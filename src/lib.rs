@@ -3,11 +3,10 @@
 use std::any::Any;
 use std::collections::HashMap;
 use std::str::FromStr;
-use std::str::Chars;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct WTBLK {
-	pub file_name: String,
+	pub struct_name: String,
 	pub data: HashMap<String, WTType>,
 }
 
@@ -52,19 +51,19 @@ impl WTBLK {
 		collect_inner_struct(&file, file_name, &mut data, &mut idx);
 
 		Ok(Self {
-			file_name: file_name.to_owned(),
+			struct_name: file_name.to_owned(),
 			data,
 		})
 	}
 	pub fn new_from_type(file_name: &str, data: HashMap<String, WTType>) -> Self {
 		Self {
-			file_name: file_name.to_owned(),
+			struct_name: file_name.to_owned(),
 			data
 		}
 	}
 }
 
-pub fn collect_inner_struct(file: &str, file_name: &str, data: &mut HashMap<String, WTType>, idx: &mut usize) {
+pub fn collect_inner_struct(file: &str, struct_name: &str, data: &mut HashMap<String, WTType>, idx: &mut usize) {
 	let mut escaping = false;
 	let mut in_val = false;
 	let mut buff = "".to_owned();
@@ -93,11 +92,11 @@ pub fn collect_inner_struct(file: &str, file_name: &str, data: &mut HashMap<Stri
 				in_val = true;
 			}
 			'}' => {
-				data.insert(name.to_owned(), WTType::Struct(Box::new(WTBLK::new_from_type(file_name, self_data))));
+				data.insert(struct_name.trim().to_owned(), WTType::Struct(Box::new(WTBLK::new_from_type(&name, self_data))));
 				return;
 			}
 			'{' => {
-				collect_inner_struct(file, &name, data, idx);
+				collect_inner_struct(file, &name, &mut self_data, idx);
 			}
 			'\n' => {
 				val = buff.trim().replace(",", "").to_owned();
@@ -107,7 +106,9 @@ pub fn collect_inner_struct(file: &str, file_name: &str, data: &mut HashMap<Stri
 				in_val = false;
 			}
 			_ => {
-				buff.push(char);
+				if char != ' ' {
+					buff.push(char);
+				}
 			}
 		}
 	}
