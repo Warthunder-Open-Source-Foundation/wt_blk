@@ -3,6 +3,7 @@
 use std::any::Any;
 use std::collections::HashMap;
 use std::str::FromStr;
+use std::str::Chars;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct WTBLK {
@@ -35,7 +36,7 @@ impl From<&String> for WTType {
 			_ => {
 				Self::String(input.to_owned())
 			}
-		}
+		};
 	}
 }
 
@@ -43,54 +44,72 @@ pub enum BLKError {}
 
 impl WTBLK {
 	pub fn new_from_file(file: &str, file_name: &str) -> Result<Self, Box<dyn Any>> {
-		let chars = file.chars();
+		let file = file.replace("\r\n", "\n");
 
 		let mut data = HashMap::new();
+		let mut idx = 0;
 
-		let mut escaping = false;
-		let mut in_val = false;
-		let mut buff = "".to_owned();
-		let mut name = "".to_owned();
-		let mut val = "".to_owned();
-
-		for (i, char) in chars.enumerate() {
-			match char {
-				'"' => {
-					if escaping {
-						escaping = false;
-
-						buff = buff.replace("\n", "").replace("\r\n", "");
-						if in_val {
-							val = buff.to_owned();
-							data.insert(name.to_owned(), WTType::from(&val));
-						} else {
-							name = buff.to_owned();
-						}
-						buff.clear();
-					} else {
-						escaping = true;
-					}
-				}
-				':' => {
-					in_val = true;
-				}
-				',' => {
-					in_val = false;
-				}
-				_ => {
-					if in_val {
-						val.push(char);
-					} else {
-						buff.push(char);
-					}
-				}
-			}
-		}
+		collect_inner_struct(&file, file_name, &mut data, &mut idx);
 
 		Ok(Self {
 			file_name: file_name.to_owned(),
 			data,
 		})
+	}
+	pub fn new_from_type(file_name: &str, data: HashMap<String, WTType>) -> Self {
+		Self {
+			file_name: file_name.to_owned(),
+			data
+		}
+	}
+}
+
+pub fn collect_inner_struct(file: &str, file_name: &str, data: &mut HashMap<String, WTType>, idx: &mut usize) {
+	let mut escaping = false;
+	let mut in_val = false;
+	let mut buff = "".to_owned();
+	let mut name = "".to_owned();
+	let mut val;
+
+	let mut self_data = HashMap::new();
+
+
+	for char in file.split_at(*idx).1.chars() {
+		*idx += 1;
+		match char {
+			'"' => {
+				if escaping {
+					escaping = false;
+
+					if !in_val {
+						name = buff.to_owned();
+						buff.clear();
+					}
+				} else {
+					escaping = true;
+				}
+			}
+			':' => {
+				in_val = true;
+			}
+			'}' => {
+				data.insert(name.to_owned(), WTType::Struct(Box::new(WTBLK::new_from_type(file_name, self_data))));
+				return;
+			}
+			'{' => {
+				collect_inner_struct(file, &name, data, idx);
+			}
+			'\n' => {
+				val = buff.trim().replace(",", "").to_owned();
+				self_data.insert(name.trim().to_owned(), WTType::from(&val));
+				buff.clear();
+
+				in_val = false;
+			}
+			_ => {
+				buff.push(char);
+			}
+		}
 	}
 }
 
