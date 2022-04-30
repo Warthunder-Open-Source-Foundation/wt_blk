@@ -1,13 +1,12 @@
 #![feature(if_let_guard)]
 
-use std::any::Any;
-use std::collections::HashMap;
 use std::str::FromStr;
+use std::error::Error;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct WTBLK {
 	pub struct_name: String,
-	pub data: HashMap<String, WTType>,
+	pub data: WTData,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -19,6 +18,8 @@ pub enum WTType {
 	Array(Vec<WTType>),
 	Struct(Box<WTBLK>),
 }
+
+pub type WTData = Vec<(String, WTType)>;
 
 impl From<&String> for WTType {
 	fn from(input: &String) -> Self {
@@ -42,11 +43,12 @@ impl From<&String> for WTType {
 pub enum BLKError {}
 
 impl WTBLK {
-	pub fn new_from_file(file: &str, file_name: &str) -> Result<Self, Box<dyn Any>> {
+	pub fn new_from_file(file: &str, file_name: &str) -> Result<Self, Box<dyn Error>> {
 		let file = file.replace("\r\n", "\n");
 
-		let mut data = HashMap::new();
+		let mut data = Vec::new();
 		let mut idx = 0;
+		println!("{}", file.split("\n").count());
 
 		collect_inner_struct(&file, file_name, &mut data, &mut idx);
 
@@ -55,7 +57,7 @@ impl WTBLK {
 			data,
 		})
 	}
-	pub fn new_from_type(file_name: &str, data: HashMap<String, WTType>) -> Self {
+	pub fn new_from_type(file_name: &str, data: WTData) -> Self {
 		Self {
 			struct_name: file_name.to_owned(),
 			data
@@ -63,14 +65,14 @@ impl WTBLK {
 	}
 }
 
-pub fn collect_inner_struct(file: &str, struct_name: &str, data: &mut HashMap<String, WTType>, idx: &mut usize) {
+pub fn collect_inner_struct(file: &str, struct_name: &str, data: &mut WTData, idx: &mut usize) {
 	let mut escaping = false;
 	let mut in_val = false;
 	let mut buff = "".to_owned();
 	let mut name = "".to_owned();
 	let mut val;
 
-	let mut self_data = HashMap::new();
+	let mut self_data = Vec::new();
 
 
 	for char in file.split_at(*idx).1.chars() {
@@ -92,7 +94,7 @@ pub fn collect_inner_struct(file: &str, struct_name: &str, data: &mut HashMap<St
 				in_val = true;
 			}
 			'}' => {
-				data.insert(struct_name.trim().to_owned(), WTType::Struct(Box::new(WTBLK::new_from_type(&name, self_data))));
+				data.push((struct_name.trim().to_owned(), WTType::Struct(Box::new(WTBLK::new_from_type(&name, self_data)))));
 				return;
 			}
 			'{' => {
@@ -100,7 +102,7 @@ pub fn collect_inner_struct(file: &str, struct_name: &str, data: &mut HashMap<St
 			}
 			'\n' => {
 				val = buff.trim().replace(",", "").to_owned();
-				self_data.insert(name.trim().to_owned(), WTType::from(&val));
+				self_data.push((name.trim().to_owned(), WTType::from(&val)));
 				buff.clear();
 
 				in_val = false;
