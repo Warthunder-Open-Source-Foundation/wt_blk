@@ -46,11 +46,12 @@ impl WTBLK {
 	pub fn new_from_file(file: &str, file_name: &str) -> Result<Self, Box<dyn Error>> {
 		let file = file.replace("\r\n", "\n");
 
+
+		let mut split = file.split("\n").collect::<Vec<&str>>();
 		let mut data = Vec::new();
 		let mut idx = 0;
-		println!("{}", file.split("\n").count());
 
-		collect_inner_struct(&file, file_name, &mut data, &mut idx);
+		collect_inner_struct(&split, file_name, &mut data, &mut idx);
 
 		Ok(Self {
 			struct_name: file_name.to_owned(),
@@ -60,56 +61,38 @@ impl WTBLK {
 	pub fn new_from_type(file_name: &str, data: WTData) -> Self {
 		Self {
 			struct_name: file_name.to_owned(),
-			data
+			data,
 		}
 	}
 }
 
-pub fn collect_inner_struct(file: &str, struct_name: &str, data: &mut WTData, idx: &mut usize) {
-	let mut escaping = false;
-	let mut in_val = false;
-	let mut buff = "".to_owned();
-	let mut name = "".to_owned();
-	let mut val;
+pub fn collect_inner_struct(file: &[&str], struct_name: &str, data: &mut WTData, idx: &mut usize) {
+	let mut self_data: WTData = Vec::new();
 
-	let mut self_data = Vec::new();
-
-
-	for char in file.split_at(*idx).1.chars() {
+	for row in file.iter().skip(*idx) {
 		*idx += 1;
-		match char {
-			'"' => {
-				if escaping {
-					escaping = false;
+		println!("{idx} {}", row);
+		let split = row.split(":").collect::<Vec<&str>>();
 
-					if !in_val {
-						name = buff.to_owned();
-						buff.clear();
-					}
-				} else {
-					escaping = true;
-				}
+		if split.len() == 2 {
+			let name = split[0];
+			let val = split[1];
+			if val.trim().contains("{") {
+				println!("{idx} recurse into {}", name);
+				collect_inner_struct(file, name.trim(), &mut self_data, idx);
+			} else {
+				println!("{idx} stow data as {name} with {val}");
+				self_data.push((name.trim().to_owned(), WTType::from(&val.trim().replace(",", ""))));
 			}
-			':' => {
-				in_val = true;
-			}
-			'}' => {
-				data.push((struct_name.trim().to_owned(), WTType::Struct(Box::new(WTBLK::new_from_type(&name, self_data)))));
+		} else {
+			if row.contains("}") {
+				println!("{idx} end recurse");
+				data.push((struct_name.to_owned(), WTType::Struct(Box::new(WTBLK::new_from_type(struct_name, self_data)))));
 				return;
-			}
-			'{' => {
-				collect_inner_struct(file, &name, &mut self_data, idx);
-			}
-			'\n' => {
-				val = buff.trim().replace(",", "").to_owned();
-				self_data.push((name.trim().to_owned(), WTType::from(&val)));
-				buff.clear();
-
-				in_val = false;
-			}
-			_ => {
-				if char != ' ' {
-					buff.push(char);
+			} else {
+				if row.contains("{") {
+					println!("{idx} recurse into unit_type");
+					collect_inner_struct(file, "", &mut self_data, idx);
 				}
 			}
 		}
