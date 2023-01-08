@@ -2,6 +2,8 @@
 name = "wt_blk"
 version = "0.0.1"
 edition = "2021"
+license-file = "LICENSE"
+description = "Parser for Json-like files blk"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
