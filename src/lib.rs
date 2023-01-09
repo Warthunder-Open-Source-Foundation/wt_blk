@@ -27,7 +27,7 @@ impl WTBlk {
 	pub fn bool<'a>(&'a self, pointer: &'a str) -> Result<bool, WTBlkError> {
 		self.pointer(pointer)?.as_bool().ok_or_else(||WTBlkError::Parse(pointer.to_owned()))
 	}
-	pub fn f64<'a>(&'a self, pointer: &'a str) -> Result<f64, WTBlkError> {
+	pub fn float<'a>(&'a self, pointer: &'a str) -> Result<f64, WTBlkError> {
 		self.pointer(pointer)?.as_f64().ok_or_else(||WTBlkError::Parse(pointer.to_owned()))
 	}
 	pub fn int<'a>(&'a self, pointer: &'a str) -> Result<i64, WTBlkError> {
@@ -36,7 +36,7 @@ impl WTBlk {
 	pub fn str<'a>(&'a self, pointer: &'a str) -> Result<&str, WTBlkError> {
 		self.pointer(pointer)?.as_str().ok_or_else(||WTBlkError::Parse(pointer.to_owned()))
 	}
-	pub fn object<'a>(&'a self, pointer: &'a str) -> Result<&Map<String, Value>, WTBlkError> {
+	pub fn objects<'a>(&'a self, pointer: &'a str) -> Result<&Map<String, Value>, WTBlkError> {
 		self.pointer(pointer)?.as_object().ok_or_else(||WTBlkError::Parse(pointer.to_owned()))
 	}
 	pub fn array<'a>(&'a self, pointer: &'a str) -> Result<&Vec<Value>, WTBlkError> {
