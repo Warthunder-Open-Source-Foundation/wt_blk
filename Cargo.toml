@@ -1,6 +1,6 @@
 [package]
 name = "wt_blk"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2021"
 license-file = "LICENSE"
 description = "Parser for Json-like files blk"

@@ -3,14 +3,14 @@ use thiserror::Error;
 
 
 #[derive(Error, Debug)]
-pub enum WTBlkError<'a> {
-	NoSuchValue(&'a str),
+pub enum WTBlkError {
+	NoSuchValue(String),
 
-	Parse(&'a str),
+	Parse(String),
 	Serde(#[from] serde_json::Error)
 }
 
-impl Display for WTBlkError<'_> {
+impl Display for WTBlkError {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		match self {
 			WTBlkError::Serde(e) => {
