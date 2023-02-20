@@ -6,7 +6,8 @@ use thiserror::Error;
 pub enum WTBlkError {
 	NoSuchValue(String),
 
-	Parse(String),
+	Parse(String, String),
+
 	Serde(#[from] serde_json::Error)
 }
 
@@ -19,8 +20,8 @@ impl Display for WTBlkError {
 			WTBlkError::NoSuchValue(pointer) => {
 				write!(f, "No field for pointer {pointer}")
 			}
-			WTBlkError::Parse(pointer) => {
-				write!(f, "Parsing the field for pointer {pointer} failed")
+			WTBlkError::Parse(pointer, contents) => {
+				write!(f, "{pointer} resolved correctly, but field failed to parse. contents: \n {contents}")
 			}
 		}
 	}
