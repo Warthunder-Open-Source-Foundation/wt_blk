@@ -1,1 +1,2 @@
-mod output_parsing;
+pub mod output_parsing;
+pub mod binary;
