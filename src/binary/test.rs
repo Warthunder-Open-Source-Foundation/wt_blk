@@ -53,8 +53,12 @@ mod test {
 			params_data_size,
 		};
 
+		let params_data = &file[ptr..(ptr + params_data_size)];
+		ptr += params_data_size;
+
+
+
 		println!("{:#?}", blk);
-		println!("{:?}", &file[..].iter().map(|x|format!("{:x}",x)).collect::<Vec<String>>());
-		println!("{:?}", &file[ptr..].iter().map(|x|format!("{:x}",x)).collect::<Vec<String>>());
+		println!("{:?}", &file[ptr..(ptr + params_data_size)].iter().map(|x|format!("{:x}",x)).collect::<Vec<String>>());
 	}
 }
