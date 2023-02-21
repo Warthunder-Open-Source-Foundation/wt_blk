@@ -5,7 +5,8 @@ pub fn decode_zstd(file: &[u8]) -> Option<Vec<u8>> {
 	// validate magic byte
 	let is_fat = match file.get(0)? {
 		0x2 => true, // FAT_ZST
-		0x4 | 0x5 => false, // SLIM_ZST and SLIM_ZST_DICT
+		0x4 => false, // SLIM_ZST and SLIM_ZST_DICT
+		0x5 => unimplemented!("File: zstd.rs, note: DICT ZSTD files are not supported yet"),
 		_ => return None
 	};
 
@@ -47,9 +48,10 @@ mod test {
 	}
 
 	// TODO: Fix decoding failure with dict mode
-	// #[test]
-	// fn slim_zstd_dict() {
-	// 	let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst_dict.blk")).unwrap();
-	// 	assert_eq!(&decoded, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
-	// }
+	#[test]
+	#[should_panic]
+	fn slim_zstd_dict() {
+		let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst_dict.blk")).unwrap();
+		assert_eq!(&decoded, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
+	}
 }
