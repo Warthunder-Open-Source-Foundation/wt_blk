@@ -30,7 +30,7 @@ pub const TYPE_DEF: &[TypeDef] = &[
 		is_short: false,
 	},
 	TypeDef {
-		name: "FLoat4",
+		name: "Float4",
 		type_id: TypeId::Float4,
 		length: 16,
 		is_short: false,
