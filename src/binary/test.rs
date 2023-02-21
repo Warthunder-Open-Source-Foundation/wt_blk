@@ -2,6 +2,7 @@
 
 #[cfg(test)]
 mod test {
+	use crate::binary::file::FatBLk;
 	use crate::binary::leb128::uleb128;
 
 	#[test]
@@ -17,5 +18,40 @@ mod test {
 
 		let (offset, names_data_size) = uleb128(&file[ptr..]).unwrap();
 		ptr += offset;
+		
+		let mut names = vec![];
+
+		{
+			let mut buff = vec![];
+			for idx in 0..names_data_size {
+				let char = file[ptr + idx];
+				if char == 0 {
+					names.push(String::from_utf8(buff.clone()).unwrap());
+					buff.clear();
+				} else {
+					buff.push(char);
+				}
+			}
+		}
+
+		let (offset, blocks_count) = uleb128(&file[ptr..]).unwrap();
+		ptr += offset;
+
+		let (offset, params_count) = uleb128(&file[ptr..]).unwrap();
+		ptr += offset;
+
+		let (offset, params_data_size) = uleb128(&file[ptr..]).unwrap();
+		ptr += offset;
+
+		let blk = FatBLk {
+			names_count,
+			names_data_size,
+			names,
+			blocks_count,
+			params_count,
+			params_data_size,
+		};
+
+		println!("{:#?}", blk);
 	}
 }

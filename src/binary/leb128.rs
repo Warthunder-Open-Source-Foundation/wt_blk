@@ -1,5 +1,5 @@
 
-pub fn uleb128(bytes: &[u8]) -> Option<(usize, u128)> {
+pub fn uleb128(bytes: &[u8]) -> Option<(usize, usize)> {
 	let mut result = 0u128;
 	let mask = 1 << 7;
 
@@ -8,7 +8,7 @@ pub fn uleb128(bytes: &[u8]) -> Option<(usize, u128)> {
 		result |=  bits << (7 * i);
 
 		if mask & bytes[i] == 0 {
-			return Some((i + 1, result));
+			return Some((i + 1, result as usize));
 		};
 	}
 	None
