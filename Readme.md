@@ -1,2 +1,2 @@
 
-Parser for Json-like files blk
+Wt .blk parsing and indexing
