@@ -32,6 +32,7 @@ mod test {
 					buff.push(char);
 				}
 			}
+			ptr += names_data_size;
 		}
 
 		let (offset, blocks_count) = uleb128(&file[ptr..]).unwrap();
@@ -53,5 +54,7 @@ mod test {
 		};
 
 		println!("{:#?}", blk);
+		println!("{:?}", &file[..].iter().map(|x|format!("{:x}",x)).collect::<Vec<String>>());
+		println!("{:?}", &file[ptr..].iter().map(|x|format!("{:x}",x)).collect::<Vec<String>>());
 	}
 }

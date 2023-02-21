@@ -1,0 +1,18 @@
+"vec4f":p4 = 1.25, 2.5, 5, 10
+    "int":i = 42
+    "long":i64 = 0x40
+    "alpha" {
+      "str":t = "hello"
+      "bool":b = true
+      "color":c = 0x1, 0x2, 0x3, 0x4
+      "gamma" {
+        "vec2i":ip2 = 3, 4
+        "vec2f":p2 = 1.25, 2.5
+        "transform":m = [[1, 0, 0] [0, 1, 0] [0, 0, 1] [1.25, 2.5, 5]]
+      }
+    }
+    "beta" {
+      "float":r = 1.25
+      "vec2i":ip2 = 1, 2
+      "vec3f":p3 = 1.25, 2.5, 5
+    }
