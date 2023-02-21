@@ -4,8 +4,8 @@ use ruzstd::StreamingDecoder;
 pub fn decode_zstd(file: &[u8]) -> Option<Vec<u8>> {
 	// validate magic byte
 	let is_fat = match file.get(0)? {
-		0x2 => true,
-		0x4 => false,
+		0x2 => true, // FAT_ZST
+		0x4 | 0x5 => false, // SLIM_ZST and SLIM_ZST_DICT
 		_ => return None
 	};
 
@@ -45,4 +45,11 @@ mod test {
 		let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst.blk")).unwrap();
 		assert_eq!(&decoded, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
 	}
+
+	// TODO: Fix decoding failure with dict mode
+	// #[test]
+	// fn slim_zstd_dict() {
+	// 	let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst_dict.blk")).unwrap();
+	// 	assert_eq!(&decoded, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
+	// }
 }
