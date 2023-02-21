@@ -59,6 +59,6 @@ mod test {
 
 
 		println!("{:#?}", blk);
-		println!("{:?}", &file[ptr..(ptr + params_data_size)].iter().map(|x|format!("{:x}",x)).collect::<Vec<String>>());
+		println!("{:?}", &file[ptr..].iter().map(|x|format!("{:x}",x)).collect::<Vec<String>>());
 	}
 }
