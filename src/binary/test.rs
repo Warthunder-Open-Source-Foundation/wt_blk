@@ -45,7 +45,7 @@ mod test {
 		let params_data = &file[ptr..(ptr + params_data_size)];
 		ptr += params_data_size;
 
-		let params_info = &file[ptr..(file.len() - names_count)]; // TODO not sure if names_count is the correct offset to compute the remaining file minus BlocksInfo
+		let params_info = &file[ptr..(ptr + params_count * 8)];
 		ptr += params_info.len();
 
 		let block_info = &file[ptr..];
@@ -56,11 +56,13 @@ mod test {
 		// let blk = FatBLk {
 		// 	names_count,
 		// 	names_data_size,
-		// 	names,
+		// 	names: names.clone(),
 		// 	blocks_count,
 		// 	params_count,
 		// 	params_data_size,
 		// };
+		//
+		// dbg!(blk);
 
 
 		// let values = vec![];
@@ -77,5 +79,6 @@ mod test {
 			println!("{:?} {:?} {:?} ", name_id, type_id, data);
 		}
 		println!("{:?}", names);
+		println!("{}", block_info.len());
 	}
 }
