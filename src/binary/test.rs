@@ -1,5 +1,3 @@
-
-
 #[cfg(test)]
 mod test {
 	use crate::binary::file::FatBLk;
@@ -18,7 +16,7 @@ mod test {
 
 		let (offset, names_data_size) = uleb128(&file[ptr..]).unwrap();
 		ptr += offset;
-		
+
 		let mut names = vec![];
 
 		{
@@ -44,21 +42,40 @@ mod test {
 		let (offset, params_data_size) = uleb128(&file[ptr..]).unwrap();
 		ptr += offset;
 
-		let blk = FatBLk {
-			names_count,
-			names_data_size,
-			names,
-			blocks_count,
-			params_count,
-			params_data_size,
-		};
-
 		let params_data = &file[ptr..(ptr + params_data_size)];
 		ptr += params_data_size;
 
+		let params_info = &file[ptr..(file.len() - names_count)]; // TODO not sure if names_count is the correct offset to compute the remaining file minus BlocksInfo
+		ptr += params_info.len();
+
+		let block_info = &file[ptr..];
+		drop(ptr);
+
+		let dbg_hex = |x: &[u8]| x.iter().map(|item| format!("{:X}", item)).collect::<Vec<String>>().join(" ");
+
+		// let blk = FatBLk {
+		// 	names_count,
+		// 	names_data_size,
+		// 	names,
+		// 	blocks_count,
+		// 	params_count,
+		// 	params_data_size,
+		// };
 
 
-		println!("{:#?}", blk);
-		println!("{:?}", &file[ptr..].iter().map(|x|format!("{:x}",x)).collect::<Vec<String>>());
+		// let values = vec![];
+		for chunk in params_info.chunks(8) {
+			let name_id_raw = &chunk[0..3];
+			let name_id = u32::from_le_bytes([
+				name_id_raw[0],
+				name_id_raw[1],
+				name_id_raw[2],
+				0
+			]);
+			let type_id = &chunk[3];
+			let data = &chunk[4..];
+			println!("{:?} {:?} {:?} ", name_id, type_id, data);
+		}
+		println!("{:?}", names);
 	}
 }

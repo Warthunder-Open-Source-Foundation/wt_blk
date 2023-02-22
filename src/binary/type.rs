@@ -1,4 +1,8 @@
-pub const TYPE_DEF: &[TypeDef] = &[
+use std::collections::HashMap;
+use lazy_static::lazy_static;
+
+// Private const represenation of types
+const TYPE_DEF: &[TypeDef] = &[
 	TypeDef {
 		name: "Str",
 		type_id: TypeId::Str,
@@ -73,8 +77,19 @@ pub const TYPE_DEF: &[TypeDef] = &[
 	},
 ];
 
+lazy_static! {
+    static ref TYPE_MAP: HashMap<TypeId, TypeDef<'static>> = {
+		let mut map = HashMap::new();
+		for i in TYPE_DEF.iter() {
+			map.insert(i.type_id, *i);
+		}
 
-#[derive(PartialEq, Eq)]
+		map
+	};
+}
+
+
+#[derive(PartialEq, Eq, Hash, Debug, Copy, Clone)]
 pub enum TypeId {
 	Str = 0x01,
 	Int = 0x02,
@@ -90,20 +105,22 @@ pub enum TypeId {
 	Long = 0x0c,
 }
 
+#[derive(Copy, Clone, Hash)]
 pub struct TypeDef<'a> {
 	pub name: &'a str,
 
 	pub type_id: TypeId,
-	// stored in multiples of 8, get bitsize with getter `size`
 
+	// stored in multiples of 8, get bitsize with getter `bit_size`
 	pub length: usize,
+
 	// means they are stored in-place after their definition
 
 	pub is_short: bool,
 }
 
 impl TypeDef<'_> {
-	pub fn size(&self) -> usize {
+	pub fn bit_size(&self) -> usize {
 		if self.type_id != TypeId::Str {
 			self.length * 8
 		} else {
