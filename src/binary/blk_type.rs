@@ -29,85 +29,80 @@ impl BlkType {
 			return None;
 		}
 
-		match type_id {
-			0x06 => {
-				let offset = bytes_to_offset(field)?;
-				let data_region = &data_region[offset..(offset + 16)];
-				return Some(Self::Float4([
-					bytes_to_float(&data_region[0..4])?,
-					bytes_to_float(&data_region[4..8])?,
-					bytes_to_float(&data_region[8..12])?,
-					bytes_to_float(&data_region[12..16])?,
-				]));
-			}
-			0x04 => {
-				let offset = bytes_to_offset(field)?;
-				let data_region = &data_region[offset..(offset + 8)];
-				return Some(Self::Float2([
-					bytes_to_float(&data_region[0..4])?,
-					bytes_to_float(&data_region[4..8])?,
-				]));
-			}
-			0x02 => {
-				return Some(Self::Int(bytes_to_int(field)?));
-			}
-			0x0c => {
-				let offset = bytes_to_offset(field)?;
-				let data_region = &data_region[offset..(offset + 8)];
-				return Some(Self::Long(bytes_to_long(data_region)?));
-			}
+		return match type_id {
 			0x01 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..];
 				let cstr = CStr::from_bytes_until_nul(data_region).unwrap();
 				let rstr = cstr.to_str().ok()?.to_owned();
-				return Some(Self::Str(rstr));
+				Some(Self::Str(rstr))
+			}
+			0x02 => {
+				Some(Self::Int(bytes_to_int(field)?))
+			}
+			0x03 => {
+				Some(Self::Float(bytes_to_float(field)?))
+			}
+			0x04 => {
+				let offset = bytes_to_offset(field)?;
+				let data_region = &data_region[offset..(offset + 8)];
+				Some(Self::Float2([
+					bytes_to_float(&data_region[0..4])?,
+					bytes_to_float(&data_region[4..8])?,
+				]))
+			}
+			0x05 => {
+				let offset = bytes_to_offset(field)?;
+				let data_region = &data_region[offset..(offset + 12)];
+				Some(Self::Float3([
+					bytes_to_float(&data_region[0..4])?,
+					bytes_to_float(&data_region[4..8])?,
+					bytes_to_float(&data_region[8..12])?,
+				]))
+			}
+			0x06 => {
+				let offset = bytes_to_offset(field)?;
+				let data_region = &data_region[offset..(offset + 16)];
+				Some(Self::Float4([
+					bytes_to_float(&data_region[0..4])?,
+					bytes_to_float(&data_region[4..8])?,
+					bytes_to_float(&data_region[8..12])?,
+					bytes_to_float(&data_region[12..16])?,
+				]))
+			}
+			0x07 => {
+				let offset = bytes_to_offset(field)?;
+				let data_region = &data_region[offset..(offset + 8)];
+				Some(Self::Int2([
+					bytes_to_int(&data_region[0..4])?,
+					bytes_to_int(&data_region[4..8])?,
+				]))
+			}
+			0x08 => {
+				let offset = bytes_to_offset(field)?;
+				let data_region = &data_region[offset..(offset + 12)];
+				Some(Self::Int3([
+					bytes_to_int(&data_region[0..4])?,
+					bytes_to_int(&data_region[4..8])?,
+					bytes_to_int(&data_region[8..12])?,
+				]))
 			}
 			0x09 => {
-				return Some(Self::Bool(field[0] != 0))
+				Some(Self::Bool(field[0] != 0))
 			}
 			0x0a => {
 				// Game stores them in BGRA order
-				return Some(Self::Color([
+				Some(Self::Color([
 					field[2],
 					field[1],
 					field[0],
 					field[3],
 				]))
 			}
-			0x07 => {
-				let offset = bytes_to_offset(field)?;
-				let data_region = &data_region[offset..(offset + 8)];
-				return Some(Self::Int2([
-					bytes_to_int(&data_region[0..4])?,
-					bytes_to_int(&data_region[4..8])?,
-				]));
-			}
-			0x03 => {
-				return Some(Self::Float(bytes_to_float(field)?))
-			}
-			0x08 => {
-				let offset = bytes_to_offset(field)?;
-				let data_region = &data_region[offset..(offset + 12)];
-				return Some(Self::Int3([
-					bytes_to_int(&data_region[0..4])?,
-					bytes_to_int(&data_region[4..8])?,
-					bytes_to_int(&data_region[8..12])?,
-				]));
-			}
-			0x05 => {
-				let offset = bytes_to_offset(field)?;
-				let data_region = &data_region[offset..(offset + 12)];
-				return Some(Self::Float3([
-					bytes_to_float(&data_region[0..4])?,
-					bytes_to_float(&data_region[4..8])?,
-					bytes_to_float(&data_region[8..12])?,
-				]));
-			}
 			0x0b => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 48)];
-				return Some(Self::Float12([
+				Some(Self::Float12([
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 					bytes_to_float(&data_region[8..12])?,
@@ -120,9 +115,14 @@ impl BlkType {
 					bytes_to_float(&data_region[36..40])?,
 					bytes_to_float(&data_region[40..44])?,
 					bytes_to_float(&data_region[44..48])?,
-				]));
+				]))
 			}
-			_ => { return None; }
+			0x0c => {
+				let offset = bytes_to_offset(field)?;
+				let data_region = &data_region[offset..(offset + 8)];
+				Some(Self::Long(bytes_to_long(data_region)?))
+			}
+			_ => { None }
 		}
 	}
 
