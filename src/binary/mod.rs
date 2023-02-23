@@ -1,5 +1,5 @@
 mod file;
-mod r#type;
+mod type_translation;
 mod test;
 mod parser;
 mod leb128;

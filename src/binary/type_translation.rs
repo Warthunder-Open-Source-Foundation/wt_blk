@@ -78,10 +78,10 @@ const TYPE_DEF: &[TypeDef] = &[
 ];
 
 lazy_static! {
-    static ref TYPE_MAP: HashMap<TypeId, TypeDef<'static>> = {
+    pub static ref TYPE_MAP: HashMap<u8, TypeDef<'static>> = {
 		let mut map = HashMap::new();
 		for i in TYPE_DEF.iter() {
-			map.insert(i.type_id, *i);
+			map.insert(i.type_id as u8, *i);
 		}
 
 		map

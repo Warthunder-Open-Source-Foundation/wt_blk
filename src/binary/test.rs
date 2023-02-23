@@ -2,6 +2,7 @@
 mod test {
 	use crate::binary::file::FatBLk;
 	use crate::binary::leb128::uleb128;
+	use crate::binary::type_translation::{TYPE_MAP, TypeId};
 
 	#[test]
 	fn fat_blk() {
@@ -74,7 +75,8 @@ mod test {
 				name_id_raw[2],
 				0
 			]);
-			let type_id = &chunk[3];
+			let type_id = chunk[3];
+			let type_def = TYPE_MAP.get(&type_id).unwrap();
 			let data = &chunk[4..];
 			println!("{:?} {:?} {:?} ", name_id, type_id, data);
 		}
