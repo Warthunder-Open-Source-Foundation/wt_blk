@@ -78,6 +78,7 @@ mod test {
 			let type_id = chunk[3];
 			let data = &chunk[4..];
 
+			println!("{:X}", type_id);
 			let parsed = BlkType::from_raw_param_info(type_id, data, params_data).unwrap();
 			results.push(parsed);
 			println!("{:?}", results);
