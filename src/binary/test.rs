@@ -80,9 +80,9 @@ mod test {
 
 			let parsed = BlkType::from_raw_param_info(type_id, data, params_data).unwrap();
 			results.push(parsed);
+			println!("{:?}", results);
 		}
 		// println!("{:?}", names);
 		// println!("{}", block_info.len());
-		println!("{:?}", results);
 	}
 }

@@ -7,11 +7,11 @@ pub enum BlkType {
 	Int2([u32; 2]),
 	Int3([u32; 3]),
 	Long(u64),
-	Float(f64),
-	Float2([f64; 2]),
-	Float3([u32; 3]),
-	Float4([u32; 4]),
-	Float12([u32; 12]),
+	Float(f32),
+	Float2([f32; 2]),
+	Float3([f32; 3]),
+	Float4([f32; 4]),
+	Float12([f32; 12]),
 	Bool(bool),
 	Color([u8; 4]),
 }
@@ -25,6 +25,21 @@ impl BlkType {
 		// Make sure the field is properly sized
 		if field.len() != 4 {
 			return None
+		}
+
+		match type_id {
+			0x06 => {
+				let offset = bytes_to_offset(field)?;
+				let data_region = &data_region[offset..(offset + 16)];
+				eprintln!("data_region = {:?}", data_region);
+				return Some(Self::Float4([
+					bytes_to_float(&data_region[0..4])?,
+					bytes_to_float(&data_region[4..8])?,
+					bytes_to_float(&data_region[8..12])?,
+					bytes_to_float(&data_region[12..16])?,
+				]))
+			}
+			_ => {return None}
 		}
 
 		unimplemented!()
@@ -78,4 +93,30 @@ impl BlkType {
 			BlkType::Color(_) => {4}
 		}
 	}
+}
+
+pub fn bytes_to_offset(input: &[u8]) -> Option<usize> {
+	if input.len() != 4 {
+		return None
+	}
+
+	Some(u32::from_le_bytes([
+		input[0],
+		input[1],
+		input[2],
+		input[3],
+	]) as usize)
+}
+
+pub fn bytes_to_float(input: &[u8]) -> Option<f32> {
+	if input.len() != 4 {
+		return None
+	}
+
+	Some(f32::from_le_bytes([
+		input[0],
+		input[1],
+		input[2],
+		input[3],
+	]))
 }
