@@ -174,6 +174,22 @@ impl BlkType {
 			BlkType::Color(_) => { 4 }
 		}
 	}
+	pub const fn blk_type_name(&self) -> &'static str {
+		match self {
+			BlkType::Str(_) => {"t"}
+			BlkType::Int(_) => {"i"}
+			BlkType::Int2(_) => {"ip2"}
+			BlkType::Int3(_) => {"ip3"}
+			BlkType::Long(_) => {"i64"}
+			BlkType::Float(_) => {"r"}
+			BlkType::Float2(_) => {"p2"}
+			BlkType::Float3(_) => {"p3"}
+			BlkType::Float4(_) => {"p4"}
+			BlkType::Float12(_) => {"m"}
+			BlkType::Bool(_) => {"b"}
+			BlkType::Color(_) => {"c"}
+		}
+	}
 }
 
 pub fn bytes_to_offset(input: &[u8]) -> Option<usize> {
