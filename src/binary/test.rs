@@ -54,18 +54,6 @@ mod test {
 
 		let dbg_hex = |x: &[u8]| x.iter().map(|item| format!("{:X}", item)).collect::<Vec<String>>().join(" ");
 
-		// let blk = FatBLk {
-		// 	names_count,
-		// 	names_data_size,
-		// 	names: names.clone(),
-		// 	blocks_count,
-		// 	params_count,
-		// 	params_data_size,
-		// };
-		//
-		// dbg!(blk);
-
-
 		let mut results = vec![];
 		for chunk in params_info.chunks(8) {
 			let name_id_raw = &chunk[0..3];
@@ -78,12 +66,9 @@ mod test {
 			let type_id = chunk[3];
 			let data = &chunk[4..];
 
-			println!("{:X}", type_id);
 			let parsed = BlkType::from_raw_param_info(type_id, data, params_data).unwrap();
 			results.push(parsed);
-			println!("{:?}", results);
 		}
-		// println!("{:?}", names);
-		// println!("{}", block_info.len());
+		println!("{:?}", results);
 	}
 }
