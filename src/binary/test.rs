@@ -2,7 +2,9 @@
 mod test {
 	use crate::binary::file::FatBLk;
 	use crate::binary::leb128::uleb128;
-	use crate::binary::type_translation::{TYPE_MAP, TypeId};
+	use crate::binary::type_structure::int::Int;
+	use crate::binary::type_translation::{TYPE_MAP, TypeDef, TypeId};
+	use crate::binary::type_structure::blk_type_trait::BlkType;
 
 	#[test]
 	fn fat_blk() {
@@ -66,7 +68,7 @@ mod test {
 		// dbg!(blk);
 
 
-		// let values = vec![];
+		let mut values: Vec<Box<dyn BlkType>> = vec![];
 		for chunk in params_info.chunks(8) {
 			let name_id_raw = &chunk[0..3];
 			let name_id = u32::from_le_bytes([
@@ -78,9 +80,18 @@ mod test {
 			let type_id = chunk[3];
 			let type_def = TYPE_MAP.get(&type_id).unwrap();
 			let data = &chunk[4..];
-			println!("{:?} {:?} {:?} ", name_id, type_id, data);
+
+			match type_def.type_id {
+				TypeId::Int => {
+					let int = Int::from_bytes(data.try_into().unwrap(), &[]);
+					values.push(Box::new(int));
+				}
+				_ => {}
+			};
+
 		}
-		println!("{:?}", names);
-		println!("{}", block_info.len());
+		// println!("{:?}", names);
+		// println!("{}", block_info.len());
+		dbg!(values);
 	}
 }
