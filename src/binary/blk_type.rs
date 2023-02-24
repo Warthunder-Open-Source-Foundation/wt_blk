@@ -1,5 +1,4 @@
-use std::ffi::{CStr, CString};
-use std::process::{abort, exit};
+use std::ffi::{CStr};
 
 #[derive(Debug, PartialOrd, PartialEq)]
 pub enum BlkType {
