@@ -70,5 +70,68 @@ mod test {
 			results.push((name_id as usize, name, parsed));
 		}
 		println!("{:?}", results);
+
+
+		let mut blocks = vec![];
+		{
+			let block_id_to_name = |id| {
+				if id == 0 {
+					"root".to_owned()
+				} else {
+					(&names)[(id - 1) as usize].clone()
+				}
+			};
+			let mut stage = 0_u8;
+
+			let mut name = 0_u8;
+			let mut param_count = 0_u8;
+			let mut blocks_count = 0_u8;
+			let mut first_block_id = 0_u8;
+
+
+			for (i, byte) in block_info.iter().enumerate() {
+				/*println!("i: {i} stage: {} {} {} {} {}",
+				stage, name, param_count, blocks_count, first_block_id);
+
+				 */
+				match stage {
+					0 => {
+						name = *byte;
+						stage = 1;
+					}
+					1 => {
+						param_count = *byte;
+						stage = 2;
+					}
+					2 => {
+						blocks_count = *byte;
+
+						if blocks_count == 0 {
+							blocks.push((block_id_to_name(name), param_count, blocks_count, None));
+							name = 0;
+							param_count = 0;
+							blocks_count = 0;
+							first_block_id = 0;
+							stage = 0;
+						} else {
+							stage = 3;
+						}
+					}
+					3 => {
+						first_block_id = *byte;
+						blocks.push((block_id_to_name(name), param_count, blocks_count, Some(first_block_id)));
+						name = 0;
+						param_count = 0;
+						blocks_count = 0;
+						first_block_id = 0;
+						stage = 0;
+					}
+					_ => {
+						unimplemented!();
+					}
+				}
+			}
+		}
+		println!("{:#?}", blocks);
 	}
 }
