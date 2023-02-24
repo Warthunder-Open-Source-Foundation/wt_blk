@@ -1,5 +1,6 @@
 
 #[repr(u8)]
+#[allow(non_camel_case_types)]
 pub enum FileType {
 	BBF = 0x00,
 	FAT = 0x01,
