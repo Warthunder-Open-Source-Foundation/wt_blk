@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod test {
 	use crate::binary::blk_type::BlkType;
-	use crate::binary::file::FatBLk;
 	use crate::binary::leb128::uleb128;
 
 	#[test]

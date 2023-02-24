@@ -1,12 +1,13 @@
 use std::io::Read;
 use ruzstd::StreamingDecoder;
+use crate::binary::file::FileType;
 
 pub fn decode_zstd(file: &[u8]) -> Option<Vec<u8>> {
 	// validate magic byte
-	let is_fat = match file.get(0)? {
-		0x2 => true, // FAT_ZST
-		0x4 => false, // SLIM_ZST and SLIM_ZST_DICT
-		0x5 => unimplemented!("File: zstd.rs, note: DICT ZSTD files are not supported yet"),
+	let is_fat = match FileType::from_byte(*file.get(0)?)? {
+		FileType::FAT_ZSTD => true, // FAT_ZST
+		FileType::SLIM_ZSTD => false, // SLIM_ZST and SLIM_ZST_DICT
+		FileType::SLIM_ZST_DICT => unimplemented!("File: zstd.rs, note: DICT ZSTD files are not supported yet"),
 		_ => return None
 	};
 
