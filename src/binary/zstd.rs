@@ -38,13 +38,13 @@ mod test {
 	#[test]
 	fn fat_zstd() {
 		let decoded = decode_zstd(include_bytes!("../../samples/section_fat_zst.blk")).unwrap();
-		assert_eq!(&decoded, &include_bytes!("../../samples/section_fat.blk"))
+		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_fat.blk"));
 	}
 
 	#[test]
 	fn slim_zstd() {
 		let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst.blk")).unwrap();
-		assert_eq!(&decoded, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
+		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
 	}
 
 	// TODO: Fix decoding failure with dict mode
@@ -52,6 +52,6 @@ mod test {
 	#[should_panic]
 	fn slim_zstd_dict() {
 		let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst_dict.blk")).unwrap();
-		assert_eq!(&decoded, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
+		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
 	}
 }
