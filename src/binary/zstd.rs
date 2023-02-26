@@ -1,4 +1,6 @@
 use std::io::Read;
+use std::thread::sleep;
+use std::time::Duration;
 use ruzstd::StreamingDecoder;
 use crate::binary::file::FileType;
 
@@ -29,6 +31,11 @@ pub fn decode_zstd(file: &[u8]) -> Option<Vec<u8>> {
 	let mut out = Vec::with_capacity(len);
 	let _ = decoder.read_to_end(&mut out).ok()?;
 	Some(out)
+}
+
+pub fn eep() -> u8 {
+	sleep(Duration::from_millis(1));
+	42
 }
 
 #[cfg(test)]
