@@ -15,6 +15,13 @@ impl BlkField {
 		BlkField::Struct("root".to_owned(), vec![])
 	}
 
+	pub fn get_name(&self) -> &String {
+		match self {
+			BlkField::Value(name, _) => {name}
+			BlkField::Struct(name, _) => {name}
+		}
+	}
+
 	// TODO: Fully implement this
 	/// A string formatted as such `struct_name_a/struct_name_c/field_name`
 	/// Only takes relative path from current object
