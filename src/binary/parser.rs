@@ -6,7 +6,7 @@ use crate::output_parsing::WTBlk;
 
 pub fn parse_blk(file: &[u8], with_magic_byte: bool) -> (
 	Vec<(usize, BlkField)>,
-	Vec<(String, u8, u8, Option<u8>)>
+	Vec<(String, usize, usize, Option<usize>)>
 ) {
 	let mut ptr = 0;
 
@@ -84,55 +84,28 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool) -> (
 				(&names)[(id - 1) as usize].clone()
 			}
 		};
-		let mut stage = 0_u8;
 
-		let mut name = 0_u8;
-		let mut param_count = 0_u8;
-		let mut blocks_count = 0_u8;
-		let mut first_block_id = 0_u8;
+		let mut ptr = 0;
+		for _ in 0..blocks_count {
+			let (offset, name_id) = uleb128(&block_info[ptr..]).unwrap();
+			ptr += offset;
 
+			let (offset, param_count) = uleb128(&block_info[ptr..]).unwrap();
+			ptr += offset;
 
-		for (i, byte) in block_info.iter().enumerate() {
-			/*println!("i: {i} stage: {} {} {} {} {}",
-			stage, name, param_count, blocks_count, first_block_id);
+			let (offset, blocks_count) = uleb128(&block_info[ptr..]).unwrap();
+			ptr += offset;
 
-			 */
-			match stage {
-				0 => {
-					name = *byte;
-					stage = 1;
-				}
-				1 => {
-					param_count = *byte;
-					stage = 2;
-				}
-				2 => {
-					blocks_count = *byte;
+			let first_block_id = if blocks_count > 0 {
+				let (offset, first_block_id) = uleb128(&block_info[ptr..]).unwrap();
+				ptr += offset;
+				Some(first_block_id)
+			} else {
+				None
+			};
 
-					if blocks_count == 0 {
-						blocks.push((block_id_to_name(name), param_count, blocks_count, None));
-						name = 0;
-						param_count = 0;
-						blocks_count = 0;
-						first_block_id = 0;
-						stage = 0;
-					} else {
-						stage = 3;
-					}
-				}
-				3 => {
-					first_block_id = *byte;
-					blocks.push((block_id_to_name(name), param_count, blocks_count, Some(first_block_id)));
-					name = 0;
-					param_count = 0;
-					blocks_count = 0;
-					first_block_id = 0;
-					stage = 0;
-				}
-				_ => {
-					unimplemented!();
-				}
-			}
+			blocks.push((block_id_to_name(name_id), param_count, blocks_count, first_block_id));
+
 		}
 	}
 	(results, blocks)
