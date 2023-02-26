@@ -11,6 +11,6 @@ mod test {
 		let start = Instant::now();
 		let output = parse_blk(file);
 		println!("{:?}", start.elapsed());
-		println!("{:?}", output);
+		println!("{:#?}", output);
 	}
 }
