@@ -1,7 +1,7 @@
 use serde_json::to_string;
 use crate::binary::blk_type::BlkType;
 
-
+#[derive(Debug)]
 pub enum BlkField {
 	// Name and field value
 	Value(String, BlkType),

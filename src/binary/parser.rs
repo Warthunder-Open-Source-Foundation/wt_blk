@@ -1,10 +1,11 @@
+use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::BlkType;
 use crate::binary::file::FileType;
 use crate::binary::leb128::uleb128;
 use crate::output_parsing::WTBlk;
 
 pub fn parse_blk(file: &[u8], with_magic_byte: bool) -> (
-	Vec<(usize, String, BlkType)>,
+	Vec<(usize, BlkField)>,
 	Vec<(String, u8, u8, Option<u8>)>
 ) {
 	let mut ptr = 0;
@@ -56,7 +57,7 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool) -> (
 
 	let dbg_hex = |x: &[u8]| x.iter().map(|item| format!("{:X}", item)).collect::<Vec<String>>().join(" ");
 
-	let mut results: Vec<(usize, String, BlkType)> = vec![];
+	let mut results: Vec<(usize, BlkField)> = vec![];
 	for chunk in params_info.chunks(8) {
 		let name_id_raw = &chunk[0..3];
 		let name_id = u32::from_le_bytes([
@@ -70,7 +71,8 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool) -> (
 		let name = &names[name_id as usize];
 
 		let parsed = BlkType::from_raw_param_info(type_id, data, params_data).unwrap();
-		results.push((name_id as usize, name.to_owned(), parsed));
+		let field = BlkField::Value(name.to_owned(), parsed);
+		results.push((name_id as usize, field));
 	}
 
 	let mut blocks = vec![];
