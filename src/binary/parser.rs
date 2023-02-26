@@ -37,6 +37,10 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool) -> (
 		ptr += names_data_size;
 	}
 
+	if names_count != names.len() {
+		panic!("Should be equal"); // TODO: Change to result when fn signature allows for it
+	}
+
 	let (offset, blocks_count) = uleb128(&file[ptr..]).unwrap();
 	ptr += offset;
 
