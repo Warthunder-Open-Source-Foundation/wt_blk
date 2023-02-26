@@ -5,7 +5,7 @@ use crate::binary::leb128::uleb128;
 use crate::output_parsing::WTBlk;
 
 pub fn parse_blk(file: &[u8], with_magic_byte: bool) -> (
-	Vec<(usize, BlkField)>,
+	Vec<BlkField>,
 	Vec<(String, usize, usize, Option<usize>)>
 ) {
 	let mut ptr = 0;
@@ -109,8 +109,26 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool) -> (
 			};
 
 			blocks.push((block_id_to_name(name_id), param_count, blocks_count, first_block_id));
+			// Name of the block
+			// Amount of non-block fields
+			// Amount of child-blocks
+			// If it has child-blocks, starting index of said block
 
 		}
 	}
-	(results, blocks)
+
+	// resolve block fields
+
+	let mut flat_map = vec![];
+
+	let mut ptr = 0;
+	for (name, field_count, _ , _) in &blocks {
+		let mut field = BlkField::Struct(name.to_owned(), Vec::with_capacity(*field_count));
+		for i in (ptr)..(ptr + field_count) {
+			field.insert_field(results[i].1.clone());
+		}
+		flat_map.push(field);
+	}
+
+	(flat_map, blocks)
 }

@@ -1,7 +1,7 @@
 use serde_json::to_string;
 use crate::binary::blk_type::BlkType;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum BlkField {
 	// Name and field value
 	Value(String, BlkType),
@@ -13,6 +13,19 @@ pub enum BlkField {
 impl BlkField {
 	pub fn new() -> Self {
 		BlkField::Struct("root".to_owned(), vec![])
+	}
+
+	#[must_use]
+	pub fn insert_field(&mut self, field: Self) -> Option<()> {
+		match self {
+			BlkField::Value(_, _) => {
+				None
+			}
+			BlkField::Struct(_, fields) => {
+				fields.push(field);
+				Some(())
+			}
+		}
 	}
 
 	pub fn get_name(&self) -> &String {

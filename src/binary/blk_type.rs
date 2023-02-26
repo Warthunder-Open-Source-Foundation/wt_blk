@@ -1,6 +1,6 @@
 use std::ffi::{CStr};
 
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, PartialOrd, PartialEq, Clone)]
 pub enum BlkType {
 	Str(String),
 	Int(u32),
