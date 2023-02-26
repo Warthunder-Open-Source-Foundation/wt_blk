@@ -1,7 +1,7 @@
-mod file;
+pub mod file;
 mod test;
-mod parser;
-mod leb128;
-mod zstd;
-mod blk_type;
-mod blk_structure;
+pub mod parser;
+pub mod leb128;
+pub mod zstd;
+pub mod blk_type;
+pub mod blk_structure;
