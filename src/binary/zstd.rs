@@ -1,7 +1,9 @@
 use std::io::Read;
 use std::thread::sleep;
 use std::time::Duration;
+
 use ruzstd::StreamingDecoder;
+
 use crate::binary::file::FileType;
 
 pub fn decode_zstd(file: &[u8]) -> Option<Vec<u8>> {
@@ -40,7 +42,11 @@ pub fn eep() -> u8 {
 
 #[cfg(test)]
 mod test {
-	use std::fs;
+	use std::{fs, io};
+	use std::io::Read;
+
+	use ruzstd::{FrameDecoder, StreamingDecoder};
+
 	use crate::binary::zstd::decode_zstd;
 
 	#[test]
@@ -55,11 +61,16 @@ mod test {
 		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
 	}
 
-	// TODO: Fix decoding failure with dict mode
 	#[test]
-	#[should_panic]
 	fn slim_zstd_dict() {
-		let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst_dict.blk")).unwrap();
-		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
+		let file = fs::read("./samples/section_slim_zst_dict.blk").unwrap();
+		let dict = fs::read("./samples/bfb732560ad45234690acad246d7b14c2f25ad418a146e5e7ef68ba3386a315c.dict").unwrap();
+		let mut frame_decoder = FrameDecoder::new();
+		frame_decoder.add_dict(&dict).unwrap();
+
+		let mut decoder = StreamingDecoder::new_with_decoder(&file[1..], frame_decoder).unwrap();
+		let mut out = vec![];
+		decoder.read_to_end(&mut out).unwrap();
+		pretty_assertions::assert_eq!(&out, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
 	}
 }
