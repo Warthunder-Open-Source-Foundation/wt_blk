@@ -1,15 +1,18 @@
 use crate::binary::blk_type::BlkType;
+use crate::binary::file::FileType;
 use crate::binary::leb128::uleb128;
 use crate::output_parsing::WTBlk;
 
-pub fn parse_blk(file: &[u8]) -> (
+pub fn parse_blk(file: &[u8], with_magic_byte: bool) -> (
 	Vec<(usize, String, BlkType)>,
 	Vec<(String, u8, u8, Option<u8>)>
 ) {
 	let mut ptr = 0;
 
-	let file_type = file[0];
-	ptr += 1;
+	if with_magic_byte {
+		let file_type = FileType::from_byte(file[0]).unwrap();
+		ptr += 1;
+	}
 
 	let (offset, names_count) = uleb128(&file[ptr..]).unwrap();
 	ptr += offset;
