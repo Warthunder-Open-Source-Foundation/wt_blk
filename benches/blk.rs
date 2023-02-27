@@ -8,7 +8,7 @@ use wt_blk::binary::zstd::eep;
 
 pub fn blk_fat(c: &mut Criterion) {
 	let f = fs::read("./samples/section_fat.blk").unwrap();
-	c.bench_function("blk fat", |b| b.iter(|| parse_blk(black_box(&f))));
+	c.bench_function("blk fat", |b| b.iter(|| parse_blk(black_box(&f), true)));
 }
 
 pub fn zstd(c: &mut Criterion) {

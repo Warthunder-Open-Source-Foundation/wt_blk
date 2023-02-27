@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod test {
 	use std::fs;
+	use std::mem::size_of;
 	use crate::binary::blk_type::BlkType;
 	use crate::binary::leb128::uleb128;
 	use crate::binary::parser::parse_blk;
@@ -17,5 +18,10 @@ mod test {
 		let file = fs::read("./samples/route_prober.blk").unwrap();
 		let output = parse_blk(&file, false);
 		println!("{:?}", output);
+	}
+
+	#[test]
+	fn size_validator() {
+		println!("{}", size_of::<BlkType>());
 	}
 }

@@ -11,7 +11,7 @@ pub enum BlkType {
 	Float2([f32; 2]),
 	Float3([f32; 3]),
 	Float4([f32; 4]),
-	Float12([f32; 12]),
+	Float12(Box<[f32; 12]>),
 	Bool(bool),
 	/// Stored as RGBA
 	Color([u8; 4]),
@@ -101,7 +101,7 @@ impl BlkType {
 			0x0b => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 48)];
-				Some(Self::Float12([
+				Some(Self::Float12(Box::new([
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 					bytes_to_float(&data_region[8..12])?,
@@ -114,7 +114,7 @@ impl BlkType {
 					bytes_to_float(&data_region[36..40])?,
 					bytes_to_float(&data_region[40..44])?,
 					bytes_to_float(&data_region[44..48])?,
-				]))
+				])))
 			}
 			0x0c => {
 				let offset = bytes_to_offset(field)?;
