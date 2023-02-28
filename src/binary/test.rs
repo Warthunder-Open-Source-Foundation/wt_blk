@@ -9,14 +9,14 @@ mod test {
 	#[test]
 	fn fat_blk() {
 		let file = fs::read("./samples/section_fat.blk").unwrap();
-		let output = parse_blk(&file, true);
+		let output = parse_blk(&file, true, None);
 		println!("{:#?}", output);
 	}
 
 	#[test]
 	fn fat_blk_router_probe() {
 		let file = fs::read("./samples/route_prober.blk").unwrap();
-		let output = parse_blk(&file, false);
+		let output = parse_blk(&file, false, None);
 		println!("{:?}", output);
 	}
 

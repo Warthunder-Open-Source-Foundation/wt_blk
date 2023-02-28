@@ -4,7 +4,7 @@ use crate::binary::file::FileType;
 use crate::binary::leb128::uleb128;
 use crate::output_parsing::WTBlk;
 
-pub fn parse_blk(file: &[u8], with_magic_byte: bool) -> (
+pub fn parse_blk(file: &[u8], with_magic_byte: bool, name_map: Option<&[u8]>) -> (
 	Vec<BlkField>,
 	Vec<(String, usize, usize, Option<usize>)>
 ) {
@@ -58,8 +58,6 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool) -> (
 
 	let block_info = &file[ptr..];
 	drop(ptr);
-
-	let dbg_hex = |x: &[u8]| x.iter().map(|item| format!("{:X}", item)).collect::<Vec<String>>().join(" ");
 
 	let mut results: Vec<(usize, BlkField)> = vec![];
 	for chunk in params_info.chunks(8) {

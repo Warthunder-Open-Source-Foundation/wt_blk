@@ -5,3 +5,4 @@ pub mod leb128;
 pub mod zstd;
 pub mod blk_type;
 pub mod blk_structure;
+pub mod nm_file;
