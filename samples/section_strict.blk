@@ -1,0 +1,21 @@
+vec4f:p4=1.25, 2.5, 5.0, 10.0
+int:i=42
+long:i64=64
+
+alpha{
+  str:t="hello"
+  bool:b=yes
+  color:c=1, 2, 3, 4
+
+  gamma{
+    vec2i:ip2=3, 4
+    vec2f:p2=1.25, 2.5
+    transform:m=[[1.0, 0.0, 0.0] [0.0, 1.0, 0.0] [0.0, 0.0, 1.0] [1.25, 2.5, 5.0]]
+  }
+}
+
+beta{
+  float:r=1.25
+  vec2i:ip2=1, 2
+  vec3f:p3=1.25, 2.5, 5.0
+}
