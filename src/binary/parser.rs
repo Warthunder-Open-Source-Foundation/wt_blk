@@ -4,6 +4,7 @@ use crate::binary::file::FileType;
 use crate::binary::leb128::uleb128;
 use crate::binary::nm_file::parse_name_section;
 
+//																	TODO: Pass the name map parsed as a finished `&[String]`
 pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, name_map: Option<&[u8]>) -> (
 	Vec<BlkField>,
 	Vec<(String, usize, usize, Option<usize>)>
