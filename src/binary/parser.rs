@@ -2,9 +2,9 @@ use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::BlkType;
 use crate::binary::file::FileType;
 use crate::binary::leb128::uleb128;
-use crate::output_parsing::WTBlk;
+use crate::binary::nm_file::parse_name_section;
 
-pub fn parse_blk(file: &[u8], with_magic_byte: bool, name_map: Option<&[u8]>) -> (
+pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, name_map: Option<&[u8]>) -> (
 	Vec<BlkField>,
 	Vec<(String, usize, usize, Option<usize>)>
 ) {
@@ -18,28 +18,38 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool, name_map: Option<&[u8]>) ->
 	let (offset, names_count) = uleb128(&file[ptr..]).unwrap();
 	ptr += offset;
 
-	let (offset, names_data_size) = uleb128(&file[ptr..]).unwrap();
-	ptr += offset;
+	let names = if is_slim { // TODO Figure out if names_count dictates the existence of a name map or if it may be 0 without requiring a name map
+		let name_map = name_map.unwrap();
+		let mut nm_ptr = 0;
 
-	let mut names = vec![];
-
-	{
-		let mut buff = vec![];
-		for idx in 0..names_data_size {
-			let char = file[ptr + idx];
-			if char == 0 {
-				names.push(String::from_utf8(buff.clone()).unwrap());
-				buff.clear();
-			} else {
-				buff.push(char);
-			}
+		if names_count != 0 {
+			panic!("Names count should be 0")
 		}
-		ptr += names_data_size;
-	}
 
-	if names_count != names.len() {
-		panic!("Should be equal"); // TODO: Change to result when fn signature allows for it
-	}
+		let (offset, names_count) = uleb128(&name_map[nm_ptr..]).unwrap();
+		nm_ptr += offset;
+
+		let (offset, names_data_size) = uleb128(&name_map[nm_ptr..]).unwrap();
+		nm_ptr += offset;
+
+		let names = parse_name_section(&name_map[nm_ptr..(nm_ptr + names_data_size)]);
+
+		if names_count != names.len() {
+			panic!("Should be equal"); // TODO: Change to result when fn signature allows for it
+		}
+
+		names
+	} else {
+		let (offset, names_data_size) = uleb128(&file[ptr..]).unwrap();
+		ptr += offset;
+
+		let names = parse_name_section(&file[ptr..(ptr + names_data_size)]);
+		ptr += names_data_size;
+		if names_count != names.len() {
+			panic!("Should be equal"); // TODO: Change to result when fn signature allows for it
+		}
+		names
+	};
 
 	let (offset, blocks_count) = uleb128(&file[ptr..]).unwrap();
 	ptr += offset;
@@ -72,7 +82,14 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool, name_map: Option<&[u8]>) ->
 		let data = &chunk[4..];
 		let name = &names[name_id as usize];
 
-		let parsed = BlkType::from_raw_param_info(type_id, data, params_data).unwrap();
+
+		// TODO: Validate wether or not slim files store only strings in the name map
+		let parsed = if is_slim && type_id == 0x01 {
+			BlkType::from_raw_param_info(type_id, data, name_map.unwrap(), &names).unwrap()
+		} else {
+			BlkType::from_raw_param_info(type_id, data, params_data, &names).unwrap()
+		};
+
 		let field = BlkField::Value(name.to_owned(), parsed);
 		results.push((name_id as usize, field));
 	}

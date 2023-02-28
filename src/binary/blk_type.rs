@@ -21,7 +21,7 @@ impl BlkType {
 	/// Type ID as corresponding to its type_code
 	/// Field is a 4 byte long region that either contains the final value or offset for the data region
 	/// data_region is for non-32 bit data
-	pub fn from_raw_param_info(type_id: u8, field: &[u8], data_region: &[u8]) -> Option<Self> {
+	pub fn from_raw_param_info(type_id: u8, field: &[u8], data_region: &[u8], name_map: &Vec<String>) -> Option<Self> {
 
 		// Make sure the field is properly sized
 		if field.len() != 4 {
@@ -30,11 +30,23 @@ impl BlkType {
 
 		return match type_id {
 			0x01 => {
-				let offset = bytes_to_offset(field)?;
-				let data_region = &data_region[offset..];
-				let cstr = CStr::from_bytes_until_nul(data_region).unwrap();
-				let rstr = cstr.to_str().ok()?.to_owned();
-				Some(Self::Str(rstr))
+				// Explanation:
+				// Strings have their offset encoded as a LE integer constructed from 31 bits
+				// The first bit in their field is an indicator whether or not to search in the regular data region or name map
+				// The remaining bytes represent the integer
+				let offset = u32::from_le_bytes([field[0], field[1], field[2], field[3]]); // Construct int from the individual bytes
+				let in_nm = (offset >> 31) == 1; // Compare first bit to check where to look
+				let offset = i32::MAX as u32 & offset; // Set first byte to 0
+				let res=  if in_nm {
+					name_map[offset as usize].clone()
+				} else {
+					let data_region = &data_region[(offset as usize)..];
+					let cstr = CStr::from_bytes_until_nul(data_region).unwrap();
+					let rstr = cstr.to_str().ok()?.to_owned();
+					rstr
+				};
+
+				Some(Self::Str(res))
 			}
 			0x02 => {
 				Some(Self::Int(bytes_to_int(field)?))
@@ -122,7 +134,7 @@ impl BlkType {
 				Some(Self::Long(bytes_to_long(data_region)?))
 			}
 			_ => { None }
-		}
+		};
 	}
 
 	pub const fn type_code(&self) -> u8 {
@@ -175,18 +187,18 @@ impl BlkType {
 	}
 	pub const fn blk_type_name(&self) -> &'static str {
 		match self {
-			BlkType::Str(_) => {"t"}
-			BlkType::Int(_) => {"i"}
-			BlkType::Int2(_) => {"ip2"}
-			BlkType::Int3(_) => {"ip3"}
-			BlkType::Long(_) => {"i64"}
-			BlkType::Float(_) => {"r"}
-			BlkType::Float2(_) => {"p2"}
-			BlkType::Float3(_) => {"p3"}
-			BlkType::Float4(_) => {"p4"}
-			BlkType::Float12(_) => {"m"}
-			BlkType::Bool(_) => {"b"}
-			BlkType::Color(_) => {"c"}
+			BlkType::Str(_) => { "t" }
+			BlkType::Int(_) => { "i" }
+			BlkType::Int2(_) => { "ip2" }
+			BlkType::Int3(_) => { "ip3" }
+			BlkType::Long(_) => { "i64" }
+			BlkType::Float(_) => { "r" }
+			BlkType::Float2(_) => { "p2" }
+			BlkType::Float3(_) => { "p3" }
+			BlkType::Float4(_) => { "p4" }
+			BlkType::Float12(_) => { "m" }
+			BlkType::Bool(_) => { "b" }
+			BlkType::Color(_) => { "c" }
 		}
 	}
 }

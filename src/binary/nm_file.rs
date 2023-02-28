@@ -11,6 +11,20 @@ pub fn decode_nm_file(file: &[u8]) -> Option<Vec<u8>> {
 	Some(out)
 }
 
+pub fn parse_name_section(file: &[u8]) -> Vec<String> {
+	let mut buff = vec![];
+	let mut names = vec![];
+	for val in file {
+		if *val == 0 {
+			names.push(String::from_utf8(buff.clone()).unwrap());
+			buff.clear();
+		} else {
+			buff.push(*val);
+		}
+	}
+	names
+}
+
 #[cfg(test)]
 mod test {
 	use std::fs;
