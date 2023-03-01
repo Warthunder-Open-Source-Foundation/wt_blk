@@ -11,7 +11,7 @@ mod test {
 	fn fat_blk() {
 		let file = fs::read("./samples/section_fat.blk").unwrap();
 		let output = parse_blk(&file, true, false,None);
-		// println!("{:#?}", output);
+		println!("{:?}", output.1);
 	}
 
 	#[test]

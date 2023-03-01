@@ -141,7 +141,7 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, name_map: Op
 	for (name, field_count, _ , _) in &blocks {
 		let mut field = BlkField::Struct(name.to_owned(), Vec::with_capacity(*field_count));
 		for i in (ptr)..(ptr + field_count) {
-			field.insert_field(results[i].1.clone());
+			field.insert_field(results[i].1.clone()).unwrap();
 		}
 		flat_map.push(field);
 	}
