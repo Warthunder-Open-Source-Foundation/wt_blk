@@ -1,14 +1,12 @@
+use crate::binary::blk_block_hierarchy::FlatBlock;
 use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::BlkType;
 use crate::binary::file::FileType;
 use crate::binary::leb128::uleb128;
 use crate::binary::nm_file::parse_name_section;
 
-//																	TODO: Pass the name map parsed as a finished `&[String]`
-pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, name_map: Option<&[u8]>) -> (
-	Vec<BlkField>,
-	Vec<(String, usize, usize, Option<usize>)>
-) {
+//															TODO: Pass the name map parsed as a finished `&[String]`
+pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, name_map: Option<&[u8]>) -> BlkField {
 	let mut ptr = 0;
 
 	if with_magic_byte {
@@ -133,18 +131,27 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, name_map: Op
 		}
 	}
 
-	// resolve block fields
-
-	let mut flat_map = vec![];
-
+	// Create a flat hierarchy of all blocks including their non-block fields
+	// This ensures all values are actually assigned
+	// After this, the hierarchy will be assigned depth depending on the block-map
+	let mut flat_map: Vec<FlatBlock> = vec![];
 	let mut ptr = 0;
-	for (name, field_count, _ , _) in &blocks {
-		let mut field = BlkField::Struct(name.to_owned(), Vec::with_capacity(*field_count));
+	for (name, field_count, blocks , offset) in &blocks {
+		let mut field = FlatBlock {
+			name: name.to_owned(),
+			fields: vec![],
+			blocks: *blocks,
+			offset: offset.unwrap_or(0),
+		};
 		for i in (ptr)..(ptr + field_count) {
-			field.insert_field(results[i].1.clone()).unwrap();
+			field.fields.push(results[i].1.clone());
 		}
+		ptr += field_count;
 		flat_map.push(field);
 	}
 
-	(flat_map, blocks)
+
+	let out = BlkField::from_flat_blocks(&flat_map);
+
+	out
 }

@@ -11,14 +11,13 @@ mod test {
 	fn fat_blk() {
 		let file = fs::read("./samples/section_fat.blk").unwrap();
 		let output = parse_blk(&file, true, false,None);
-		println!("{:?}", output.1);
 	}
 
 	#[test]
 	fn fat_blk_router_probe() {
 		let file = fs::read("./samples/route_prober.blk").unwrap();
 		let output = parse_blk(&file, false, false,None);
-		// println!("{:?}", output);
+
 	}
 
 	#[test]
@@ -26,6 +25,5 @@ mod test {
 		let file = fs::read("./samples/section_slim.blk").unwrap();
 		let nm = fs::read("./samples/names").unwrap();
 		let output = parse_blk(&file, true, true,Some(&nm));
-		// println!("{:?}", output);
 	}
 }
