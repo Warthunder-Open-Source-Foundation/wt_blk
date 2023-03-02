@@ -11,8 +11,12 @@ pub enum BlkField {
 
 
 impl BlkField {
-	pub fn new() -> Self {
+	pub fn new_root() -> Self {
 		BlkField::Struct("root".to_owned(), vec![])
+	}
+
+	pub fn new_struct(name: &str) -> Self {
+		BlkField::Struct(name.to_owned(), vec![])
 	}
 
 	#[must_use]

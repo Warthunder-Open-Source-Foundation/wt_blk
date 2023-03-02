@@ -6,3 +6,4 @@ pub mod zstd;
 pub mod blk_type;
 pub mod blk_structure;
 pub mod nm_file;
+mod blk_to_text;

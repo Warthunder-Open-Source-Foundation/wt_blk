@@ -1,4 +1,5 @@
 use std::ffi::{CStr};
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, PartialOrd, PartialEq, Clone)]
 pub enum BlkType {
@@ -257,4 +258,25 @@ pub fn bytes_to_long(input: &[u8]) -> Option<u64> {
 		input[6],
 		input[7],
 	]))
+}
+
+impl Display for BlkType {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		let value = match self {
+			BlkType::Str(v) => {"\"".to_owned() + v + "\""}
+			BlkType::Int(v) => {v.to_string()}
+			BlkType::Int2(v) => {format!("{}, {}", v[0], v[1])}
+			BlkType::Int3(v) => {format!("{}, {}, {}", v[0], v[1], v[2])}
+			BlkType::Long(v) => {v.to_string()}
+			BlkType::Float(v) => {v.to_string()}
+			BlkType::Float2(v) => {format!("{}, {}", v[0], v[1])}
+			BlkType::Float3(v) => {format!("{}, {}, {}", v[0], v[1], v[2])}
+			BlkType::Float4(v) => {format!("{}, {}, {}, {}", v[0], v[1], v[2], v[3])}
+			BlkType::Float12(v) => {format!("{:?}",*v)}
+			BlkType::Bool(v) => {v.to_string()}
+			BlkType::Color(v) => {format!("{}, {}, {}, {}", v[3], v[2], v[1], v[0])}
+		};
+
+		write!(f, "{} = {}", self.blk_type_name(), value)
+	}
 }
