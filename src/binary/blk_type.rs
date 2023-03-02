@@ -1,4 +1,3 @@
-use std::ffi::{CStr};
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, PartialOrd, PartialEq, Clone)]
@@ -42,9 +41,14 @@ impl BlkType {
 					name_map[offset as usize].clone()
 				} else {
 					let data_region = &data_region[(offset as usize)..];
-					let cstr = CStr::from_bytes_until_nul(data_region).unwrap();
-					let rstr = cstr.to_str().ok()?.to_owned();
-					rstr
+					let mut buff = vec![];
+					for byte in data_region {
+						if *byte == 0 {
+							break;
+						}
+						buff.push(*byte);
+					}
+					String::from_utf8_lossy(buff.as_slice()).to_string()
 				};
 
 				Some(Self::Str(res))
