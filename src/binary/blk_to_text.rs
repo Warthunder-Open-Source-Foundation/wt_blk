@@ -1,8 +1,14 @@
 use crate::binary::blk_structure::BlkField;
 
 impl BlkField {
+	// Public facing formatting fn
+	pub fn as_blk_text(&self) -> String {
+		self._as_blk_text(&mut 0, true)
+	}
+
 	// TODO: Make this generic with a configuration file
-	pub fn as_blk_text(&self, indent_level: &mut usize, is_root: bool) -> String {
+	// Internal fn that actually formats
+	fn _as_blk_text(&self, indent_level: &mut usize, is_root: bool) -> String {
 		match self {
 			BlkField::Value(name, value) => {
 				format!("\"{name}\":{value}")
@@ -10,7 +16,7 @@ impl BlkField {
 			BlkField::Struct(name, fields) => {
 				let indent = "\t".repeat(*indent_level);
 				*indent_level += 1;
-				let children = fields.iter().map(|x| format!("{indent}{}", x.as_blk_text(indent_level, false))).collect::<Vec<_>>().join("\n");
+				let children = fields.iter().map(|x| format!("{indent}{}", x._as_blk_text(indent_level, false))).collect::<Vec<_>>().join("\n");
 				*indent_level -= 1;
 
 				let indent_closing = "\t".repeat(indent_level.saturating_sub(1));
@@ -56,6 +62,6 @@ mod test {
 		root.insert_field(beta).unwrap();
 
 
-		println!("{}", root.as_blk_text(&mut 0, true));
+		println!("{}", root._as_blk_text(&mut 0, true));
 	}
 }
