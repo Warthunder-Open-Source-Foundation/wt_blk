@@ -23,4 +23,23 @@ impl FileType {
 			_ => {None}
 		}
 	}
+	pub fn is_slim(&self) -> bool {
+		match self {
+			FileType::SLIM => true,
+			FileType::SLIM_ZSTD => true,
+			FileType::SLIM_ZST_DICT => true,
+			_ => false,
+		}
+	}
+	pub fn is_zstd(&self) -> bool {
+		match self {
+			FileType::FAT_ZSTD => true,
+			FileType::SLIM_ZSTD => true,
+			FileType::SLIM_ZST_DICT => true,
+			_ => false,
+		}
+	}
+	pub fn needs_dict(&self) -> bool {
+		*self == FileType::SLIM_ZST_DICT
+	}
 }

@@ -16,7 +16,7 @@ pub fn parse_name_section(file: &[u8]) -> Vec<String> {
 	let mut names = vec![];
 	for val in file {
 		if *val == 0 {
-			names.push(String::from_utf8(buff.clone()).unwrap());
+			names.push(String::from_utf8_lossy(&buff).to_string());
 			buff.clear();
 		} else {
 			buff.push(*val);

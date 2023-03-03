@@ -2,20 +2,15 @@ use std::io::Read;
 use std::thread::sleep;
 use std::time::Duration;
 
-use ruzstd::StreamingDecoder;
+use ruzstd::{FrameDecoder, StreamingDecoder};
 
 use crate::binary::file::FileType;
 
-pub fn decode_zstd(file: &[u8]) -> Option<Vec<u8>> {
+pub fn decode_zstd(file: &[u8], dict: Option<&[u8]>) -> Option<Vec<u8>> {
 	// validate magic byte
-	let is_fat = match FileType::from_byte(*file.get(0)?)? {
-		FileType::FAT_ZSTD => true, // FAT_ZST
-		FileType::SLIM_ZSTD => false, // SLIM_ZST and SLIM_ZST_DICT
-		FileType::SLIM_ZST_DICT => unimplemented!("File: zstd.rs, note: DICT ZSTD files are not supported yet"),
-		_ => return None
-	};
+	let file_type =  FileType::from_byte(*file.get(0)?)?;
 
-	let (len, mut to_decode) = if is_fat {
+	let (len, mut to_decode) = if !file_type.is_slim() {
 		let len_raw = &file[1..4];
 		let len = u32::from_be_bytes([
 			0,
@@ -29,10 +24,40 @@ pub fn decode_zstd(file: &[u8]) -> Option<Vec<u8>> {
 		(file.len() - 1, &file[1..])
 	};
 
-	let mut decoder = StreamingDecoder::new(&mut to_decode).ok()?;
-	let mut out = Vec::with_capacity(len);
-	let _ = decoder.read_to_end(&mut out).ok()?;
-	Some(out)
+
+
+	let decoded = if file_type.needs_dict() {
+		let mut frame_decoder = FrameDecoder::new();
+		frame_decoder.add_dict(dict.unwrap()).expect("Dict should be available for dict file");
+		let mut decoder = StreamingDecoder::new_with_decoder(&file[1..], frame_decoder).unwrap();
+		let mut out = Vec::with_capacity(len);
+		let _ = decoder.read_to_end(&mut out).ok()?;
+		out
+	} else {
+		let mut decoder =  StreamingDecoder::new(&mut to_decode).ok()?;
+		let mut out = Vec::with_capacity(len);
+		let _ = decoder.read_to_end(&mut out).ok()?;
+		out
+	};
+	Some(decoded)
+}
+
+pub fn decode_raw_zstd(file: &[u8], dict: Option<&[u8]> ) -> Option<Vec<u8>> {
+	let len = file.len();
+	Some(if let Some(dict) = dict {
+		let mut frame_decoder = FrameDecoder::new();
+		frame_decoder.add_dict(dict).expect("Dict should be available for dict file");
+		let mut decoder = StreamingDecoder::new_with_decoder(&file[1..], frame_decoder).unwrap();
+		let mut out = Vec::with_capacity(len);
+		let _ = decoder.read_to_end(&mut out).ok()?;
+		out
+	} else {
+		let mut file = file;
+		let mut decoder =  StreamingDecoder::new(&mut file).ok()?;
+		let mut out = Vec::with_capacity(len);
+		let _ = decoder.read_to_end(&mut out).ok()?;
+		out
+	})
 }
 
 
@@ -52,13 +77,13 @@ mod test {
 
 	#[test]
 	fn fat_zstd() {
-		let decoded = decode_zstd(include_bytes!("../../samples/section_fat_zst.blk")).unwrap();
+		let decoded = decode_zstd(include_bytes!("../../samples/section_fat_zst.blk"), None).unwrap();
 		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_fat.blk"));
 	}
 
 	#[test]
 	fn slim_zstd() {
-		let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst.blk")).unwrap();
+		let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst.blk"), None).unwrap();
 		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
 	}
 

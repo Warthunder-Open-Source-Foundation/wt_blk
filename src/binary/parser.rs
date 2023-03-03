@@ -17,12 +17,16 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, name_map: Op
 	let (offset, names_count) = uleb128(&file[ptr..]).unwrap();
 	ptr += offset;
 
+
 	let names = if is_slim { // TODO Figure out if names_count dictates the existence of a name map or if it may be 0 without requiring a name map
 		let name_map = name_map.unwrap();
 		let mut nm_ptr = 0;
 
+		// println!("{:?}", &name_map[..10].iter().map(|x|format!("{x:X}")).collect::<Vec<_>>().join(" "));
+
 		if names_count != 0 {
-			panic!("Names count should be 0")
+			// panic!("Names count should be 0, but was {}", names_count)
+			println!("{}", "NAME COUNT MISSMATCH; IS THIS AN EXCEPTION? SLIM SHOULD BE 0");
 		}
 
 		let (offset, names_count) = uleb128(&name_map[nm_ptr..]).unwrap();
