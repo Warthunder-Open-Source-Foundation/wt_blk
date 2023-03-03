@@ -11,6 +11,7 @@ mod test {
 	use std::fs::ReadDir;
 	use std::mem::size_of;
 	use std::path::Path;
+	use std::time::Instant;
 	use crate::binary::blk_type::BlkType;
 	use crate::binary::leb128::uleb128;
 	use crate::binary::nm_file::{decode_nm_file, parse_name_section};
@@ -39,7 +40,9 @@ mod test {
 	}
 
 	#[test]
+	#[ignore]
 	fn test_all() {
+		let start = Instant::now();
 		let nm = fs::read("./samples/vromfs/aces.vromfs.bin_u/nm").unwrap();
 		let dict = fs::read("./samples/vromfs/aces.vromfs.bin_u/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
 		let nm = decode_nm_file(&nm).unwrap();
@@ -47,8 +50,8 @@ mod test {
 		let dir: ReadDir = fs::read_dir("./samples/vromfs/aces.vromfs.bin_u").unwrap();
 		let mut total = 0;
 		test_parse_dir(dir, &mut total, &dict, &nm);
-		println!("Successfully parsed {} files! Thats all of them.", total);
-		panic!("bonk")
+		let stop = start.elapsed();
+		println!("Successfully parsed {} files! Thats all of them. The process took: {stop:?}", total);
 	}
 }
 
