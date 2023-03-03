@@ -1,8 +1,11 @@
 use std::fs;
 use std::fs::ReadDir;
 use std::io::{stdout, Write};
+use std::sync::atomic::{AtomicUsize, Ordering};
+use rayon::prelude::IntoParallelRefIterator;
 use crate::binary::file::FileType;
 use crate::binary::parser::parse_blk;
+use rayon::iter::ParallelIterator;
 use crate::binary::zstd::decode_zstd;
 
 #[cfg(test)]
@@ -11,6 +14,7 @@ mod test {
 	use std::fs::ReadDir;
 	use std::mem::size_of;
 	use std::path::Path;
+	use std::sync::atomic::{AtomicUsize, Ordering};
 	use std::time::Instant;
 	use crate::binary::blk_type::BlkType;
 	use crate::binary::leb128::uleb128;
@@ -48,16 +52,16 @@ mod test {
 		let nm = decode_nm_file(&nm).unwrap();
 
 		let dir: ReadDir = fs::read_dir("./samples/vromfs/aces.vromfs.bin_u").unwrap();
-		let mut total = 0;
-		test_parse_dir(dir, &mut total, &dict, &nm);
+		let mut total = AtomicUsize::new(0);
+		test_parse_dir(dir, &total, &dict, &nm);
 		let stop = start.elapsed();
-		println!("Successfully parsed {} files! Thats all of them. The process took: {stop:?}", total);
+		println!("Successfully parsed {} files! Thats all of them. The process took: {stop:?}", total.load(Ordering::Relaxed));
 	}
 }
 
-fn test_parse_dir(dir: ReadDir, total: &mut i32, dict: &[u8], nm: &[u8]) {
-	for file in dir {
-		let file = file.unwrap();
+fn test_parse_dir(dir: ReadDir, total: &AtomicUsize, dict: &[u8], nm: &[u8]) {
+	dir.collect::<Vec<_>>().par_iter().for_each(|file| {
+		let file = file.as_ref().unwrap();
 		if file.metadata().unwrap().is_dir() {
 			test_parse_dir(file.path().read_dir().unwrap(), total, dict, nm);
 		} else {
@@ -73,14 +77,12 @@ fn test_parse_dir(dir: ReadDir, total: &mut i32, dict: &[u8], nm: &[u8]) {
 						offset = 1;
 					}
 
-
 					parse_blk(&read[offset..], false, file_type.is_slim(), Some(nm));
 				} else {
-					println!("Skipped {} as it was plaintext", fname);
+					// println!("Skipped {} as it was plaintext", fname); locking stdout takes too long for this to be useful all the time
 				}
-				*total += 1;
-				eprintln!("{}", total);
+				total.fetch_add(1, Ordering::Relaxed);
 			}
 		}
-	}
+	});
 }
