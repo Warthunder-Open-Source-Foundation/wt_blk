@@ -50,7 +50,7 @@ mod test {
 	}
 
 	#[test]
-	// #[ignore]
+	#[ignore]
 	fn test_all() {
 		let start = Instant::now();
 		let nm = fs::read("./samples/vromfs/aces.vromfs.bin_u/nm").unwrap();
@@ -66,7 +66,7 @@ mod test {
 	}
 }
 
-fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, dict: &[u8], nm: &[u8], parsed_nm: Rc<Vec<String>>) {
+pub fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, dict: &[u8], nm: &[u8], parsed_nm: Rc<Vec<String>>) {
 	// if total_files_processed.load(Ordering::Relaxed) > 1000 {
 	// 	exit(0);
 	// }

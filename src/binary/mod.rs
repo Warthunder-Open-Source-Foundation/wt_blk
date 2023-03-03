@@ -1,5 +1,5 @@
 pub mod file;
-mod test;
+pub mod test;
 pub mod parser;
 pub mod leb128;
 pub mod zstd;
