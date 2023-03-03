@@ -26,21 +26,20 @@ mod test {
 	#[test]
 	fn fat_blk() {
 		let file = fs::read("./samples/section_fat.blk").unwrap();
-		let output = parse_blk(&file, true, false,None);
+		let output = parse_blk(&file, true, false, None);
 	}
 
 	#[test]
 	fn fat_blk_router_probe() {
 		let file = fs::read("./samples/route_prober.blk").unwrap();
-		let output = parse_blk(&file, false, false,None);
-
+		let output = parse_blk(&file, false, false, None);
 	}
 
 	#[test]
 	fn slim_blk() {
 		let file = fs::read("./samples/section_slim.blk").unwrap();
 		let nm = fs::read("./samples/names").unwrap();
-		let output = parse_blk(&file, true, true,Some(&nm));
+		let output = parse_blk(&file, true, true, Some(&nm));
 	}
 
 	#[test]
@@ -59,13 +58,13 @@ mod test {
 	}
 }
 
-fn test_parse_dir(dir: ReadDir, total: &AtomicUsize, dict: &[u8], nm: &[u8]) {
+fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, dict: &[u8], nm: &[u8]) {
 	dir.collect::<Vec<_>>().par_iter().for_each(|file| {
 		let file = file.as_ref().unwrap();
 		if file.metadata().unwrap().is_dir() {
-			test_parse_dir(file.path().read_dir().unwrap(), total, dict, nm);
+			test_parse_dir(file.path().read_dir().unwrap(), total_files_processed, dict, nm);
 		} else {
-			let fname =  file.file_name().to_str().unwrap().to_owned();
+			let fname = file.file_name().to_str().unwrap().to_owned();
 			if fname.ends_with(".blk") {
 				let mut read = fs::read(file.path()).unwrap();
 				let mut offset = 0;
@@ -81,7 +80,7 @@ fn test_parse_dir(dir: ReadDir, total: &AtomicUsize, dict: &[u8], nm: &[u8]) {
 				} else {
 					// println!("Skipped {} as it was plaintext", fname); locking stdout takes too long for this to be useful all the time
 				}
-				total.fetch_add(1, Ordering::Relaxed);
+				total_files_processed.fetch_add(1, Ordering::Relaxed);
 			}
 		}
 	});
