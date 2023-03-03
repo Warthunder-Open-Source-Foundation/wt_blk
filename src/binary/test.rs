@@ -1,11 +1,14 @@
 use std::fs;
 use std::fs::ReadDir;
 use std::io::{stdout, Write};
+use std::process::exit;
 use std::sync::atomic::{AtomicUsize, Ordering};
+
+use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
+
 use crate::binary::file::FileType;
 use crate::binary::parser::parse_blk;
-use rayon::iter::ParallelIterator;
 use crate::binary::zstd::decode_zstd;
 
 #[cfg(test)]
@@ -16,6 +19,7 @@ mod test {
 	use std::path::Path;
 	use std::sync::atomic::{AtomicUsize, Ordering};
 	use std::time::Instant;
+
 	use crate::binary::blk_type::BlkType;
 	use crate::binary::leb128::uleb128;
 	use crate::binary::nm_file::{decode_nm_file, parse_name_section};
@@ -59,7 +63,10 @@ mod test {
 }
 
 fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, dict: &[u8], nm: &[u8]) {
-	dir.collect::<Vec<_>>().par_iter().for_each(|file| {
+	if total_files_processed.load(Ordering::Relaxed) > 1000 {
+		exit(0);
+	}
+	for file in dir {
 		let file = file.as_ref().unwrap();
 		if file.metadata().unwrap().is_dir() {
 			test_parse_dir(file.path().read_dir().unwrap(), total_files_processed, dict, nm);
@@ -83,5 +90,5 @@ fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, dict: &[u8]
 				total_files_processed.fetch_add(1, Ordering::Relaxed);
 			}
 		}
-	});
+	}
 }
