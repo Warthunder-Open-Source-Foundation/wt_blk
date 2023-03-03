@@ -1,5 +1,6 @@
 use std::io::Read;
 use ruzstd::StreamingDecoder;
+use crate::binary::leb128::uleb128;
 
 pub fn decode_nm_file(file: &[u8]) -> Option<Vec<u8>> {
 	let _names_digest = &file[0..8];
@@ -22,6 +23,24 @@ pub fn parse_name_section(file: &[u8]) -> Vec<String> {
 			buff.push(*val);
 		}
 	}
+	names
+}
+
+pub fn parse_slim_nm(name_map: &[u8]) -> Vec<String> {
+	let mut nm_ptr = 0;
+
+	let (offset, names_count) = uleb128(&name_map[nm_ptr..]).unwrap();
+	nm_ptr += offset;
+
+	let (offset, names_data_size) = uleb128(&name_map[nm_ptr..]).unwrap();
+	nm_ptr += offset;
+
+	let names = parse_name_section(&name_map[nm_ptr..(nm_ptr + names_data_size)]);
+
+	if names_count != names.len() {
+		panic!("Should be equal"); // TODO: Change to result when fn signature allows for it
+	}
+
 	names
 }
 

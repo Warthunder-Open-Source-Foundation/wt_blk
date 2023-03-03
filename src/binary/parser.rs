@@ -1,12 +1,13 @@
+use std::rc::Rc;
 use crate::binary::blk_block_hierarchy::FlatBlock;
 use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::BlkType;
 use crate::binary::file::FileType;
 use crate::binary::leb128::uleb128;
-use crate::binary::nm_file::parse_name_section;
+use crate::binary::nm_file::{parse_name_section, parse_slim_nm};
 
 //															TODO: Pass the name map parsed as a finished `&[String]`
-pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, name_map: Option<&[u8]>) -> BlkField {
+pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, name_map: Option<&[u8]>, parsed_nm: Rc<Vec<String>>) -> BlkField {
 	let mut ptr = 0;
 
 	if with_magic_byte {
@@ -19,29 +20,7 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, name_map: Op
 
 
 	let names = if is_slim { // TODO Figure out if names_count dictates the existence of a name map or if it may be 0 without requiring a name map
-		let name_map = name_map.unwrap();
-		let mut nm_ptr = 0;
-
-		// println!("{:?}", &name_map[..10].iter().map(|x|format!("{x:X}")).collect::<Vec<_>>().join(" "));
-
-		if names_count != 0 {
-			// panic!("Names count should be 0, but was {}", names_count)
-			println!("{}", "NAME COUNT MISSMATCH; IS THIS AN EXCEPTION? SLIM SHOULD BE 0");
-		}
-
-		let (offset, names_count) = uleb128(&name_map[nm_ptr..]).unwrap();
-		nm_ptr += offset;
-
-		let (offset, names_data_size) = uleb128(&name_map[nm_ptr..]).unwrap();
-		nm_ptr += offset;
-
-		let names = parse_name_section(&name_map[nm_ptr..(nm_ptr + names_data_size)]);
-
-		if names_count != names.len() {
-			panic!("Should be equal"); // TODO: Change to result when fn signature allows for it
-		}
-
-		names
+		parsed_nm
 	} else {
 		let (offset, names_data_size) = uleb128(&file[ptr..]).unwrap();
 		ptr += offset;
@@ -51,7 +30,7 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, name_map: Op
 		if names_count != names.len() {
 			panic!("Should be equal"); // TODO: Change to result when fn signature allows for it
 		}
-		names
+		Rc::new(names)
 	};
 
 	let (offset, blocks_count) = uleb128(&file[ptr..]).unwrap();
