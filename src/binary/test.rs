@@ -67,9 +67,6 @@ mod test {
 }
 
 pub fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, dict: &[u8], nm: &[u8], parsed_nm: Rc<Vec<String>>) {
-	// if total_files_processed.load(Ordering::Relaxed) > 1000 {
-	// 	exit(0);
-	// }
 	for file in dir {
 		let file = file.as_ref().unwrap();
 		if file.metadata().unwrap().is_dir() {
