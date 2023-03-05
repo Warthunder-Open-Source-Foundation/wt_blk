@@ -50,7 +50,6 @@ mod test {
 	}
 
 	#[test]
-	#[ignore]
 	fn test_all() {
 		let start = Instant::now();
 		let nm = fs::read("./samples/vromfs/aces.vromfs.bin_u/nm").unwrap();
