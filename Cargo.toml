@@ -14,7 +14,6 @@ thiserror = "^1"
 ruzstd = "0.3.0"
 lazy_static = "1.4.0"
 rayon = "1.6"
-wt_blk_macro = {path = "./wt_blk_macro"}
 
 [profile.test]
 opt-level = 3
