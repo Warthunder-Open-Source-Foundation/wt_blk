@@ -21,6 +21,7 @@ mod test {
 	use std::rc::Rc;
 	use std::sync::atomic::{AtomicUsize, Ordering};
 	use std::time::Instant;
+	use wt_blk_macro::time;
 
 	use crate::binary::blk_type::BlkType;
 	use crate::binary::leb128::uleb128;
