@@ -1,4 +1,6 @@
 use std::io::Read;
+use std::ops::Deref;
+use std::rc::Rc;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -6,7 +8,7 @@ use ruzstd::{FrameDecoder, StreamingDecoder};
 
 use crate::binary::file::FileType;
 
-pub fn decode_zstd(file: &[u8], dict: Option<&[u8]>) -> Option<Vec<u8>> {
+pub fn decode_zstd(file: &[u8], frame_decoder: Rc<FrameDecoder>) -> Option<Vec<u8>> {
 	// validate magic byte
 	let file_type =  FileType::from_byte(*file.get(0)?)?;
 
@@ -27,9 +29,8 @@ pub fn decode_zstd(file: &[u8], dict: Option<&[u8]>) -> Option<Vec<u8>> {
 
 
 	let decoded = if file_type.needs_dict() {
-		let mut frame_decoder = FrameDecoder::new();
-		frame_decoder.add_dict(dict.unwrap()).expect("Dict should be available for dict file");
-		let mut decoder = StreamingDecoder::new_with_decoder(&file[1..], frame_decoder).unwrap();
+
+		let mut decoder = StreamingDecoder::new_with_decoder(&file[1..], (*frame_decoder).clone()).unwrap();
 		let mut out = Vec::with_capacity(len);
 		let _ = decoder.read_to_end(&mut out).ok()?;
 		out
@@ -70,6 +71,7 @@ pub fn eep() -> u8 {
 mod test {
 	use std::{fs, io};
 	use std::io::Read;
+	use std::rc::Rc;
 
 	use ruzstd::{FrameDecoder, StreamingDecoder};
 
@@ -77,13 +79,13 @@ mod test {
 
 	#[test]
 	fn fat_zstd() {
-		let decoded = decode_zstd(include_bytes!("../../samples/section_fat_zst.blk"), None).unwrap();
+		let decoded = decode_zstd(include_bytes!("../../samples/section_fat_zst.blk"), Rc::new(FrameDecoder::new())).unwrap();
 		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_fat.blk"));
 	}
 
 	#[test]
 	fn slim_zstd() {
-		let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst.blk"), None).unwrap();
+		let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst.blk"), Rc::new(FrameDecoder::new())).unwrap();
 		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
 	}
 

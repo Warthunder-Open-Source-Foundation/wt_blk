@@ -7,6 +7,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
+use ruzstd::FrameDecoder;
 
 use crate::binary::file::FileType;
 use crate::binary::parser::parse_blk;
@@ -21,6 +22,7 @@ mod test {
 	use std::rc::Rc;
 	use std::sync::atomic::{AtomicUsize, Ordering};
 	use std::time::Instant;
+	use ruzstd::FrameDecoder;
 
 	use crate::binary::blk_type::BlkType;
 	use crate::binary::leb128::uleb128;
@@ -54,22 +56,27 @@ mod test {
 		let start = Instant::now();
 		let nm = fs::read("./samples/vromfs/aces.vromfs.bin_u/nm").unwrap();
 		let dict = fs::read("./samples/vromfs/aces.vromfs.bin_u/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
+
+		let mut frame_decoder = FrameDecoder::new();
+		frame_decoder.add_dict(&dict).expect("Dict should be available for dict file");
+		let frame_decoder = Rc::new(frame_decoder);
+
 		let nm = decode_nm_file(&nm).unwrap();
 		let parsed_nm = parse_slim_nm(&nm);
 
 		let dir: ReadDir = fs::read_dir("./samples/vromfs/aces.vromfs.bin_u").unwrap();
 		let mut total = AtomicUsize::new(0);
-		test_parse_dir(dir, &total, &dict, &nm,Rc::new(parsed_nm));
+		test_parse_dir(dir, &total, frame_decoder, &nm,Rc::new(parsed_nm));
 		let stop = start.elapsed();
 		println!("Successfully parsed {} files! Thats all of them. The process took: {stop:?}", total.load(Ordering::Relaxed));
 	}
 }
 
-pub fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, dict: &[u8], nm: &[u8], parsed_nm: Rc<Vec<String>>) {
+pub fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, fd: Rc<FrameDecoder>, nm: &[u8], parsed_nm: Rc<Vec<String>>) {
 	for file in dir {
 		let file = file.as_ref().unwrap();
 		if file.metadata().unwrap().is_dir() {
-			test_parse_dir(file.path().read_dir().unwrap(), total_files_processed, dict, nm, parsed_nm.clone());
+			test_parse_dir(file.path().read_dir().unwrap(), total_files_processed, fd.clone(), nm, parsed_nm.clone());
 		} else {
 			let fname = file.file_name().to_str().unwrap().to_owned();
 			if fname.ends_with(".blk") {
@@ -77,7 +84,7 @@ pub fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, dict: &
 				let mut offset = 0;
 				if let Some(file_type) = FileType::from_byte(read[0]) {
 					if file_type.is_zstd() {
-						read = decode_zstd(&read, Some(dict)).unwrap();
+						read = decode_zstd(&read, fd.clone()).unwrap();
 					} else {
 						// uncompressed Slim and Fat files retain their initial magic bytes
 						offset = 1;
