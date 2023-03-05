@@ -117,12 +117,12 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, name_map: Op
 	// Create a flat hierarchy of all blocks including their non-block fields
 	// This ensures all values are actually assigned
 	// After this, the hierarchy will be assigned depth depending on the block-map
-	let mut flat_map: Vec<FlatBlock> = vec![];
+	let mut flat_map: Vec<FlatBlock> = Vec::with_capacity(blocks_count);
 	let mut ptr = 0;
 	for (name, field_count, blocks , offset) in &blocks {
 		let mut field = FlatBlock {
 			name: name.to_owned(),
-			fields: vec![],
+			fields: Vec::with_capacity(*field_count),
 			blocks: *blocks,
 			offset: offset.unwrap_or(0),
 		};
@@ -135,6 +135,5 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, name_map: Op
 
 
 	let out = BlkField::from_flat_blocks(&flat_map);
-
 	out
 }

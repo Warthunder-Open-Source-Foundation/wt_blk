@@ -11,13 +11,13 @@ fn read_seq() {
 	let mut out = vec![];
 	let start = Instant::now();
 	test_parse_dir(fs::read_dir("./samples/vromfs/aces.vromfs.bin_u").unwrap(), &mut out);
-	println!("Reading: {:?}", start.elapsed());
+	// println!("Reading: {:?}", start.elapsed());
 
 	let start = Instant::now();
 	for file in out {
 		fs::write(format!("{}{}", "./samples/vromfs/out/",file.0.file_name().unwrap().to_str().unwrap()), &file.1).unwrap();
 	}
-	println!("Writing: {:?}", start.elapsed());
+	// println!("Writing: {:?}", start.elapsed());
 }
 
 pub fn test_parse_dir(dir:ReadDir, stack: &mut Vec<(PathBuf, Vec<u8>)>) {
