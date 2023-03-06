@@ -1,7 +1,7 @@
 
 #[repr(u8)]
 #[allow(non_camel_case_types)]
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Copy, Clone)]
 pub enum FileType {
 	BBF = 0x00,
 	FAT = 0x01,
