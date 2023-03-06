@@ -61,18 +61,15 @@ mod test {
 		let parsed_nm = parse_slim_nm(&nm);
 
 		let mut offset = 0;
-		if let Some(file_type) = FileType::from_byte(file[0]) {
-			if file_type.is_zstd() {
-				file = decode_zstd(&file, frame_decoder).unwrap();
-			} else {
-				// uncompressed Slim and Fat files retain their initial magic bytes
-				offset = 1;
-			}
-
-			parse_blk(&file[offset..], false, file_type.is_slim(), Some(&nm), Rc::new(parsed_nm));
+		let file_type = FileType::from_byte(file[0]).unwrap();
+		if file_type.is_zstd() {
+			file = decode_zstd(&file, frame_decoder).unwrap();
 		} else {
-			// println!("Skipped {} as it was plaintext", fname); locking stdout takes too long for this to be useful all the time
+			// uncompressed Slim and Fat files retain their initial magic bytes
+			offset = 1;
 		}
+
+		parse_blk(&file[offset..], false, file_type.is_slim(), Some(&nm), Rc::new(parsed_nm));
 	}
 
 	#[test]
