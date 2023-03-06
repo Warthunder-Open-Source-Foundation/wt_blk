@@ -76,7 +76,7 @@ mod test {
 			let mut names = vec![];
 			for val in &nm[nm_ptr..(nm_ptr + names_data_size)] {
 				if *val == 0 {
-					if let Some(good) = String::from_utf8(buff.clone()) {
+					if let Ok(good) = String::from_utf8(buff.clone()) {
 						names.push(good);
 					} else {
 						println!("{:?}", String::from_utf8_lossy(&buff));
@@ -88,8 +88,9 @@ mod test {
 			}
 			names
 		};
-		let new = {
-		};
-
+		// let new = {
+		// 	nm[nm_ptr..(nm_ptr + names_data_size)].split(|b| *b == 0).map(|bs| String::from_utf8_lossy(bs).to_string()).collect::<Vec<_>>()
+		// };
+		// assert_eq!(old, new);
 	}
 }
