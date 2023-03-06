@@ -12,6 +12,7 @@ use ruzstd::FrameDecoder;
 use crate::binary::file::FileType;
 use crate::binary::parser::parse_blk;
 use crate::binary::zstd::decode_zstd;
+use crate::util::time;
 
 #[cfg(test)]
 mod test {
@@ -25,6 +26,7 @@ mod test {
 	use ruzstd::FrameDecoder;
 
 	use crate::binary::blk_type::BlkType;
+	use crate::binary::file::FileType;
 	use crate::binary::leb128::uleb128;
 	use crate::binary::nm_file::{decode_nm_file, parse_name_section, parse_slim_nm};
 	use crate::binary::parser::parse_blk;
@@ -41,6 +43,36 @@ mod test {
 	fn fat_blk_router_probe() {
 		let file = fs::read("./samples/route_prober.blk").unwrap();
 		let output = parse_blk(&file, false, false, None, Rc::new(vec![]));
+	}
+
+	/// the rendist file is *very* large for a BLK file, so this test is best for optimizing single-run executions
+	#[test]
+	fn slim_zstd_rendist() {
+		let mut file = fs::read("./samples/rendinst_dmg.blk").unwrap();
+
+		let nm = fs::read("./samples/vromfs/aces.vromfs.bin_u/nm").unwrap();
+		let dict = fs::read("./samples/vromfs/aces.vromfs.bin_u/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
+
+		let mut frame_decoder = FrameDecoder::new();
+		frame_decoder.add_dict(&dict).expect("Dict should be available for dict file");
+		let frame_decoder = Rc::new(frame_decoder);
+
+		let nm = decode_nm_file(&nm).unwrap();
+		let parsed_nm = parse_slim_nm(&nm);
+
+		let mut offset = 0;
+		if let Some(file_type) = FileType::from_byte(file[0]) {
+			if file_type.is_zstd() {
+				file = decode_zstd(&file, frame_decoder).unwrap();
+			} else {
+				// uncompressed Slim and Fat files retain their initial magic bytes
+				offset = 1;
+			}
+
+			parse_blk(&file[offset..], false, file_type.is_slim(), Some(&nm), Rc::new(parsed_nm));
+		} else {
+			// println!("Skipped {} as it was plaintext", fname); locking stdout takes too long for this to be useful all the time
+		}
 	}
 
 	#[test]
@@ -66,7 +98,7 @@ mod test {
 
 		let dir: ReadDir = fs::read_dir("./samples/vromfs/aces.vromfs.bin_u").unwrap();
 		let mut total = AtomicUsize::new(0);
-		test_parse_dir(dir, &total, frame_decoder, &nm,Rc::new(parsed_nm));
+		test_parse_dir(dir, &total, frame_decoder, &nm, Rc::new(parsed_nm));
 		let stop = start.elapsed();
 		println!("Successfully parsed {} files! Thats all of them. The process took: {stop:?}", total.load(Ordering::Relaxed));
 	}
