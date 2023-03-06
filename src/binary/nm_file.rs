@@ -47,6 +47,7 @@ pub fn parse_slim_nm(name_map: &[u8]) -> Vec<String> {
 #[cfg(test)]
 mod test {
 	use std::fs;
+	use crate::binary::leb128::uleb128;
 	use crate::binary::nm_file::decode_nm_file;
 
 	#[test]
@@ -54,5 +55,41 @@ mod test {
 		let file = fs::read("./samples/nm").unwrap();
 		let decoded = decode_nm_file(&file).unwrap();
 		assert_eq!(&fs::read("./samples/names").unwrap(), &decoded)
+	}
+
+	#[test]
+	fn nm_parity() {
+		let nm = fs::read("../wt_blk/samples/rendist/nm").unwrap();
+		let nm = decode_nm_file(&nm).unwrap();
+
+		let mut nm_ptr = 0;
+
+		let (offset, names_count) = uleb128(&nm[nm_ptr..]).unwrap();
+		nm_ptr += offset;
+
+		let (offset, names_data_size) = uleb128(&nm[nm_ptr..]).unwrap();
+		nm_ptr += offset;
+
+
+		let old = {
+			let mut buff = vec![];
+			let mut names = vec![];
+			for val in &nm[nm_ptr..(nm_ptr + names_data_size)] {
+				if *val == 0 {
+					if let Some(good) = String::from_utf8(buff.clone()) {
+						names.push(good);
+					} else {
+						println!("{:?}", String::from_utf8_lossy(&buff));
+					}
+					buff.clear();
+				} else {
+					buff.push(*val);
+				}
+			}
+			names
+		};
+		let new = {
+		};
+
 	}
 }
