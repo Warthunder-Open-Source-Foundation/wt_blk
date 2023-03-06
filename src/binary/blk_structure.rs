@@ -1,22 +1,22 @@
 use serde_json::to_string;
-use crate::binary::blk_type::BlkType;
+use crate::binary::blk_type::{BlkCow, BlkType};
 
 #[derive(Debug, Clone)]
-pub enum BlkField {
+pub enum BlkField<'a> {
 	// Name and field value
-	Value(String, BlkType),
+	Value(BlkCow<'a>, BlkType<'a>),
 	// Name and fields of substructs
-	Struct(String, Vec<BlkField>),
+	Struct(BlkCow<'a>, Vec<BlkField<'a>>),
 }
 
 
-impl BlkField {
+impl <'a>BlkField<'a> {
 	pub fn new_root() -> Self {
-		BlkField::Struct("root".to_owned(), vec![])
+		BlkField::Struct(BlkCow::Borrowed("root"), vec![])
 	}
 
-	pub fn new_struct(name: &str) -> Self {
-		BlkField::Struct(name.to_owned(), vec![])
+	pub fn new_struct(name: BlkCow<'a>) -> Self {
+		BlkField::Struct(name, vec![])
 	}
 
 	#[must_use]
@@ -32,10 +32,10 @@ impl BlkField {
 		}
 	}
 
-	pub fn get_name(&self) -> &String {
+	pub fn get_name(&self) -> String {
 		match self {
-			BlkField::Value(name, _) => {name}
-			BlkField::Struct(name, _) => {name}
+			BlkField::Value(name, _) => {name.to_string()}
+			BlkField::Struct(name, _) => {name.to_string()}
 		}
 	}
 

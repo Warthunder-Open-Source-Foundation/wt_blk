@@ -1,5 +1,6 @@
 use std::io::Read;
 use ruzstd::StreamingDecoder;
+use crate::binary::blk_type::BlkCow;
 use crate::binary::leb128::uleb128;
 
 pub fn decode_nm_file(file: &[u8]) -> Option<Vec<u8>> {
@@ -12,21 +13,19 @@ pub fn decode_nm_file(file: &[u8]) -> Option<Vec<u8>> {
 	Some(out)
 }
 
-pub fn parse_name_section(file: &[u8]) -> Vec<String> {
-	let mut buff = vec![];
+pub fn parse_name_section(file: &[u8]) -> Vec<BlkCow> {
+	let mut start = 0_usize;
 	let mut names = vec![];
-	for val in file {
+	for (i, val) in file.iter().enumerate() {
 		if *val == 0 {
-			names.push(String::from_utf8_lossy(&buff).to_string());
-			buff.clear();
-		} else {
-			buff.push(*val);
+			names.push(String::from_utf8_lossy(&file[start..i]));
+			start = i;
 		}
 	}
 	names
 }
 
-pub fn parse_slim_nm(name_map: &[u8]) -> Vec<String> {
+pub fn parse_slim_nm(name_map: &[u8]) -> Vec<BlkCow> {
 	let mut nm_ptr = 0;
 
 	let (offset, names_count) = uleb128(&name_map[nm_ptr..]).unwrap();

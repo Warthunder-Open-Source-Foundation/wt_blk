@@ -8,6 +8,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
 use ruzstd::FrameDecoder;
+use crate::binary::blk_type::BlkCow;
 
 use crate::binary::file::FileType;
 use crate::binary::parser::parse_blk;
@@ -101,7 +102,7 @@ mod test {
 	}
 }
 
-pub fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, fd: Rc<FrameDecoder>, nm: &[u8], parsed_nm: Rc<Vec<String>>) {
+pub fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, fd: Rc<FrameDecoder>, nm: &[u8], parsed_nm: Rc<Vec<BlkCow>>) {
 	for file in dir {
 		let file = file.as_ref().unwrap();
 		if file.metadata().unwrap().is_dir() {

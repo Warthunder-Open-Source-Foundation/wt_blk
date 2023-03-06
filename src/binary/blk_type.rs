@@ -1,8 +1,13 @@
+use std::borrow::Cow;
 use std::fmt::{Display, Formatter};
+use std::rc::Rc;
+use crate::binary::nm_file::parse_name_section;
+
+pub type BlkCow<'a> = Cow<'a, str>;
 
 #[derive(Debug, PartialOrd, PartialEq, Clone)]
-pub enum BlkType {
-	Str(String),
+pub enum BlkType<'a> {
+	Str(BlkCow<'a>),
 	Int(u32),
 	Int2([u32; 2]),
 	Int3([u32; 3]),
@@ -17,11 +22,11 @@ pub enum BlkType {
 	Color([u8; 4]),
 }
 
-impl BlkType {
+impl <'a> BlkType<'a> {
 	/// Type ID as corresponding to its type_code
 	/// Field is a 4 byte long region that either contains the final value or offset for the data region
 	/// data_region is for non-32 bit data
-	pub fn from_raw_param_info(type_id: u8, field: &[u8], data_region: &[u8], name_map: &Vec<String>) -> Option<Self> {
+	pub fn from_raw_param_info(type_id: u8, field: &'a [u8], data_region: &'a [u8], name_map: Rc<Vec<BlkCow<'a>>>) -> Option<Self> {
 
 		// Make sure the field is properly sized
 		if field.len() != 4 {
@@ -37,18 +42,11 @@ impl BlkType {
 				let offset = u32::from_le_bytes([field[0], field[1], field[2], field[3]]); // Construct int from the individual bytes
 				let in_nm = (offset >> 31) == 1; // Compare first bit to check where to look
 				let offset = i32::MAX as u32 & offset; // Set first byte to 0
-				let res=  if in_nm {
+				let res: BlkCow =  if in_nm {
 					name_map[offset as usize].clone()
 				} else {
 					let data_region = &data_region[(offset as usize)..];
-					let mut buff = vec![];
-					for byte in data_region {
-						if *byte == 0 {
-							break;
-						}
-						buff.push(*byte);
-					}
-					String::from_utf8_lossy(buff.as_slice()).to_string()
+					parse_name_section(data_region).remove(0)
 				};
 
 				Some(Self::Str(res))
@@ -264,10 +262,10 @@ pub fn bytes_to_long(input: &[u8]) -> Option<u64> {
 	]))
 }
 
-impl Display for BlkType {
+impl Display for BlkType<'_> {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		let value = match self {
-			BlkType::Str(v) => {"\"".to_owned() + v + "\""}
+			BlkType::Str(v) => {format!("\\{}\\", v)}
 			BlkType::Int(v) => {v.to_string()}
 			BlkType::Int2(v) => {format!("{}, {}", v[0], v[1])}
 			BlkType::Int3(v) => {format!("{}, {}, {}", v[0], v[1], v[2])}
