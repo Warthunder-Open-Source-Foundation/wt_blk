@@ -48,10 +48,10 @@ mod test {
 	/// the rendist file is *very* large for a BLK file, so this test is best for optimizing single-run executions
 	#[test]
 	fn slim_zstd_rendist() {
-		let mut file = fs::read("./samples/rendinst_dmg.blk").unwrap();
+		let mut file = fs::read("./samples/rendist/rendinst_dmg.blk").unwrap();
 
-		let nm = fs::read("./samples/vromfs/aces.vromfs.bin_u/nm").unwrap();
-		let dict = fs::read("./samples/vromfs/aces.vromfs.bin_u/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
+		let nm = fs::read("./samples/rendist/nm").unwrap();
+		let dict = fs::read("./samples/rendist/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
 
 		let mut frame_decoder = FrameDecoder::new();
 		frame_decoder.add_dict(&dict).expect("Dict should be available for dict file");
