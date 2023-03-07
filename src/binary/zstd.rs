@@ -6,9 +6,11 @@ use std::time::Duration;
 
 use ruzstd::{FrameDecoder, StreamingDecoder};
 
+pub type BlkDecoder<'a> = StreamingDecoder<&'a [u8]>;
+
 use crate::binary::file::FileType;
 
-pub fn decode_zstd(file: &[u8], frame_decoder: Rc<FrameDecoder>) -> Option<Vec<u8>> {
+pub fn decode_zstd(file: &[u8], frame_decoder: &mut BlkDecoder) -> Option<Vec<u8>> {
 	// validate magic byte
 	let file_type =  FileType::from_byte(*file.get(0)?)?;
 
@@ -29,37 +31,37 @@ pub fn decode_zstd(file: &[u8], frame_decoder: Rc<FrameDecoder>) -> Option<Vec<u
 
 
 	let decoded = if file_type.needs_dict() {
-
-		let mut decoder = StreamingDecoder::new_with_decoder(&file[1..], (*frame_decoder).clone()).unwrap();
+		frame_decoder.decoder.init(&file[1..]).unwrap();
 		let mut out = Vec::with_capacity(len);
-		let _ = decoder.read_to_end(&mut out).ok()?;
+		let _ = frame_decoder.read_to_end(&mut out).ok()?;
 		out
 	} else {
-		let mut decoder =  StreamingDecoder::new(&mut to_decode).ok()?;
+		frame_decoder.decoder.init(to_decode).unwrap();
 		let mut out = Vec::with_capacity(len);
-		let _ = decoder.read_to_end(&mut out).ok()?;
+		let _ = frame_decoder.read_to_end(&mut out).ok()?;
 		out
 	};
 	Some(decoded)
 }
 
-pub fn decode_raw_zstd(file: &[u8], dict: Option<&[u8]> ) -> Option<Vec<u8>> {
-	let len = file.len();
-	Some(if let Some(dict) = dict {
-		let mut frame_decoder = FrameDecoder::new();
-		frame_decoder.add_dict(dict).expect("Dict should be available for dict file");
-		let mut decoder = StreamingDecoder::new_with_decoder(&file[1..], frame_decoder).unwrap();
-		let mut out = Vec::with_capacity(len);
-		let _ = decoder.read_to_end(&mut out).ok()?;
-		out
-	} else {
-		let mut file = file;
-		let mut decoder =  StreamingDecoder::new(&mut file).ok()?;
-		let mut out = Vec::with_capacity(len);
-		let _ = decoder.read_to_end(&mut out).ok()?;
-		out
-	})
-}
+// UNUSED ATM
+// pub fn decode_raw_zstd(file: &[u8], dict: Option<&[u8]> ) -> Option<Vec<u8>> {
+// 	let len = file.len();
+// 	Some(if let Some(dict) = dict {
+// 		let mut frame_decoder = FrameDecoder::new();
+// 		frame_decoder.add_dict(dict).expect("Dict should be available for dict file");
+// 		let mut decoder = StreamingDecoder::new_with_decoder(&file[1..], frame_decoder).unwrap();
+// 		let mut out = Vec::with_capacity(len);
+// 		let _ = decoder.read_to_end(&mut out).ok()?;
+// 		out
+// 	} else {
+// 		let mut file = file;
+// 		let mut decoder =  StreamingDecoder::new(&mut file).ok()?;
+// 		let mut out = Vec::with_capacity(len);
+// 		let _ = decoder.read_to_end(&mut out).ok()?;
+// 		out
+// 	})
+// }
 
 
 pub fn eep() -> u8 {
@@ -79,13 +81,13 @@ mod test {
 
 	#[test]
 	fn fat_zstd() {
-		let decoded = decode_zstd(include_bytes!("../../samples/section_fat_zst.blk"), Rc::new(FrameDecoder::new())).unwrap();
+		let decoded = decode_zstd(include_bytes!("../../samples/section_fat_zst.blk"), &mut StreamingDecoder::new(Default::default()).unwrap()).unwrap();
 		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_fat.blk"));
 	}
 
 	#[test]
 	fn slim_zstd() {
-		let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst.blk"), Rc::new(FrameDecoder::new())).unwrap();
+		let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst.blk"), &mut StreamingDecoder::new(Default::default()).unwrap()).unwrap();
 		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
 	}
 
