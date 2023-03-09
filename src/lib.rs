@@ -1,3 +1,4 @@
+#![feature(arc_unwrap_or_clone)]
 
 pub mod binary;
 pub mod output_parsing;

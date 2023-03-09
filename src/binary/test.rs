@@ -3,6 +3,7 @@ use std::fs::ReadDir;
 use std::io::{stdout, Write};
 use std::process::exit;
 use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use rayon::iter::ParallelIterator;
@@ -22,6 +23,7 @@ mod test {
 	use std::mem::size_of;
 	use std::path::Path;
 	use std::rc::Rc;
+	use std::sync::{Arc, Mutex};
 	use std::sync::atomic::{AtomicUsize, Ordering};
 	use std::time::Instant;
 	use ruzstd::{FrameDecoder, StreamingDecoder};
@@ -56,7 +58,6 @@ mod test {
 
 		let mut frame_decoder = FrameDecoder::new();
 		frame_decoder.add_dict(&dict).expect("Dict should be available for dict file");
-		let mut streaming_dec: BlkDecoder = StreamingDecoder::new_with_decoder(Default::default(), frame_decoder).unwrap();
 
 		let nm = decode_nm_file(&nm).unwrap();
 		let parsed_nm = parse_slim_nm(&nm);
@@ -64,7 +65,7 @@ mod test {
 		let mut offset = 0;
 		let file_type = FileType::from_byte(file[0]).unwrap();
 		if file_type.is_zstd() {
-			file = decode_zstd(&file, &mut streaming_dec).unwrap();
+			file = decode_zstd(&file, Arc::new(frame_decoder)).unwrap();
 		} else {
 			// uncompressed Slim and Fat files retain their initial magic bytes
 			offset = 1;
@@ -89,24 +90,23 @@ mod test {
 
 		let mut frame_decoder = FrameDecoder::new();
 		frame_decoder.add_dict(&dict).expect("Dict should be available for dict file");
-		let mut streaming_dec = StreamingDecoder::new_with_decoder(Default::default(), frame_decoder).unwrap();
 
 		let nm = decode_nm_file(&nm).unwrap();
 		let parsed_nm = parse_slim_nm(&nm);
 
 		let dir: ReadDir = fs::read_dir("./samples/vromfs/aces.vromfs.bin_u").unwrap();
 		let mut total = AtomicUsize::new(0);
-		test_parse_dir(dir, &total, &mut streaming_dec, &nm, Rc::new(parsed_nm));
+		test_parse_dir(dir, &total, Arc::new(frame_decoder), &nm, Rc::new(parsed_nm));
 		let stop = start.elapsed();
 		println!("Successfully parsed {} files! Thats all of them. The process took: {stop:?}", total.load(Ordering::Relaxed));
 	}
 }
 
-pub fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, fd: &mut BlkDecoder, nm: &[u8], parsed_nm: Rc<Vec<BlkCow>>) {
+pub fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, fd: Arc<BlkDecoder>, nm: &[u8], parsed_nm: Rc<Vec<BlkCow>>) {
 	for file in dir {
 		let file = file.as_ref().unwrap();
 		if file.metadata().unwrap().is_dir() {
-			test_parse_dir(file.path().read_dir().unwrap(), total_files_processed, fd, nm, parsed_nm.clone());
+			test_parse_dir(file.path().read_dir().unwrap(), total_files_processed, fd.clone(), nm, parsed_nm.clone());
 		} else {
 			let fname = file.file_name().to_str().unwrap().to_owned();
 			if fname.ends_with(".blk") {
@@ -114,7 +114,7 @@ pub fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, fd: &mu
 				let mut offset = 0;
 				if let Some(file_type) = FileType::from_byte(read[0]) {
 					if file_type.is_zstd() {
-						read = decode_zstd(&read, fd).unwrap();
+						read = decode_zstd(&read, fd.clone()).unwrap();
 					} else {
 						// uncompressed Slim and Fat files retain their initial magic bytes
 						offset = 1;

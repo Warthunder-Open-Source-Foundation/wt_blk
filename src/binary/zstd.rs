@@ -1,18 +1,19 @@
 use std::io::Read;
 use std::ops::Deref;
 use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::Duration;
 
 use ruzstd::{FrameDecoder, StreamingDecoder};
 
-pub type BlkDecoder<'a> = StreamingDecoder<&'a [u8]>;
+pub type BlkDecoder = FrameDecoder;
 
 use crate::binary::file::FileType;
 
-pub fn decode_zstd(file: &[u8], frame_decoder: &mut BlkDecoder) -> Option<Vec<u8>> {
+pub fn decode_zstd(file: &[u8], mut frame_decoder: Arc<BlkDecoder>) -> Option<Vec<u8>> {
 	// validate magic byte
-	let file_type =  FileType::from_byte(*file.get(0)?)?;
+	let file_type = FileType::from_byte(*file.get(0)?)?;
 
 	let (len, mut to_decode) = if !file_type.is_slim() {
 		let len_raw = &file[1..4];
@@ -29,16 +30,15 @@ pub fn decode_zstd(file: &[u8], frame_decoder: &mut BlkDecoder) -> Option<Vec<u8
 	};
 
 
-
 	let decoded = if file_type.needs_dict() {
-		frame_decoder.decoder.init(&file[1..]).unwrap();
 		let mut out = Vec::with_capacity(len);
-		let _ = frame_decoder.read_to_end(&mut out).ok()?;
+		let mut decoder = StreamingDecoder::new_with_decoder(&file[1..], Arc::unwrap_or_clone(frame_decoder)).unwrap();
+		let _ = decoder.read_to_end(&mut out).ok()?;
 		out
 	} else {
-		frame_decoder.decoder.init(to_decode).unwrap();
 		let mut out = Vec::with_capacity(len);
-		let _ = frame_decoder.read_to_end(&mut out).ok()?;
+		let mut decoder = StreamingDecoder::new_with_decoder(to_decode, Arc::unwrap_or_clone(frame_decoder)).unwrap();
+		let _ = decoder.read_to_end(&mut out).ok()?;
 		out
 	};
 	Some(decoded)
@@ -81,13 +81,13 @@ mod test {
 
 	#[test]
 	fn fat_zstd() {
-		let decoded = decode_zstd(include_bytes!("../../samples/section_fat_zst.blk"), &mut StreamingDecoder::new(Default::default()).unwrap()).unwrap();
+		let decoded = decode_zstd(include_bytes!("../../samples/section_fat_zst.blk"), Default::default()).unwrap();
 		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_fat.blk"));
 	}
 
 	#[test]
 	fn slim_zstd() {
-		let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst.blk"), &mut StreamingDecoder::new(Default::default()).unwrap()).unwrap();
+		let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst.blk"), Default::default()).unwrap();
 		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
 	}
 
