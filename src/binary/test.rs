@@ -97,7 +97,6 @@ mod test {
 
 		let dir: ReadDir = fs::read_dir("./samples/vromfs/aces.vromfs.bin_u").unwrap();
 		let mut total = AtomicUsize::new(0);
-		// let pile = Arc::new(Mutex::new(vec![]));
 
 		test_parse_dir(dir, &total, Arc::new(frame_decoder), &nm, Rc::new(parsed_nm));
 		let stop = start.elapsed();
