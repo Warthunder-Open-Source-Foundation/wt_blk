@@ -9,6 +9,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
 use ruzstd::{FrameDecoder, StreamingDecoder};
+use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::BlkCow;
 
 use crate::binary::file::FileType;
@@ -96,6 +97,8 @@ mod test {
 
 		let dir: ReadDir = fs::read_dir("./samples/vromfs/aces.vromfs.bin_u").unwrap();
 		let mut total = AtomicUsize::new(0);
+		// let pile = Arc::new(Mutex::new(vec![]));
+
 		test_parse_dir(dir, &total, Arc::new(frame_decoder), &nm, Rc::new(parsed_nm));
 		let stop = start.elapsed();
 		println!("Successfully parsed {} files! Thats all of them. The process took: {stop:?}", total.load(Ordering::Relaxed));
@@ -111,21 +114,25 @@ pub fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, fd: Arc
 			let fname = file.file_name().to_str().unwrap().to_owned();
 			if fname.ends_with(".blk") {
 				let mut read = fs::read(file.path()).unwrap();
-				let mut offset = 0;
-				if let Some(file_type) = FileType::from_byte(read[0]) {
-					if file_type.is_zstd() {
-						read = decode_zstd(&read, fd.clone()).unwrap();
-					} else {
-						// uncompressed Slim and Fat files retain their initial magic bytes
-						offset = 1;
-					}
-
-					parse_blk(&read[offset..], false, file_type.is_slim(), Some(nm), parsed_nm.clone());
-				} else {
-					// println!("Skipped {} as it was plaintext", fname); locking stdout takes too long for this to be useful all the time
-				}
+				parse_file(read, fd.clone(), nm, parsed_nm.clone());
 				total_files_processed.fetch_add(1, Ordering::Relaxed);
 			}
 		}
+	}
+}
+
+pub fn parse_file(mut file: Vec<u8>, fd: Arc<BlkDecoder>, nm: &[u8], parsed_nm: Rc<Vec<BlkCow>>) {
+	let mut offset = 0;
+	if let Some(file_type) = FileType::from_byte(file[0]) {
+		 if file_type.is_zstd() {
+			file = decode_zstd(&file, fd.clone()).unwrap();
+		} else {
+			// uncompressed Slim and Fat files retain their initial magic bytes
+			offset = 1;
+		};
+
+		parse_blk(&file[offset..], false, file_type.is_slim(), Some(nm), parsed_nm.clone());
+	} else {
+		// println!("Skipped {} as it was plaintext", fname); locking stdout takes too long for this to be useful all the time
 	}
 }

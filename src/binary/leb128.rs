@@ -1,4 +1,5 @@
 // Yields length in buffer and value
+#[inline]
 pub fn uleb128(bytes: &[u8]) -> Option<(usize, usize)> {
 	let mut result = 0u128;
 	let mask = 1 << 7;
