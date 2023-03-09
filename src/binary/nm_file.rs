@@ -1,5 +1,5 @@
 use std::io::Read;
-use ruzstd::StreamingDecoder;
+use zstd::Decoder;
 use crate::binary::blk_type::BlkCow;
 use crate::binary::leb128::uleb128;
 
@@ -7,7 +7,7 @@ pub fn decode_nm_file(file: &[u8]) -> Option<Vec<u8>> {
 	let _names_digest = &file[0..8];
 	let _dict_digest = &file[8..40];
 	let mut zstd_stream = &file[40..];
-	let mut decoder = StreamingDecoder::new(&mut zstd_stream).ok()?;
+	let mut decoder = Decoder::new(&mut zstd_stream).ok()?;
 	let mut out = Vec::with_capacity(file.len());
 	let _ = decoder.read_to_end(&mut out).ok()?;
 	Some(out)

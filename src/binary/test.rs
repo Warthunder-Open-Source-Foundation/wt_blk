@@ -8,7 +8,6 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
-use ruzstd::{FrameDecoder, StreamingDecoder};
 use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::BlkCow;
 
@@ -27,7 +26,8 @@ mod test {
 	use std::sync::{Arc, Mutex};
 	use std::sync::atomic::{AtomicUsize, Ordering};
 	use std::time::Instant;
-	use ruzstd::{FrameDecoder, StreamingDecoder};
+	use zstd::Decoder;
+	use zstd::dict::DecoderDictionary;
 
 	use crate::binary::blk_type::BlkType;
 	use crate::binary::file::FileType;
@@ -36,6 +36,7 @@ mod test {
 	use crate::binary::parser::parse_blk;
 	use crate::binary::test::test_parse_dir;
 	use crate::binary::zstd::{BlkDecoder, decode_zstd};
+
 
 	#[test]
 	fn fat_blk() {
@@ -57,8 +58,7 @@ mod test {
 		let nm = fs::read("./samples/rendist/nm").unwrap();
 		let dict = fs::read("./samples/rendist/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
 
-		let mut frame_decoder = FrameDecoder::new();
-		frame_decoder.add_dict(&dict).expect("Dict should be available for dict file");
+		let mut frame_decoder = DecoderDictionary::copy(&dict);
 
 		let nm = decode_nm_file(&nm).unwrap();
 		let parsed_nm = parse_slim_nm(&nm);
@@ -89,8 +89,7 @@ mod test {
 		let nm = fs::read("./samples/vromfs/aces.vromfs.bin_u/nm").unwrap();
 		let dict = fs::read("./samples/vromfs/aces.vromfs.bin_u/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
 
-		let mut frame_decoder = FrameDecoder::new();
-		frame_decoder.add_dict(&dict).expect("Dict should be available for dict file");
+		let  frame_decoder = DecoderDictionary::copy(&dict);
 
 		let nm = decode_nm_file(&nm).unwrap();
 		let parsed_nm = parse_slim_nm(&nm);

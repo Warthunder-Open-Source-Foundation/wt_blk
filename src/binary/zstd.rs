@@ -4,10 +4,11 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::Duration;
+use zstd::Decoder;
+use zstd::dict::DecoderDictionary;
 
-use ruzstd::{FrameDecoder, StreamingDecoder};
 
-pub type BlkDecoder = FrameDecoder;
+pub type BlkDecoder<'a> = DecoderDictionary<'a>;
 
 use crate::binary::file::FileType;
 
@@ -32,12 +33,12 @@ pub fn decode_zstd(file: &[u8], mut frame_decoder: Arc<BlkDecoder>) -> Option<Ve
 
 	let decoded = if file_type.needs_dict() {
 		let mut out = Vec::with_capacity(len);
-		let mut decoder = StreamingDecoder::new_with_decoder(&file[1..], Arc::unwrap_or_clone(frame_decoder)).unwrap();
+		let mut decoder = Decoder::with_prepared_dictionary(&file[1..], &frame_decoder).unwrap();
 		let _ = decoder.read_to_end(&mut out).ok()?;
 		out
 	} else {
 		let mut out = Vec::with_capacity(len);
-		let mut decoder = StreamingDecoder::new_with_decoder(to_decode, Arc::unwrap_or_clone(frame_decoder)).unwrap();
+		let mut decoder = Decoder::with_prepared_dictionary(to_decode, &frame_decoder).unwrap();
 		let _ = decoder.read_to_end(&mut out).ok()?;
 		out
 	};
@@ -74,20 +75,24 @@ mod test {
 	use std::{fs, io};
 	use std::io::Read;
 	use std::rc::Rc;
+	use std::sync::Arc;
+	use zstd::Decoder;
+	use zstd::dict::DecoderDictionary;
 
-	use ruzstd::{FrameDecoder, StreamingDecoder};
 
 	use crate::binary::zstd::decode_zstd;
 
+	pub (crate) static DUMMY_DICT: fn() -> Arc<DecoderDictionary<'static>> = ||Arc::new(DecoderDictionary::copy(&[]));
+
 	#[test]
 	fn fat_zstd() {
-		let decoded = decode_zstd(include_bytes!("../../samples/section_fat_zst.blk"), Default::default()).unwrap();
+		let decoded = decode_zstd(include_bytes!("../../samples/section_fat_zst.blk"), DUMMY_DICT()).unwrap();
 		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_fat.blk"));
 	}
 
 	#[test]
 	fn slim_zstd() {
-		let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst.blk"), Default::default()).unwrap();
+		let decoded = decode_zstd(include_bytes!("../../samples/section_slim_zst.blk"), DUMMY_DICT()).unwrap();
 		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format
 	}
 
@@ -95,10 +100,9 @@ mod test {
 	fn slim_zstd_dict() {
 		let file = fs::read("./samples/section_slim_zst_dict.blk").unwrap();
 		let dict = fs::read("./samples/bfb732560ad45234690acad246d7b14c2f25ad418a146e5e7ef68ba3386a315c.dict").unwrap();
-		let mut frame_decoder = FrameDecoder::new();
-		frame_decoder.add_dict(&dict).unwrap();
+		let mut frame_decoder = DecoderDictionary::copy(&dict);
 
-		let mut decoder = StreamingDecoder::new_with_decoder(&file[1..], frame_decoder).unwrap();
+		let mut decoder = Decoder::with_prepared_dictionary(&file[1..], &frame_decoder).unwrap();
 		let mut out = vec![];
 		decoder.read_to_end(&mut out).unwrap();
 		pretty_assertions::assert_eq!(&out, &include_bytes!("../../samples/section_slim.blk")[1..]) // Truncating the first byte, as it is magic byte for the SLIM format

@@ -11,7 +11,7 @@ description = "Parser for Json-like files blk"
 serde_json = "^1"
 serde = {version = "^1", features = ["serde_derive"]}
 thiserror = "^1"
-ruzstd = {git = "https://github.com/FlareFlo/zstd-rs.git", branch = "master"}
+zstd = "0.12.3+zstd.1.5.2"
 lazy_static = "1.4.0"
 rayon = "1.6"
 
