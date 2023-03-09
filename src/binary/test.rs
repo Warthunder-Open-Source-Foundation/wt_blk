@@ -34,7 +34,7 @@ mod test {
 	use crate::binary::leb128::uleb128;
 	use crate::binary::nm_file::{decode_nm_file, parse_name_section, parse_slim_nm};
 	use crate::binary::parser::parse_blk;
-	use crate::binary::test::test_parse_dir;
+	use crate::binary::test::{parse_file, test_parse_dir};
 	use crate::binary::zstd::{BlkDecoder, decode_zstd};
 
 
@@ -89,7 +89,7 @@ mod test {
 		let nm = fs::read("./samples/vromfs/aces.vromfs.bin_u/nm").unwrap();
 		let dict = fs::read("./samples/vromfs/aces.vromfs.bin_u/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
 
-		let  frame_decoder = DecoderDictionary::copy(&dict);
+		let frame_decoder = DecoderDictionary::copy(&dict);
 
 		let nm = decode_nm_file(&nm).unwrap();
 		let parsed_nm = parse_slim_nm(&nm);
@@ -97,40 +97,46 @@ mod test {
 		let dir: ReadDir = fs::read_dir("./samples/vromfs/aces.vromfs.bin_u").unwrap();
 		let mut total = AtomicUsize::new(0);
 
-		test_parse_dir(dir, &total, Arc::new(frame_decoder), &nm, Rc::new(parsed_nm));
+		let mut pile = vec![];
+		test_parse_dir(&mut pile, dir, &total);
+
+		let rc_nm = Rc::new(parsed_nm);
+		let arced_fd = Arc::new(frame_decoder);
+		let out = pile.into_iter().map(|file| {
+			parse_file(file.1, arced_fd.clone(), &nm, rc_nm.clone())
+		}).filter_map(|x| x)
+					  .collect::<Vec<_>>();
+
 		let stop = start.elapsed();
-		println!("Successfully parsed {} files! Thats all of them. The process took: {stop:?}", total.load(Ordering::Relaxed));
+		println!("Successfully parsed {} files! Thats all of them. The process took: {stop:?}", out.len());
 	}
 }
 
-pub fn test_parse_dir(dir: ReadDir, total_files_processed: &AtomicUsize, fd: Arc<BlkDecoder>, nm: &[u8], parsed_nm: Rc<Vec<BlkCow>>) {
+pub fn test_parse_dir(pile: &mut Vec<(String, Vec<u8>)>, dir: ReadDir, total_files_processed: &AtomicUsize) {
 	for file in dir {
 		let file = file.as_ref().unwrap();
 		if file.metadata().unwrap().is_dir() {
-			test_parse_dir(file.path().read_dir().unwrap(), total_files_processed, fd.clone(), nm, parsed_nm.clone());
+			test_parse_dir(pile, file.path().read_dir().unwrap(), total_files_processed);
 		} else {
 			let fname = file.file_name().to_str().unwrap().to_owned();
 			if fname.ends_with(".blk") {
 				let mut read = fs::read(file.path()).unwrap();
-				parse_file(read, fd.clone(), nm, parsed_nm.clone());
+				pile.push((fname, read));
 				total_files_processed.fetch_add(1, Ordering::Relaxed);
 			}
 		}
 	}
 }
 
-pub fn parse_file(mut file: Vec<u8>, fd: Arc<BlkDecoder>, nm: &[u8], parsed_nm: Rc<Vec<BlkCow>>) {
+pub fn parse_file(mut file: Vec<u8>, fd: Arc<BlkDecoder>, nm: &[u8], parsed_nm: Rc<Vec<BlkCow>>) -> Option<String> {
 	let mut offset = 0;
-	if let Some(file_type) = FileType::from_byte(file[0]) {
-		 if file_type.is_zstd() {
-			file = decode_zstd(&file, fd.clone()).unwrap();
-		} else {
-			// uncompressed Slim and Fat files retain their initial magic bytes
-			offset = 1;
-		};
-
-		parse_blk(&file[offset..], false, file_type.is_slim(), Some(nm), parsed_nm.clone());
+	let file_type = FileType::from_byte(file[0])?;
+	if file_type.is_zstd() {
+		file = decode_zstd(&file, fd.clone()).unwrap();
 	} else {
-		// println!("Skipped {} as it was plaintext", fname); locking stdout takes too long for this to be useful all the time
-	}
+		// uncompressed Slim and Fat files retain their initial magic bytes
+		offset = 1;
+	};
+
+	Some(parse_blk(&file[offset..], false, file_type.is_slim(), Some(nm), parsed_nm.clone()).as_blk_text())
 }
