@@ -6,7 +6,7 @@ use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::{BlkCow, BlkType};
 use crate::binary::file::FileType;
 use crate::binary::leb128::uleb128;
-use crate::binary::nm_file::{parse_name_section};
+use crate::binary::nm_file::NameMap;
 
 pub fn parse_blk<'a>(file: &'a [u8], with_magic_byte: bool, is_slim: bool, name_map: Option<&'a [u8]>, parsed_nm: Rc<Vec<BlkCow<'a>>>) -> BlkField<'a> {
 	let mut ptr = 0;
@@ -26,7 +26,7 @@ pub fn parse_blk<'a>(file: &'a [u8], with_magic_byte: bool, is_slim: bool, name_
 		let (offset, names_data_size) = uleb128(&file[ptr..]).unwrap();
 		ptr += offset;
 
-		let names = parse_name_section(&file[ptr..(ptr + names_data_size)]);
+		let names = NameMap::parse_name_section(&file[ptr..(ptr + names_data_size)]);
 		ptr += names_data_size;
 		if names_count != names.len() {
 			panic!("Should be equal"); // TODO: Change to result when fn signature allows for it

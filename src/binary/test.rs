@@ -32,7 +32,7 @@ mod test {
 	use crate::binary::blk_type::BlkType;
 	use crate::binary::file::FileType;
 	use crate::binary::leb128::uleb128;
-	use crate::binary::nm_file::{decode_nm_file, parse_name_section, parse_slim_nm};
+	use crate::binary::nm_file::{NameMap, parse_slim_nm};
 	use crate::binary::parser::parse_blk;
 	use crate::binary::test::{parse_file, test_parse_dir};
 	use crate::binary::zstd::{BlkDecoder, decode_zstd};
@@ -60,7 +60,7 @@ mod test {
 
 		let mut frame_decoder = DecoderDictionary::copy(&dict);
 
-		let nm = decode_nm_file(&nm).unwrap();
+		let nm = NameMap::decode_nm_file(&nm).unwrap();
 		let parsed_nm = parse_slim_nm(&nm);
 
 		let mut offset = 0;
@@ -91,7 +91,7 @@ mod test {
 
 		let frame_decoder = DecoderDictionary::copy(&dict);
 
-		let nm = decode_nm_file(&nm).unwrap();
+		let nm = NameMap::decode_nm_file(&nm).unwrap();
 		let parsed_nm = parse_slim_nm(&nm);
 
 		let dir: ReadDir = fs::read_dir("./samples/vromfs/aces.vromfs.bin_u").unwrap();

@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::fmt::{Display, Formatter};
 use std::rc::Rc;
-use crate::binary::nm_file::parse_name_section;
+use crate::binary::nm_file::NameMap;
 
 pub type BlkCow<'a> = Cow<'a, str>;
 
@@ -46,7 +46,7 @@ impl <'a> BlkType<'a> {
 					name_map[offset as usize].clone()
 				} else {
 					let data_region = &data_region[(offset as usize)..];
-					parse_name_section(data_region).remove(0)
+					NameMap::parse_name_section(data_region).remove(0)
 				};
 
 				Some(Self::Str(res))
