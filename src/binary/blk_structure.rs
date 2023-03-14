@@ -1,7 +1,8 @@
+use serde::{Deserialize, Serialize};
 use serde_json::to_string;
 use crate::binary::blk_type::{BlkCow, BlkType};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BlkField<'a> {
 	// Name and field value
 	Value(BlkCow<'a>, BlkType<'a>),

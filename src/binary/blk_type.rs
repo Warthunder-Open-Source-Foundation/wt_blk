@@ -1,11 +1,12 @@
 use std::borrow::Cow;
 use std::fmt::{Display, Formatter};
 use std::rc::Rc;
+use serde::{Deserialize, Serialize};
 use crate::binary::nm_file::NameMap;
 
 pub type BlkCow<'a> = Cow<'a, str>;
 
-#[derive(Debug, PartialOrd, PartialEq, Clone)]
+#[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
 pub enum BlkType<'a> {
 	Str(BlkCow<'a>),
 	Int(u32),

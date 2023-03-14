@@ -138,5 +138,6 @@ pub fn parse_file(mut file: Vec<u8>, fd: Arc<BlkDecoder>, nm: &[u8], parsed_nm: 
 		offset = 1;
 	};
 
-	Some(parse_blk(&file[offset..], false, file_type.is_slim(), Some(nm), parsed_nm.clone()).as_blk_text())
+
+	Some(serde_json::to_string(&parse_blk(&file[offset..], false, file_type.is_slim(), Some(nm), parsed_nm.clone())).unwrap())
 }
