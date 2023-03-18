@@ -34,7 +34,7 @@ mod test {
 	use crate::binary::leb128::uleb128;
 	use crate::binary::nm_file::{NameMap, parse_slim_nm};
 	use crate::binary::parser::parse_blk;
-	use crate::binary::test::{parse_file, test_parse_dir};
+	use crate::binary::{parse_file, test_parse_dir};
 	use crate::binary::zstd::{BlkDecoder, decode_zstd};
 
 
@@ -110,34 +110,4 @@ mod test {
 		let stop = start.elapsed();
 		println!("Successfully parsed {} files! Thats all of them. The process took: {stop:?}", out.len());
 	}
-}
-
-pub fn test_parse_dir(pile: &mut Vec<(String, Vec<u8>)>, dir: ReadDir, total_files_processed: &AtomicUsize) {
-	for file in dir {
-		let file = file.as_ref().unwrap();
-		if file.metadata().unwrap().is_dir() {
-			test_parse_dir(pile, file.path().read_dir().unwrap(), total_files_processed);
-		} else {
-			let fname = file.file_name().to_str().unwrap().to_owned();
-			if fname.ends_with(".blk") {
-				let mut read = fs::read(file.path()).unwrap();
-				pile.push((fname, read));
-				total_files_processed.fetch_add(1, Ordering::Relaxed);
-			}
-		}
-	}
-}
-
-pub fn parse_file(mut file: Vec<u8>, fd: Arc<BlkDecoder>, nm: &[u8], parsed_nm: Rc<Vec<BlkCow>>) -> Option<String> {
-	let mut offset = 0;
-	let file_type = FileType::from_byte(file[0])?;
-	if file_type.is_zstd() {
-		file = decode_zstd(&file, fd.clone()).unwrap();
-	} else {
-		// uncompressed Slim and Fat files retain their initial magic bytes
-		offset = 1;
-	};
-
-
-	Some(serde_json::to_string(&parse_blk(&file[offset..], false, file_type.is_slim(), Some(nm), parsed_nm.clone())).unwrap())
 }
