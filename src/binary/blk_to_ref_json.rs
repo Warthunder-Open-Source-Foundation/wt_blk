@@ -2,6 +2,8 @@ use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::{BlkCow, BlkType};
 use crate::binary::output_formatting_conf::FormattingConfiguration;
 
+/// Reference JSON is an output format dedicated to mirroring the behaviour of existing formatters
+
 impl BlkField<'_> {
 	// Public facing formatting fn
 	pub fn as_ref_json(&self, fmt: FormattingConfiguration) -> String {
@@ -10,20 +12,27 @@ impl BlkField<'_> {
 		} else {
 			0
 		};
-		self._as_ref_json(&mut initial_indentation, true, fmt)
+		self._as_ref_json(&mut initial_indentation, true, fmt, true)
 	}
 
-	// TODO: Make this generic with a configuration file
-	// Internal fn that actually formats
-	fn _as_ref_json(&self, indent_level: &mut usize, is_root: bool, fmt: FormattingConfiguration) -> String {
+	// Indent level decides how deeply nested the current fields are
+	// The root flag decides special conditions for global output
+	// The formatting configuration sets some preferences for output
+	// Is last elem prevents trailing commas when the current element is the last of an object
+	fn _as_ref_json(&self, indent_level: &mut usize, is_root: bool, fmt: FormattingConfiguration, is_last_elem: bool) -> String {
+		let trail_comma = if is_last_elem {
+			""
+		} else {
+			","
+		};
 		match self {
 			BlkField::Value(name, value) => {
-				format!("\"{name}\": {},", value.as_ref_json(fmt, *indent_level))
+				format!("\"{name}\": {}{trail_comma}", value.as_ref_json(fmt, *indent_level))
 			}
 			BlkField::Struct(name, fields) => {
 				let mut indent = fmt.indent(*indent_level);
 				*indent_level += 1;
-				let children = fields.iter().map(|x| format!("{indent}{}", x._as_ref_json(indent_level, false, fmt))).collect::<Vec<_>>().join("\n");
+				let children = fields.iter().enumerate().map(|(i,x)| format!("{indent}{}", x._as_ref_json(indent_level, false, fmt, i == fields.len() - 1))).collect::<Vec<_>>().join("\n");
 				*indent_level -= 1;
 
 				let indent_closing = fmt.indent(indent_level.saturating_sub(1));
@@ -46,7 +55,7 @@ impl BlkField<'_> {
 					} else {
 						""
 					};
-					format!("\"{name}\"{name_delimiter} {{{block_delimiter}{children}{block_delimiter}{indent_closing}}},")
+					format!("\"{name}\"{name_delimiter} {{{block_delimiter}{children}{block_delimiter}{indent_closing}}}{trail_comma}")
 
 				}
 			}
