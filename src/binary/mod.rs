@@ -18,6 +18,8 @@ pub mod blk_structure;
 pub mod nm_file;
 mod blk_to_text;
 mod blk_block_hierarchy;
+mod blk_to_ref_json;
+mod output_formatting_conf;
 
 pub use ::zstd::dict::DecoderDictionary;
 

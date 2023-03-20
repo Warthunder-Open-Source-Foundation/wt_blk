@@ -35,13 +35,29 @@ mod test {
 	use crate::binary::nm_file::{NameMap, parse_slim_nm};
 	use crate::binary::parser::parse_blk;
 	use crate::binary::{parse_file, test_parse_dir};
+	use crate::binary::output_formatting_conf::FormattingConfiguration;
 	use crate::binary::zstd::{BlkDecoder, decode_zstd};
 
+	#[test]
+	fn json_parity() {
+		let nm = fs::read("./samples/rendist/nm").unwrap();
+		let dict = fs::read("./samples/rendist/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
+		let mut frame_decoder = DecoderDictionary::copy(&dict);
+
+		let nm = NameMap::decode_nm_file(&nm).unwrap();
+		let parsed_nm = parse_slim_nm(&nm);
+
+		let mut file = fs::read("./samples/su_r_27er.blk").unwrap();
+		file = decode_zstd(&file, Arc::new(frame_decoder)).unwrap();
+		let output = parse_blk(&file, false, true, Some(&nm), Rc::new(parsed_nm));
+		assert_eq!(output.as_ref_json(FormattingConfiguration::GSZABI_REPO), fs::read_to_string("./samples/su_r_27er.blkx").unwrap())
+	}
 
 	#[test]
 	fn fat_blk() {
 		let file = fs::read("./samples/section_fat.blk").unwrap();
 		let output = parse_blk(&file, true, false, None, Rc::new(vec![]));
+		println!("{}", output.as_blk_text());
 	}
 
 	#[test]

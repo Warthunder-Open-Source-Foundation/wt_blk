@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::rc::Rc;
 use serde::{Deserialize, Serialize};
 use crate::binary::nm_file::NameMap;
+use crate::binary::output_formatting_conf::FormattingConfiguration;
 
 pub type BlkCow<'a> = Cow<'a, str>;
 
@@ -203,6 +204,23 @@ impl <'a> BlkType<'a> {
 			BlkType::Float12(_) => { "m" }
 			BlkType::Bool(_) => { "b" }
 			BlkType::Color(_) => { "c" }
+		}
+	}
+	pub fn as_ref_json(&self, fmt: FormattingConfiguration) -> String {
+		let indent_once = fmt.indent(1);
+		match self {
+			BlkType::Str(v) => {format!("\"{v}\"")}
+			BlkType::Int(v) => {v.to_string()}
+			BlkType::Int2(v) => {format!("[\n{indent_once}{},\n{indent_once}{}\n]", v[0], v [1])}
+			BlkType::Int3(v) => {format!("{v:#?}")}
+			BlkType::Long(v) => {v.to_string()}
+			BlkType::Float(v) => {format!("{v:.?}")}
+			BlkType::Float2(v) => {format!("{v:#?}")}
+			BlkType::Float3(v) => {format!("[\n{indent_once}{:.},\n{indent_once}{:.},\n{indent_once}{:.}\n]", v[0], v [1], v[2])}
+			BlkType::Float4(v) => {format!("{v:#?}")}
+			BlkType::Float12(v) => {format!("{v:#?}")}
+			BlkType::Bool(v) => {v.to_string()}
+			BlkType::Color(v) => {format!("{v:?}")}
 		}
 	}
 }
