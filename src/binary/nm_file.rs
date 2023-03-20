@@ -64,7 +64,7 @@ impl <'a>NameMap<'a> {
 		for (i, val) in file.iter().enumerate() {
 			if *val == 0 {
 				names.push(String::from_utf8_lossy(&file[start..i]));
-				start = i;
+				start = i +1;
 			}
 		}
 		names
@@ -76,6 +76,12 @@ mod test {
 	use std::fs;
 	use crate::binary::leb128::uleb128;
 	use crate::binary::nm_file::NameMap;
+
+	#[test]
+	fn test_any_stream() {
+		let decoded = NameMap::parse_name_section("a\0b\0c\0".as_bytes());
+		assert_eq!(vec!["a", "b", "c"], decoded.iter().map( |x|x.to_string()).collect::<Vec<String>>())
+	}
 
 	#[test]
 	fn test_nm_file() {
