@@ -24,7 +24,7 @@ pub enum BlkType<'a> {
 	Color([u8; 4]),
 }
 
-impl <'a> BlkType<'a> {
+impl<'a> BlkType<'a> {
 	/// Type ID as corresponding to its type_code
 	/// Field is a 4 byte long region that either contains the final value or offset for the data region
 	/// data_region is for non-32 bit data
@@ -44,7 +44,7 @@ impl <'a> BlkType<'a> {
 				let offset = u32::from_le_bytes([field[0], field[1], field[2], field[3]]); // Construct int from the individual bytes
 				let in_nm = (offset >> 31) == 1; // Compare first bit to check where to look
 				let offset = i32::MAX as u32 & offset; // Set first byte to 0
-				let res: BlkCow =  if in_nm {
+				let res: BlkCow = if in_nm {
 					name_map[offset as usize].clone()
 				} else {
 					let data_region = &data_region[(offset as usize)..];
@@ -206,21 +206,22 @@ impl <'a> BlkType<'a> {
 			BlkType::Color(_) => { "c" }
 		}
 	}
-	pub fn as_ref_json(&self, fmt: FormattingConfiguration) -> String {
-		let indent_once = fmt.indent(1);
+	pub fn as_ref_json(&self, fmt: FormattingConfiguration, indent_level: usize) -> String {
+		let indent_once = fmt.indent(indent_level);
+		let indent_once_less = fmt.indent(indent_level.saturating_sub(1));
 		match self {
-			BlkType::Str(v) => {format!("\"{v}\"")}
-			BlkType::Int(v) => {v.to_string()}
-			BlkType::Int2(v) => {format!("[\n{indent_once}{},\n{indent_once}{}\n]", v[0], v [1])}
-			BlkType::Int3(v) => {format!("{v:#?}")}
-			BlkType::Long(v) => {v.to_string()}
-			BlkType::Float(v) => {format!("{v:.?}")}
-			BlkType::Float2(v) => {format!("{v:#?}")}
-			BlkType::Float3(v) => {format!("[\n{indent_once}{:.},\n{indent_once}{:.},\n{indent_once}{:.}\n]", v[0], v [1], v[2])}
-			BlkType::Float4(v) => {format!("{v:#?}")}
-			BlkType::Float12(v) => {format!("{v:#?}")}
-			BlkType::Bool(v) => {v.to_string()}
-			BlkType::Color(v) => {format!("{v:?}")}
+			BlkType::Str(v) => { format!("\"{v}\"") }
+			BlkType::Int(v) => { v.to_string() }
+			BlkType::Int2(v) => { format!("[\n{indent_once}{},\n{indent_once}{}\n]", v[0], v[1]) }
+			BlkType::Int3(v) => { format!("{v:#?}") }
+			BlkType::Long(v) => { v.to_string() }
+			BlkType::Float(v) => { format!("{v:.?}") }
+			BlkType::Float2(v) => { format!("[\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]", v[0], v[1])}
+			BlkType::Float3(v) => { format!("[\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]", v[0], v[1], v[2]) }
+			BlkType::Float4(v) => { format!("[\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]", v[0], v[1], v[2] , v[2]) }
+			BlkType::Float12(v) => { format!("{v:#?}") }
+			BlkType::Bool(v) => { v.to_string() }
+			BlkType::Color(v) => { format!("{v:?}") }
 		}
 	}
 }
@@ -284,18 +285,18 @@ pub fn bytes_to_long(input: &[u8]) -> Option<u64> {
 impl Display for BlkType<'_> {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		let value = match self {
-			BlkType::Str(v) => {format!("\\{}\\", v)}
-			BlkType::Int(v) => {v.to_string()}
-			BlkType::Int2(v) => {format!("{}, {}", v[0], v[1])}
-			BlkType::Int3(v) => {format!("{}, {}, {}", v[0], v[1], v[2])}
-			BlkType::Long(v) => {v.to_string()}
-			BlkType::Float(v) => {v.to_string()}
-			BlkType::Float2(v) => {format!("{}, {}", v[0], v[1])}
-			BlkType::Float3(v) => {format!("{}, {}, {}", v[0], v[1], v[2])}
-			BlkType::Float4(v) => {format!("{}, {}, {}, {}", v[0], v[1], v[2], v[3])}
-			BlkType::Float12(v) => {format!("{:?}",*v)}
-			BlkType::Bool(v) => {v.to_string()}
-			BlkType::Color(v) => {format!("{}, {}, {}, {}", v[3], v[2], v[1], v[0])}
+			BlkType::Str(v) => { format!("\\{}\\", v) }
+			BlkType::Int(v) => { v.to_string() }
+			BlkType::Int2(v) => { format!("{}, {}", v[0], v[1]) }
+			BlkType::Int3(v) => { format!("{}, {}, {}", v[0], v[1], v[2]) }
+			BlkType::Long(v) => { v.to_string() }
+			BlkType::Float(v) => { v.to_string() }
+			BlkType::Float2(v) => { format!("{}, {}", v[0], v[1]) }
+			BlkType::Float3(v) => { format!("{}, {}, {}", v[0], v[1], v[2]) }
+			BlkType::Float4(v) => { format!("{}, {}, {}, {}", v[0], v[1], v[2], v[3]) }
+			BlkType::Float12(v) => { format!("{:?}", *v) }
+			BlkType::Bool(v) => { v.to_string() }
+			BlkType::Color(v) => { format!("{}, {}, {}, {}", v[3], v[2], v[1], v[0]) }
 		};
 
 		write!(f, "{} = {}", self.blk_type_name(), value)

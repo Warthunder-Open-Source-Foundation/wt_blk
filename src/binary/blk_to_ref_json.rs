@@ -18,7 +18,7 @@ impl BlkField<'_> {
 	fn _as_ref_json(&self, indent_level: &mut usize, is_root: bool, fmt: FormattingConfiguration) -> String {
 		match self {
 			BlkField::Value(name, value) => {
-				format!("\"{name}\": {},", value.as_ref_json(fmt))
+				format!("\"{name}\": {},", value.as_ref_json(fmt, *indent_level))
 			}
 			BlkField::Struct(name, fields) => {
 				let mut indent = fmt.indent(*indent_level);
@@ -29,7 +29,7 @@ impl BlkField<'_> {
 				let indent_closing = fmt.indent(indent_level.saturating_sub(1));
 				if is_root {
 					if fmt.global_curly_bracket {
-						format!("{{\n{}}}", children)
+						format!("{{\n{children}}}")
 					} else {
 						format!("{children}")
 					}
@@ -46,7 +46,7 @@ impl BlkField<'_> {
 					} else {
 						""
 					};
-					format!("\"{name}\"{name_delimiter} {{{block_delimiter}{children}{block_delimiter}{indent_closing}}}")
+					format!("\"{name}\"{name_delimiter} {{{block_delimiter}{children}{block_delimiter}{indent_closing}}},")
 
 				}
 			}
