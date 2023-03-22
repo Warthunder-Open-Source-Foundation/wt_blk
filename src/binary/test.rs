@@ -32,7 +32,7 @@ mod test {
 	use crate::binary::blk_type::BlkType;
 	use crate::binary::file::FileType;
 	use crate::binary::leb128::uleb128;
-	use crate::binary::nm_file::{NameMap, parse_slim_nm};
+	use crate::binary::nm_file::{NameMap};
 	use crate::binary::parser::parse_blk;
 	use crate::binary::{parse_file, test_parse_dir};
 	use crate::binary::output_formatting_conf::FormattingConfiguration;
@@ -45,7 +45,7 @@ mod test {
 		let mut frame_decoder = DecoderDictionary::copy(&dict);
 
 		let nm = NameMap::decode_nm_file(&nm).unwrap();
-		let parsed_nm = parse_slim_nm(&nm);
+		let parsed_nm = NameMap::parse_slim_nm(&nm);
 
 		let mut file = fs::read("./samples/su_r_27er.blk").unwrap();
 		file = decode_zstd(&file, Arc::new(frame_decoder)).unwrap();
@@ -77,7 +77,7 @@ mod test {
 		let mut frame_decoder = DecoderDictionary::copy(&dict);
 
 		let nm = NameMap::decode_nm_file(&nm).unwrap();
-		let parsed_nm = parse_slim_nm(&nm);
+		let parsed_nm = NameMap::parse_slim_nm(&nm);
 
 		let mut offset = 0;
 		let file_type = FileType::from_byte(file[0]).unwrap();
@@ -95,7 +95,7 @@ mod test {
 	fn slim_blk() {
 		let file = fs::read("./samples/section_slim.blk").unwrap();
 		let nm = fs::read("./samples/names").unwrap();
-		let parsed_nm = parse_slim_nm(&nm);
+		let parsed_nm = NameMap::parse_slim_nm(&nm);
 		let output = parse_blk(&file, true, true, Some(&nm), Rc::new(parsed_nm));
 	}
 
@@ -108,7 +108,7 @@ mod test {
 		let frame_decoder = DecoderDictionary::copy(&dict);
 
 		let nm = NameMap::decode_nm_file(&nm).unwrap();
-		let parsed_nm = parse_slim_nm(&nm);
+		let parsed_nm = NameMap::parse_slim_nm(&nm);
 
 		let dir: ReadDir = fs::read_dir("./samples/vromfs/aces.vromfs.bin_u").unwrap();
 		let mut total = AtomicUsize::new(0);
