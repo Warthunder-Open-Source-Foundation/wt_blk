@@ -55,7 +55,7 @@ pub fn parse_blk(file: & [u8], with_magic_byte: bool, is_slim: bool, shared_name
 
 
 
-	let mut results: Vec<(usize, BlkField)> = vec![]; // TODO: Allocate with capacity according to chunk count
+	let mut results: Vec<(usize, BlkField)> = Vec::with_capacity(params_info.len() / 8);
 	for chunk in params_info.chunks(8) {
 		let name_id_raw = &chunk[0..3];
 		let name_id = u32::from_le_bytes([
