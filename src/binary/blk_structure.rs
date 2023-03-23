@@ -1,14 +1,14 @@
 use std::rc::Rc;
 use serde::{Deserialize, Serialize};
 use serde_json::to_string;
-use crate::binary::blk_type::{BlkCow, BlkType};
+use crate::binary::blk_type::{BlkString, BlkType};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BlkField {
 	// Name and field value
-	Value(BlkCow, BlkType),
+	Value(BlkString, BlkType),
 	// Name and fields of substructs
-	Struct(BlkCow, Vec<BlkField>),
+	Struct(BlkString, Vec<BlkField>),
 }
 
 
@@ -17,7 +17,7 @@ impl BlkField {
 		BlkField::Struct(Rc::new("root".to_owned()), vec![])
 	}
 
-	pub fn new_struct(name: BlkCow) -> Self {
+	pub fn new_struct(name: BlkString) -> Self {
 		BlkField::Struct(name, vec![])
 	}
 

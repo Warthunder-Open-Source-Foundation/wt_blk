@@ -4,7 +4,7 @@ use std::rc::Rc;
 use std::time::Instant;
 use crate::binary::blk_block_hierarchy::FlatBlock;
 use crate::binary::blk_structure::BlkField;
-use crate::binary::blk_type::{BlkCow, BlkType};
+use crate::binary::blk_type::{BlkString, BlkType};
 use crate::binary::file::FileType;
 use crate::binary::leb128::uleb128;
 use crate::binary::nm_file::NameMap;

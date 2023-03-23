@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::binary::nm_file::NameMap;
 use crate::binary::output_formatting_conf::FormattingConfiguration;
 
-pub type BlkCow = Rc<String>;
+pub type BlkString = Rc<String>;
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
 pub enum BlkType {
@@ -45,7 +45,7 @@ impl BlkType {
 				let offset = u32::from_le_bytes([field[0], field[1], field[2], field[3]]); // Construct int from the individual bytes
 				let in_nm = (offset >> 31) == 1; // Compare first bit to check where to look
 				let offset = i32::MAX as u32 & offset; // Set first byte to 0
-				let res: BlkCow = if in_nm {
+				let res: BlkString = if in_nm {
 					name_map[offset as usize].clone()
 				} else {
 					let data_region = &data_region[(offset as usize)..];

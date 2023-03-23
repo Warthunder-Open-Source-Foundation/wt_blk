@@ -3,7 +3,7 @@ use std::fs::ReadDir;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use crate::binary::blk_type::BlkCow;
+use crate::binary::blk_type::BlkString;
 use crate::binary::file::FileType;
 use crate::binary::parser::parse_blk;
 use crate::binary::zstd::{BlkDecoder, decode_zstd};

@@ -9,7 +9,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
 use crate::binary::blk_structure::BlkField;
-use crate::binary::blk_type::BlkCow;
+use crate::binary::blk_type::BlkString;
 
 use crate::binary::file::FileType;
 use crate::binary::parser::parse_blk;

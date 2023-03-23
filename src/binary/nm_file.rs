@@ -1,14 +1,14 @@
 use std::io::Read;
 use std::rc::Rc;
 use zstd::Decoder;
-use crate::binary::blk_type::BlkCow;
+use crate::binary::blk_type::BlkString;
 use crate::binary::leb128::uleb128;
 
 
 #[derive(Clone, Debug)]
 pub struct NameMap {
 	pub binary: Rc<Vec<u8>>,
-	pub parsed: Rc<Vec<BlkCow>>,
+	pub parsed: Rc<Vec<BlkString>>,
 }
 
 impl NameMap {
@@ -21,7 +21,7 @@ impl NameMap {
 		})
 	};
 
-	pub fn idx_parsed(&self, idx: usize) -> Option<&BlkCow> {
+	pub fn idx_parsed(&self, idx: usize) -> Option<&BlkString> {
 		self.parsed.get(idx)
 	}
 
@@ -46,7 +46,7 @@ impl NameMap {
 		Some(out)
 	}
 
-	pub fn parse_name_section(file: &[u8]) -> Vec<BlkCow> {
+	pub fn parse_name_section(file: &[u8]) -> Vec<BlkString> {
 		let mut start = 0_usize;
 		let mut names = vec![];
 		for (i, val) in file.iter().enumerate() {
@@ -58,7 +58,7 @@ impl NameMap {
 		names
 	}
 
-	pub fn parse_slim_nm(name_map: &[u8]) -> Vec<BlkCow> {
+	pub fn parse_slim_nm(name_map: &[u8]) -> Vec<BlkString> {
 		let mut nm_ptr = 0;
 
 		let (offset, names_count) = uleb128(&name_map[nm_ptr..]).unwrap();
