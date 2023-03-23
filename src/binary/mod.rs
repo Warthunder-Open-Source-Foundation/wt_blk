@@ -22,6 +22,7 @@ mod blk_to_ref_json;
 mod output_formatting_conf;
 
 pub use ::zstd::dict::DecoderDictionary;
+use crate::binary::nm_file::NameMap;
 
 pub fn test_parse_dir(pile: &mut Vec<(String, Vec<u8>)>, dir: ReadDir, total_files_processed: &AtomicUsize) {
 	for file in dir {
@@ -39,7 +40,7 @@ pub fn test_parse_dir(pile: &mut Vec<(String, Vec<u8>)>, dir: ReadDir, total_fil
 	}
 }
 
-pub fn parse_file(mut file: Vec<u8>, fd: Arc<BlkDecoder>, nm: &[u8], parsed_nm: Rc<Vec<BlkCow>>) -> Option<String> {
+pub fn parse_file(mut file: Vec<u8>, fd: Arc<BlkDecoder>, shared_name_map: Rc<NameMap>) -> Option<String> {
 	let mut offset = 0;
 	let file_type = FileType::from_byte(file[0])?;
 	if file_type.is_zstd() {
@@ -50,5 +51,5 @@ pub fn parse_file(mut file: Vec<u8>, fd: Arc<BlkDecoder>, nm: &[u8], parsed_nm: 
 	};
 
 
-	Some(serde_json::to_string(&parse_blk(&file[offset..], false, file_type.is_slim(), Some(nm), parsed_nm.clone())).unwrap())
+	Some(serde_json::to_string(&parse_blk(&file[offset..], false, file_type.is_slim(), shared_name_map)).unwrap())
 }

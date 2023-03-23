@@ -1,15 +1,16 @@
 use std::borrow::Cow;
 use std::fmt::{Display, Formatter};
+use std::io::BufRead;
 use std::rc::Rc;
 use serde::{Deserialize, Serialize};
 use crate::binary::nm_file::NameMap;
 use crate::binary::output_formatting_conf::FormattingConfiguration;
 
-pub type BlkCow<'a> = Cow<'a, str>;
+pub type BlkCow = Rc<String>;
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
-pub enum BlkType<'a> {
-	Str(BlkCow<'a>),
+pub enum BlkType {
+	Str(Rc<String>),
 	Int(u32),
 	Int2([u32; 2]),
 	Int3([u32; 3]),
@@ -24,11 +25,11 @@ pub enum BlkType<'a> {
 	Color([u8; 4]),
 }
 
-impl<'a> BlkType<'a> {
+impl BlkType {
 	/// Type ID as corresponding to its type_code
 	/// Field is a 4 byte long region that either contains the final value or offset for the data region
 	/// data_region is for non-32 bit data
-	pub fn from_raw_param_info(type_id: u8, field: &'a [u8], data_region: &'a [u8], name_map: Rc<Vec<BlkCow<'a>>>) -> Option<Self> {
+	pub fn from_raw_param_info(type_id: u8, field: &[u8], data_region: Rc<Vec<u8>>, name_map: Rc<Vec<Rc<String>>>) -> Option<Self> {
 
 		// Make sure the field is properly sized
 		if field.len() != 4 {
@@ -48,7 +49,14 @@ impl<'a> BlkType<'a> {
 					name_map[offset as usize].clone()
 				} else {
 					let data_region = &data_region[(offset as usize)..];
-					NameMap::parse_name_section(data_region).remove(0)
+					let mut buff = vec![];
+					for byte in data_region {
+						if *byte == 0 {
+							break;
+						}
+						buff.push(*byte)
+					}
+					Rc::new(String::from_utf8_lossy(&buff).to_string())
 				};
 
 				Some(Self::Str(res))
@@ -282,7 +290,7 @@ pub fn bytes_to_long(input: &[u8]) -> Option<u64> {
 	]))
 }
 
-impl Display for BlkType<'_> {
+impl Display for BlkType {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		let value = match self {
 			BlkType::Str(v) => { format!("\\{}\\", v) }

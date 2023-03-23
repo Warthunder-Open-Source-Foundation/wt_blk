@@ -22,6 +22,7 @@ mod test {
 	use std::fs::ReadDir;
 	use std::mem::size_of;
 	use std::path::Path;
+	use std::process::exit;
 	use std::rc::Rc;
 	use std::sync::{Arc, Mutex};
 	use std::sync::atomic::{AtomicUsize, Ordering};
@@ -44,26 +45,27 @@ mod test {
 		let dict = fs::read("./samples/rendist/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
 		let mut frame_decoder = DecoderDictionary::copy(&dict);
 
-		let nm = NameMap::decode_nm_file(&nm).unwrap();
-		let parsed_nm = NameMap::parse_slim_nm(&nm);
+		// let nm = NameMap::decode_nm_file(&nm).unwrap();
+		// let parsed_nm = NameMap::parse_slim_nm(&nm);
 
 		let mut file = fs::read("./samples/su_r_27er.blk").unwrap();
 		file = decode_zstd(&file, Arc::new(frame_decoder)).unwrap();
-		let output = parse_blk(&file, false, true, Some(&nm), Rc::new(parsed_nm));
+		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
+		let output = parse_blk(&file, false, true, Rc::new(shared_name_map));
 		assert_eq!(output.as_ref_json(FormattingConfiguration::GSZABI_REPO), fs::read_to_string("./samples/su_r_27er.blkx").unwrap())
 	}
 
 	#[test]
 	fn fat_blk() {
 		let file = fs::read("./samples/section_fat.blk").unwrap();
-		let output = parse_blk(&file, true, false, None, Rc::new(vec![]));
+		let output = parse_blk(&file, true, false, NameMap::DUMMY());
 		println!("{}", output.as_blk_text());
 	}
 
 	#[test]
 	fn fat_blk_router_probe() {
 		let file = fs::read("./samples/route_prober.blk").unwrap();
-		let output = parse_blk(&file, false, false, None, Rc::new(vec![]));
+		let output = parse_blk(&file, false, false, NameMap::DUMMY());
 	}
 
 	/// the rendist file is *very* large for a BLK file, so this test is best for optimizing single-run executions
@@ -76,8 +78,8 @@ mod test {
 
 		let mut frame_decoder = DecoderDictionary::copy(&dict);
 
-		let nm = NameMap::decode_nm_file(&nm).unwrap();
-		let parsed_nm = NameMap::parse_slim_nm(&nm);
+		// let nm = NameMap::decode_nm_file(&nm).unwrap();
+		// let parsed_nm = NameMap::parse_slim_nm(&nm);
 
 		let mut offset = 0;
 		let file_type = FileType::from_byte(file[0]).unwrap();
@@ -88,15 +90,20 @@ mod test {
 			offset = 1;
 		}
 
-		parse_blk(&file[offset..], false, file_type.is_slim(), Some(&nm), Rc::new(parsed_nm));
+		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
+		let parsed = parse_blk(&file[offset..], false, file_type.is_slim(), Rc::new(shared_name_map));
 	}
 
 	#[test]
 	fn slim_blk() {
 		let file = fs::read("./samples/section_slim.blk").unwrap();
-		let nm = fs::read("./samples/names").unwrap();
-		let parsed_nm = NameMap::parse_slim_nm(&nm);
-		let output = parse_blk(&file, true, true, Some(&nm), Rc::new(parsed_nm));
+		let nm = fs::read("./samples/nm").unwrap();
+		// let parsed_nm = NameMap::parse_slim_nm(&nm);
+
+		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
+		let output = parse_blk(&file, true, true, Rc::new(shared_name_map));
+		println!("{}", output.as_blk_text());
+		panic!()
 	}
 
 	#[test]
@@ -107,8 +114,6 @@ mod test {
 
 		let frame_decoder = DecoderDictionary::copy(&dict);
 
-		let nm = NameMap::decode_nm_file(&nm).unwrap();
-		let parsed_nm = NameMap::parse_slim_nm(&nm);
 
 		let dir: ReadDir = fs::read_dir("./samples/vromfs/aces.vromfs.bin_u").unwrap();
 		let mut total = AtomicUsize::new(0);
@@ -116,10 +121,10 @@ mod test {
 		let mut pile = vec![];
 		test_parse_dir(&mut pile, dir, &total);
 
-		let rc_nm = Rc::new(parsed_nm);
+		let shared_name_map = Rc::new(NameMap::from_encoded_file(&nm).unwrap());
 		let arced_fd = Arc::new(frame_decoder);
 		let out = pile.into_iter().map(|file| {
-			parse_file(file.1, arced_fd.clone(), &nm, rc_nm.clone())
+			parse_file(file.1, arced_fd.clone(), shared_name_map.clone())
 		}).filter_map(|x| x)
 					  .collect::<Vec<_>>();
 

@@ -6,27 +6,39 @@ use crate::binary::leb128::uleb128;
 
 
 #[derive(Clone, Debug)]
-pub struct NameMap<'a> {
-	binary: Vec<u8>,
-	parsed: Vec<BlkCow<'a>>,
+pub struct NameMap {
+	pub binary: Rc<Vec<u8>>,
+	pub parsed: Rc<Vec<BlkCow>>,
 }
 
-impl <'a>NameMap<'a> {
-	pub fn from_encoded_file(file: &'a [u8]) -> Option<Self> {
+impl NameMap {
+	// Used for testing purposes
+	pub const DUMMY: fn() -> Rc<NameMap> = ||{
+		Rc::new(Self {
+			binary: Rc::new(vec![]),
+			parsed: Rc::new(vec![]),
+		})
+	};
+
+	pub fn idx_parsed(&self, idx: usize) -> Option<&BlkCow> {
+		self.parsed.get(idx)
+	}
+
+	pub fn from_encoded_file(file: & [u8]) -> Option<Self> {
 		let decoded = Self::decode_nm_file(file)?;
 
 		let mut start = 0_usize;
 		let mut names = vec![];
-		for (i, val) in file.iter().enumerate() {
+		for (i, val) in decoded.iter().enumerate() {
 			if *val == 0 {
-				names.push(String::from_utf8_lossy(&file[start..i]));
-				start = i;
+				names.push(Rc::new(String::from_utf8_lossy(&decoded[start..i]).to_string()));
+				start = i + 1;
 			}
 		}
 
 		Some(Self {
-			parsed: names,
-			binary: decoded,
+			parsed: Rc::new(names),
+			binary: Rc::new(decoded),
 		})
 	}
 
@@ -45,7 +57,7 @@ impl <'a>NameMap<'a> {
 		let mut names = vec![];
 		for (i, val) in file.iter().enumerate() {
 			if *val == 0 {
-				names.push(String::from_utf8_lossy(&file[start..i]));
+				names.push(Rc::new(String::from_utf8_lossy(&file[start..i]).to_string()));
 				start = i +1;
 			}
 		}

@@ -4,7 +4,7 @@ use crate::binary::output_formatting_conf::FormattingConfiguration;
 
 /// Reference JSON is an output format dedicated to mirroring the behaviour of existing formatters
 
-impl BlkField<'_> {
+impl BlkField {
 	// Public facing formatting fn
 	pub fn as_ref_json(&self, fmt: FormattingConfiguration) -> String {
 		let mut initial_indentation = if fmt.global_curly_bracket {

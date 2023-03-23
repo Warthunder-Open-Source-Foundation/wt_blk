@@ -4,26 +4,26 @@ use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::BlkCow;
 
 #[derive(Debug, Clone)]
-pub struct FlatBlock<'a> {
-	pub name: BlkCow<'a>,
-	pub fields:  Vec<BlkField<'a>>,
+pub struct FlatBlock {
+	pub name: BlkCow,
+	pub fields:  Vec<BlkField>,
 	pub blocks: usize,
 	pub offset: usize,
 }
 
-impl FlatBlock<'_> {
+impl FlatBlock {
 	fn location_range(&self) -> Range<usize> {
 		self.offset..(self.offset + self.blocks)
 	}
 }
 
-impl <'a>BlkField<'a> {
-	pub fn from_flat_blocks(flat_blocks: Vec<FlatBlock<'a>>) -> Self {
+impl BlkField {
+	pub fn from_flat_blocks(flat_blocks: Vec<FlatBlock>) -> Self {
 		let cloned = flat_blocks[0].clone();
 		Self::from_flat_blocks_with_parent(&flat_blocks, cloned)
 	}
 
-	fn from_flat_blocks_with_parent(flat_blocks: &Vec<FlatBlock<'a>>, parent: FlatBlock<'a>) -> Self {
+	fn from_flat_blocks_with_parent(flat_blocks: &Vec<FlatBlock>, parent: FlatBlock) -> Self {
 		let mut block = BlkField::Struct(parent.name.clone(), parent.fields.clone());
 
 		for flat_block in &flat_blocks[parent.location_range()] {

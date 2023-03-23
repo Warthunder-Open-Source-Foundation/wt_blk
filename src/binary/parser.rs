@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::ops::DerefMut;
 use std::rc::Rc;
 use std::time::Instant;
 use crate::binary::blk_block_hierarchy::FlatBlock;
@@ -8,7 +9,7 @@ use crate::binary::file::FileType;
 use crate::binary::leb128::uleb128;
 use crate::binary::nm_file::NameMap;
 
-pub fn parse_blk<'a>(file: &'a [u8], with_magic_byte: bool, is_slim: bool, name_map: Option<&'a [u8]>, parsed_nm: Rc<Vec<BlkCow<'a>>>) -> BlkField<'a> {
+pub fn parse_blk(file: & [u8], with_magic_byte: bool, is_slim: bool, shared_name_map: Rc<NameMap>) -> BlkField {
 	let mut ptr = 0;
 
 	if with_magic_byte {
@@ -21,7 +22,7 @@ pub fn parse_blk<'a>(file: &'a [u8], with_magic_byte: bool, is_slim: bool, name_
 
 
 	let names = if is_slim { // TODO Figure out if names_count dictates the existence of a name map or if it may be 0 without requiring a name map
-		parsed_nm
+		shared_name_map.parsed.clone()
 	} else {
 		let (offset, names_data_size) = uleb128(&file[ptr..]).unwrap();
 		ptr += offset;
@@ -54,7 +55,7 @@ pub fn parse_blk<'a>(file: &'a [u8], with_magic_byte: bool, is_slim: bool, name_
 
 
 
-	let mut results: Vec<(usize, BlkField)> = vec![];
+	let mut results: Vec<(usize, BlkField)> = vec![]; // TODO: Allocate with capacity according to chunk count
 	for chunk in params_info.chunks(8) {
 		let name_id_raw = &chunk[0..3];
 		let name_id = u32::from_le_bytes([
@@ -70,9 +71,9 @@ pub fn parse_blk<'a>(file: &'a [u8], with_magic_byte: bool, is_slim: bool, name_
 
 		// TODO: Validate wether or not slim files store only strings in the name map
 		let parsed = if is_slim && type_id == 0x01 {
-			BlkType::from_raw_param_info(type_id, data, name_map.unwrap(), names.clone()).unwrap()
+			BlkType::from_raw_param_info(type_id, data, shared_name_map.binary.clone(),shared_name_map.parsed.clone()).unwrap()
 		} else {
-			BlkType::from_raw_param_info(type_id, data, params_data, names.clone()).unwrap()
+			BlkType::from_raw_param_info(type_id, data, Rc::new(params_data.to_owned()), names.clone()).unwrap()
 		};
 
 		let field = BlkField::Value(name.to_owned(), parsed);
@@ -84,7 +85,7 @@ pub fn parse_blk<'a>(file: &'a [u8], with_magic_byte: bool, is_slim: bool, name_
 	{
 		let block_id_to_name = |id| {
 			if id == 0 {
-				BlkCow::Borrowed("root")
+				Rc::new("root".to_owned())
 			} else {
 				(&names)[(id - 1) as usize].clone()
 			}
