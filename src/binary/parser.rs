@@ -9,23 +9,27 @@ use crate::binary::file::FileType;
 use crate::binary::leb128::uleb128;
 use crate::binary::nm_file::NameMap;
 
-pub fn parse_blk(file: & [u8], with_magic_byte: bool, is_slim: bool, shared_name_map: Rc<NameMap>) -> BlkField {
+pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, shared_name_map: Rc<NameMap>) -> BlkField {
 	let mut ptr = 0;
+
+	// Globally increments ptr and returns next uleb integer from file
+	let mut next_uleb = |ptr: &mut usize| {
+		let (offset, int) = uleb128(&file[*ptr..]).unwrap();
+		*ptr += offset;
+		int
+	};
 
 	if with_magic_byte {
 		let file_type = FileType::from_byte(file[0]).unwrap();
 		ptr += 1;
 	}
 
-	let (offset, names_count) = uleb128(&file[ptr..]).unwrap();
-	ptr += offset;
-
+	let names_count = next_uleb(&mut ptr);
 
 	let names = if is_slim { // TODO Figure out if names_count dictates the existence of a name map or if it may be 0 without requiring a name map
 		shared_name_map.parsed.clone()
 	} else {
-		let (offset, names_data_size) = uleb128(&file[ptr..]).unwrap();
-		ptr += offset;
+		let names_data_size = next_uleb(&mut ptr);
 
 		let names = NameMap::parse_name_section(&file[ptr..(ptr + names_data_size)]);
 		ptr += names_data_size;
@@ -35,14 +39,11 @@ pub fn parse_blk(file: & [u8], with_magic_byte: bool, is_slim: bool, shared_name
 		Rc::new(names)
 	};
 
-	let (offset, blocks_count) = uleb128(&file[ptr..]).unwrap();
-	ptr += offset;
+	let blocks_count = next_uleb(&mut ptr);
 
-	let (offset, params_count) = uleb128(&file[ptr..]).unwrap();
-	ptr += offset;
+	let params_count = next_uleb(&mut ptr);
 
-	let (offset, params_data_size) = uleb128(&file[ptr..]).unwrap();
-	ptr += offset;
+	let params_data_size = next_uleb(&mut ptr);
 
 	let params_data = &file[ptr..(ptr + params_data_size)];
 	ptr += params_data_size;
@@ -52,7 +53,6 @@ pub fn parse_blk(file: & [u8], with_magic_byte: bool, is_slim: bool, shared_name
 
 	let block_info = &file[ptr..];
 	drop(ptr);
-
 
 
 	let mut results: Vec<(usize, BlkField)> = Vec::with_capacity(params_info.len() / 8);
@@ -71,7 +71,7 @@ pub fn parse_blk(file: & [u8], with_magic_byte: bool, is_slim: bool, shared_name
 
 		// TODO: Validate wether or not slim files store only strings in the name map
 		let parsed = if is_slim && type_id == 0x01 {
-			BlkType::from_raw_param_info(type_id, data, shared_name_map.binary.clone(),shared_name_map.parsed.clone()).unwrap()
+			BlkType::from_raw_param_info(type_id, data, shared_name_map.binary.clone(), shared_name_map.parsed.clone()).unwrap()
 		} else {
 			BlkType::from_raw_param_info(type_id, data, Rc::new(params_data.to_owned()), names.clone()).unwrap()
 		};
@@ -115,7 +115,6 @@ pub fn parse_blk(file: & [u8], with_magic_byte: bool, is_slim: bool, shared_name
 			// Amount of non-block fields
 			// Amount of child-blocks
 			// If it has child-blocks, starting index of said block
-
 		}
 	}
 
@@ -124,7 +123,7 @@ pub fn parse_blk(file: & [u8], with_magic_byte: bool, is_slim: bool, shared_name
 	// After this, the hierarchy will be assigned depth depending on the block-map
 	let mut flat_map: Vec<FlatBlock> = Vec::with_capacity(blocks_count);
 	let mut ptr = 0;
-	for (name, field_count, blocks , offset) in blocks {
+	for (name, field_count, blocks, offset) in blocks {
 		let mut field = FlatBlock {
 			name,
 			fields: Vec::with_capacity(field_count),
