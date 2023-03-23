@@ -98,12 +98,9 @@ mod test {
 	fn slim_blk() {
 		let file = fs::read("./samples/section_slim.blk").unwrap();
 		let nm = fs::read("./samples/nm").unwrap();
-		// let parsed_nm = NameMap::parse_slim_nm(&nm);
 
 		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
 		let output = parse_blk(&file, true, true, Rc::new(shared_name_map));
-		println!("{}", output.as_blk_text());
-		panic!()
 	}
 
 	#[test]

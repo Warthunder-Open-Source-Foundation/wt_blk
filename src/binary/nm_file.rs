@@ -15,6 +15,7 @@ impl NameMap {
 	// Used for testing purposes
 	pub const DUMMY: fn() -> Rc<NameMap> = ||{
 		Rc::new(Self {
+			// TODO: The binary vec still includes pre-uleb integers so im not sure if there might be an offset issue later on
 			binary: Rc::new(vec![]),
 			parsed: Rc::new(vec![]),
 		})
@@ -27,14 +28,7 @@ impl NameMap {
 	pub fn from_encoded_file(file: & [u8]) -> Option<Self> {
 		let decoded = Self::decode_nm_file(file)?;
 
-		let mut start = 0_usize;
-		let mut names = vec![];
-		for (i, val) in decoded.iter().enumerate() {
-			if *val == 0 {
-				names.push(Rc::new(String::from_utf8_lossy(&decoded[start..i]).to_string()));
-				start = i + 1;
-			}
-		}
+		let names = Self::parse_slim_nm(&decoded);
 
 		Some(Self {
 			parsed: Rc::new(names),
