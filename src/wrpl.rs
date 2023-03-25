@@ -17,10 +17,9 @@ mod test {
 
 				let parsed_floats = all_floats
 					.chunks(size_of::<f32>())
-					.map(|bin|f32::from_le_bytes([bin[0],bin[1],bin[2],bin[3],]))
+					.map(|bin|f32::from_le_bytes(bin[..4].try_into().unwrap()))
 					.map(|x|format!("{x:<15}"))
 					.collect::<Vec<_>>();
-
 				floats.push(parsed_floats.join("\t"));
 			}
 		}
