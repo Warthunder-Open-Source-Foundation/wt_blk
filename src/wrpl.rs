@@ -24,6 +24,6 @@ mod test {
 				floats.push(parsed_floats.join("\t"));
 			}
 		}
-		fs::write("floats.txt", floats.join("\n")).unwrap();
+		fs::write("./samples/floats.txt", floats.join("\n")).unwrap();
 	}
 }
