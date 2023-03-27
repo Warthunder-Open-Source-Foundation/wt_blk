@@ -60,8 +60,8 @@ pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Rc<NameMap>) -> Re
 	let params_info= idx_file_offset(&mut ptr, params_count * 8)?;
 
 	let block_info = &file.get(ptr..).ok_or(ResidualBlockBuffer)?;
-	drop(ptr);
 
+	let ptr = (); // Shadowing ptr causes it to become unusable, especially on accident
 
 	let mut results: Vec<(usize, BlkField)> = Vec::with_capacity(params_info.len() / 8);
 	for chunk in params_info.chunks(8) {
