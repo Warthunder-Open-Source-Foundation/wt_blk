@@ -20,6 +20,7 @@ mod blk_to_text;
 mod blk_block_hierarchy;
 mod blk_to_ref_json;
 mod output_formatting_conf;
+mod error;
 
 pub use ::zstd::dict::DecoderDictionary;
 use crate::binary::nm_file::NameMap;
@@ -51,5 +52,5 @@ pub fn parse_file(mut file: Vec<u8>, fd: Arc<BlkDecoder>, shared_name_map: Rc<Na
 	};
 
 
-	Some(serde_json::to_string(&parse_blk(&file[offset..], false, file_type.is_slim(), shared_name_map)).unwrap())
+	Some(serde_json::to_string(&parse_blk(&file[offset..],  file_type.is_slim(), shared_name_map)).unwrap())
 }

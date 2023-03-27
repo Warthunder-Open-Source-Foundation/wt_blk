@@ -9,7 +9,7 @@ use crate::binary::file::FileType;
 use crate::binary::leb128::uleb128;
 use crate::binary::nm_file::NameMap;
 
-pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, shared_name_map: Rc<NameMap>) -> BlkField {
+pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Rc<NameMap>) -> BlkField {
 	let mut ptr = 0;
 
 	// Globally increments ptr and returns next uleb integer from file
@@ -19,10 +19,6 @@ pub fn parse_blk(file: &[u8], with_magic_byte: bool, is_slim: bool, shared_name_
 		int
 	};
 
-	if with_magic_byte {
-		let file_type = FileType::from_byte(file[0]).unwrap();
-		ptr += 1;
-	}
 
 	let names_count = next_uleb(&mut ptr);
 
