@@ -52,20 +52,20 @@ mod test {
 		file = decode_zstd(&file, Arc::new(frame_decoder)).unwrap();
 		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
 		let output = parse_blk(&file, true, Rc::new(shared_name_map));
-		assert_eq!(output.as_ref_json(FormattingConfiguration::GSZABI_REPO), fs::read_to_string("./samples/su_r_27er.blkx").unwrap())
+		assert_eq!(output.unwrap().as_ref_json(FormattingConfiguration::GSZABI_REPO), fs::read_to_string("./samples/su_r_27er.blkx").unwrap())
 	}
 
 	#[test]
 	fn fat_blk() {
 		let file = fs::read("./samples/section_fat.blk").unwrap();
 		let output = parse_blk(&file[1..], false, NameMap::DUMMY());
-		println!("{}", output.as_blk_text());
+		println!("{}", output.unwrap().as_blk_text());
 	}
 
 	#[test]
 	fn fat_blk_router_probe() {
 		let file = fs::read("./samples/route_prober.blk").unwrap();
-		let output = parse_blk(&file, false, NameMap::DUMMY());
+		let output = parse_blk(&file, false, NameMap::DUMMY()).unwrap();
 	}
 
 	/// the rendist file is *very* large for a BLK file, so this test is best for optimizing single-run executions
@@ -91,7 +91,7 @@ mod test {
 		}
 
 		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
-		let parsed = parse_blk(&file[offset..], file_type.is_slim(), Rc::new(shared_name_map));
+		let parsed = parse_blk(&file[offset..], file_type.is_slim(), Rc::new(shared_name_map)).unwrap();
 	}
 
 	#[test]
@@ -100,7 +100,7 @@ mod test {
 		let nm = fs::read("./samples/nm").unwrap();
 
 		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
-		let output = parse_blk(&file[1..], true, Rc::new(shared_name_map));
+		let output = parse_blk(&file[1..], true, Rc::new(shared_name_map)).unwrap();
 	}
 
 	#[test]

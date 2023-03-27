@@ -52,5 +52,5 @@ pub fn parse_file(mut file: Vec<u8>, fd: Arc<BlkDecoder>, shared_name_map: Rc<Na
 	};
 
 
-	Some(serde_json::to_string(&parse_blk(&file[offset..],  file_type.is_slim(), shared_name_map)).unwrap())
+	Some(serde_json::to_string(&parse_blk(&file[offset..],  file_type.is_slim(), shared_name_map).ok()?).unwrap())
 }
