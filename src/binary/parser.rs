@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::ops::DerefMut;
 use std::rc::Rc;
 use std::time::Instant;
-use tracing::warn;
+use tracing::{error, warn};
 use crate::binary::blk_block_hierarchy::FlatBlock;
 use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::{BlkString, BlkType};
@@ -31,7 +31,7 @@ pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Rc<NameMap>) -> Bl
 		let names = NameMap::parse_name_section(&file[ptr..(ptr + names_data_size)]);
 		ptr += names_data_size;
 		if names_count != names.len() {
-			warn!("Name count mismatch, expected {names_count}, but found a len of {}. This might mean something is wrong.", names.len());
+			error!("Name count mismatch, expected {names_count}, but found a len of {}. This might mean something is wrong.", names.len());
 		}
 		Rc::new(names)
 	};
@@ -78,7 +78,7 @@ pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Rc<NameMap>) -> Bl
 	}
 
 
-	let mut blocks = vec![];
+	let mut blocks = Vec::with_capacity(blocks_count);
 	{
 		let block_id_to_name = |id| {
 			if id == 0 {
