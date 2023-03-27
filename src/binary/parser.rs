@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::ops::DerefMut;
 use std::rc::Rc;
 use std::time::Instant;
+use tracing::warn;
 use crate::binary::blk_block_hierarchy::FlatBlock;
 use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::{BlkString, BlkType};
@@ -30,7 +31,7 @@ pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Rc<NameMap>) -> Bl
 		let names = NameMap::parse_name_section(&file[ptr..(ptr + names_data_size)]);
 		ptr += names_data_size;
 		if names_count != names.len() {
-			panic!("Should be equal"); // TODO: Change to result when fn signature allows for it
+			warn!("Name count mismatch, expected {names_count}, but found a len of {}. This might mean something is wrong.", names.len());
 		}
 		Rc::new(names)
 	};
