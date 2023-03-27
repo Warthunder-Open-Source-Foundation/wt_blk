@@ -66,7 +66,7 @@ pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Rc<NameMap>) -> Re
 	let mut results: Vec<(usize, BlkField)> = Vec::with_capacity(params_info.len() / 8);
 
 	let chunks = params_info.chunks_exact(8);
-	if chunks.remainder().len() != 0 { error!("Params info chunks did not align to 8 bytes") } // TODO: Decide weather or not this constitutes a hard crash
+	if chunks.remainder().len() != 0 { error!("Params info chunks did not align to 8 bytes") } // TODO: Decide whether or not this constitutes a hard crash
 	for chunk in chunks {
 		let name_id_raw = &chunk[0..3];
 		let name_id = u32::from_le_bytes([
