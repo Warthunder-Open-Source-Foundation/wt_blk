@@ -7,6 +7,7 @@ use crate::binary::blk_block_hierarchy::FlatBlock;
 use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::{BlkString, BlkType};
 use crate::binary::error::ParseError;
+use crate::binary::error::ParseError::ResidualBlockBuffer;
 use crate::binary::file::FileType;
 use crate::binary::leb128::uleb128;
 use crate::binary::nm_file::NameMap;
@@ -41,8 +42,7 @@ pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Rc<NameMap>) -> Re
 	} else {
 		let names_data_size = next_uleb(&mut ptr)?;
 
-		let names = NameMap::parse_name_section(&file.get(ptr..(ptr + names_data_size)).ok_or(ParseError::DataRegionBoundsExceeded(ptr..(ptr + names_data_size)))?);
-		ptr += names_data_size;
+		let names = NameMap::parse_name_section(idx_file_offset(&mut ptr, names_data_size)?);
 		if names_count != names.len() {
 			error!("Name count mismatch, expected {names_count}, but found a len of {}. This might mean something is wrong.", names.len());
 		}
@@ -57,10 +57,9 @@ pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Rc<NameMap>) -> Re
 
 	let params_data = idx_file_offset(&mut ptr, params_data_size)?;
 
-	let params_info = &file[ptr..(ptr + params_count * 8)];
-	ptr += params_info.len();
+	let params_info= idx_file_offset(&mut ptr, params_count * 8)?;
 
-	let block_info = &file[ptr..];
+	let block_info = &file.get(ptr..).ok_or(ResidualBlockBuffer)?;
 	drop(ptr);
 
 
