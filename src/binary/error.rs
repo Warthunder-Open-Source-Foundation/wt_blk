@@ -16,4 +16,7 @@ pub enum ParseError {
 	// NOTE: This should not really occur, as the ptr should go out of bounds much earlier if an offset is bad
 	#[error("Residual buffer for block information was out of bounds")]
 	ResidualBlockBuffer,
+
+	#[error("Blk value parsing failed")]
+	BadBlkValue,
 }

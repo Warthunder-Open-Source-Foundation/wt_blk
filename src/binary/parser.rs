@@ -7,7 +7,7 @@ use crate::binary::blk_block_hierarchy::FlatBlock;
 use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::{BlkString, BlkType};
 use crate::binary::error::ParseError;
-use crate::binary::error::ParseError::ResidualBlockBuffer;
+use crate::binary::error::ParseError::{BadBlkValue, ResidualBlockBuffer};
 use crate::binary::file::FileType;
 use crate::binary::leb128::uleb128;
 use crate::binary::nm_file::NameMap;
@@ -77,17 +77,17 @@ pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Rc<NameMap>) -> Re
 		]);
 		let type_id = chunk[3];
 		let data = &chunk[4..];
-		let name = &names[name_id as usize];
+		let name = names[name_id as usize].clone();
 
 
 		// TODO: Validate wether or not slim files store only strings in the name map
 		let parsed = if is_slim && type_id == 0x01 {
-			BlkType::from_raw_param_info(type_id, data, shared_name_map.binary.clone(), shared_name_map.parsed.clone()).unwrap()
+			BlkType::from_raw_param_info(type_id, data, shared_name_map.binary.clone(), shared_name_map.parsed.clone()).ok_or(BadBlkValue)?
 		} else {
-			BlkType::from_raw_param_info(type_id, data, Rc::new(params_data.to_owned()), names.clone()).unwrap()
+			BlkType::from_raw_param_info(type_id, data, Rc::new(params_data.to_owned()), names.clone()).ok_or(BadBlkValue)?
 		};
 
-		let field = BlkField::Value(name.to_owned(), parsed);
+		let field = BlkField::Value(name, parsed);
 		results.push((name_id as usize, field));
 	}
 
