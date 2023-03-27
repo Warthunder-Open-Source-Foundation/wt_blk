@@ -3,6 +3,7 @@ use std::ops::DerefMut;
 use std::rc::Rc;
 use std::time::Instant;
 use tracing::{error, warn};
+use zstd::zstd_safe::WriteBuf;
 use crate::binary::blk_block_hierarchy::FlatBlock;
 use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::{BlkString, BlkType};
@@ -82,9 +83,9 @@ pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Rc<NameMap>) -> Re
 
 		// TODO: Validate wether or not slim files store only strings in the name map
 		let parsed = if is_slim && type_id == 0x01 {
-			BlkType::from_raw_param_info(type_id, data, shared_name_map.binary.clone(), shared_name_map.parsed.clone()).ok_or(BadBlkValue)?
+			BlkType::from_raw_param_info(type_id, data, shared_name_map.binary.as_slice(), shared_name_map.parsed.clone()).ok_or(BadBlkValue)?
 		} else {
-			BlkType::from_raw_param_info(type_id, data, Rc::new(params_data.to_owned()), names.clone()).ok_or(BadBlkValue)?
+			BlkType::from_raw_param_info(type_id, data, params_data, names.clone()).ok_or(BadBlkValue)?
 		};
 
 		let field = BlkField::Value(name, parsed);

@@ -29,7 +29,7 @@ impl BlkType {
 	/// Type ID as corresponding to its type_code
 	/// Field is a 4 byte long region that either contains the final value or offset for the data region
 	/// data_region is for non-32 bit data
-	pub fn from_raw_param_info(type_id: u8, field: &[u8], data_region: Rc<Vec<u8>>, name_map: Rc<Vec<Rc<String>>>) -> Option<Self> {
+	pub fn from_raw_param_info(type_id: u8, field: &[u8], data_region: &[u8], name_map: Rc<Vec<Rc<String>>>) -> Option<Self> {
 
 		// Make sure the field is properly sized
 		if field.len() != 4 {
