@@ -23,8 +23,8 @@ pub fn uleb128(bytes: &[u8]) -> Result<(usize, usize), ParseError> {
 		};
 	}
 
-	// After the loop has finished, without yielding to the callee, it means something broke
-	// In most cases this is due to the callee passing an invalid buffer that either ended too early, or was simply empty
+	// After the loop has finished, without yielding to the caller, it means something broke
+	// In most cases this is due to the caller passing an invalid buffer that either ended too early, or was simply empty
 	if bytes.len() == 0 {
 		Err(ParseError::ZeroSizedUleb)
 	} else {
