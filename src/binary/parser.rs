@@ -16,18 +16,23 @@ pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Rc<NameMap>) -> Re
 
 	// Globally increments ptr and returns next uleb integer from file
 	let mut next_uleb = |ptr: &mut usize| {
-		let (offset, int) = uleb128(&file[*ptr..]).unwrap();
-		*ptr += offset;
-		int
+		// Using ? inside of closures is not supported yet, so we need to use this match
+		match uleb128(&file[*ptr..]) {
+			Ok((offset, int)) => {
+				*ptr += offset;
+				Ok(int)
+			}
+			Err(e) => { Err(e) }
+		}
 	};
 
 
-	let names_count = next_uleb(&mut ptr);
+	let names_count = next_uleb(&mut ptr)?;
 
 	let names = if is_slim { // TODO Figure out if names_count dictates the existence of a name map or if it may be 0 without requiring a name map
 		shared_name_map.parsed.clone()
 	} else {
-		let names_data_size = next_uleb(&mut ptr);
+		let names_data_size = next_uleb(&mut ptr)?;
 
 		let names = NameMap::parse_name_section(&file[ptr..(ptr + names_data_size)]);
 		ptr += names_data_size;
@@ -37,11 +42,11 @@ pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Rc<NameMap>) -> Re
 		Rc::new(names)
 	};
 
-	let blocks_count = next_uleb(&mut ptr);
+	let blocks_count = next_uleb(&mut ptr)?;
 
-	let params_count = next_uleb(&mut ptr);
+	let params_count = next_uleb(&mut ptr)?;
 
-	let params_data_size = next_uleb(&mut ptr);
+	let params_data_size = next_uleb(&mut ptr)?;
 
 	let params_data = &file[ptr..(ptr + params_data_size)];
 	ptr += params_data_size;
