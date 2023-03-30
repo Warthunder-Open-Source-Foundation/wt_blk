@@ -25,7 +25,7 @@ mod error;
 pub use ::zstd::dict::DecoderDictionary;
 use crate::binary::nm_file::NameMap;
 
-pub fn test_parse_dir(pile: &mut Vec<(String, Vec<u8>)>, dir: ReadDir, total_files_processed: &AtomicUsize) {
+fn test_parse_dir(pile: &mut Vec<(String, Vec<u8>)>, dir: ReadDir, total_files_processed: &AtomicUsize) {
 	for file in dir {
 		let file = file.as_ref().unwrap();
 		if file.metadata().unwrap().is_dir() {
