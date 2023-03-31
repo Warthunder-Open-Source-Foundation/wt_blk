@@ -19,7 +19,7 @@ pub mod nm_file;
 mod blk_to_text;
 mod blk_block_hierarchy;
 mod blk_to_ref_json;
-mod output_formatting_conf;
+pub mod output_formatting_conf;
 mod error;
 
 pub use ::zstd::dict::DecoderDictionary;
