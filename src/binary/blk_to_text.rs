@@ -24,7 +24,6 @@ impl BlkField {
 					format!("{children}")
 				} else {
 					format!("\"{name}\" {{\n{children}\n{indent_closing}}}")
-
 				}
 			}
 		}
@@ -35,6 +34,7 @@ impl BlkField {
 mod test {
 	use std::borrow::Cow;
 	use std::rc::Rc;
+
 	use crate::binary::blk_structure::BlkField;
 	use crate::binary::blk_type::BlkType;
 

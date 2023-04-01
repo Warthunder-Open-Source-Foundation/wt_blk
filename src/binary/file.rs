@@ -1,4 +1,3 @@
-
 #[repr(u8)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Copy, Clone)]
@@ -15,12 +14,12 @@ impl FileType {
 	pub fn from_byte(input: u8) -> Option<Self> {
 		match input {
 			0x00 => Some(Self::BBF),
-			0x01 =>Some( Self::FAT),
+			0x01 => Some(Self::FAT),
 			0x02 => Some(Self::FAT_ZSTD),
 			0x03 => Some(Self::SLIM),
 			0x04 => Some(Self::SLIM_ZSTD),
 			0x05 => Some(Self::SLIM_ZST_DICT),
-			_ => {None}
+			_ => { None }
 		}
 	}
 	pub fn is_slim(&self) -> bool {

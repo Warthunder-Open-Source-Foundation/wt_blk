@@ -2,7 +2,9 @@ use std::borrow::Cow;
 use std::fmt::{Display, Formatter};
 use std::io::BufRead;
 use std::rc::Rc;
+
 use serde::{Deserialize, Serialize};
+
 use crate::binary::nm_file::NameMap;
 use crate::binary::output_formatting_conf::FormattingConfiguration;
 
@@ -224,9 +226,9 @@ impl BlkType {
 			BlkType::Int3(v) => { format!("{v:#?}") }
 			BlkType::Long(v) => { v.to_string() }
 			BlkType::Float(v) => { format!("{v:.?}") }
-			BlkType::Float2(v) => { format!("[\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]", v[0], v[1])}
+			BlkType::Float2(v) => { format!("[\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]", v[0], v[1]) }
 			BlkType::Float3(v) => { format!("[\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]", v[0], v[1], v[2]) }
-			BlkType::Float4(v) => { format!("[\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]", v[0], v[1], v[2] , v[2]) }
+			BlkType::Float4(v) => { format!("[\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]", v[0], v[1], v[2], v[2]) }
 			BlkType::Float12(v) => { format!("{v:#?}") }
 			BlkType::Bool(v) => { v.to_string() }
 			BlkType::Color(v) => { format!("{v:?}") }

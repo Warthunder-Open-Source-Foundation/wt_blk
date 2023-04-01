@@ -4,13 +4,13 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::Duration;
+
 use zstd::Decoder;
 use zstd::dict::DecoderDictionary;
 
+use crate::binary::file::FileType;
 
 pub type BlkDecoder<'a> = DecoderDictionary<'a>;
-
-use crate::binary::file::FileType;
 
 pub fn decode_zstd(file: &[u8], mut frame_decoder: Arc<BlkDecoder>) -> Option<Vec<u8>> {
 	// validate magic byte
@@ -76,13 +76,13 @@ mod test {
 	use std::io::Read;
 	use std::rc::Rc;
 	use std::sync::Arc;
+
 	use zstd::Decoder;
 	use zstd::dict::DecoderDictionary;
 
-
 	use crate::binary::zstd::decode_zstd;
 
-	pub (crate) static DUMMY_DICT: fn() -> Arc<DecoderDictionary<'static>> = ||Arc::new(DecoderDictionary::copy(&[]));
+	pub(crate) static DUMMY_DICT: fn() -> Arc<DecoderDictionary<'static>> = || Arc::new(DecoderDictionary::copy(&[]));
 
 	#[test]
 	fn fat_zstd() {

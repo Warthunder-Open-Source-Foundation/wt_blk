@@ -3,8 +3,12 @@ use std::fs::ReadDir;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+
+pub use ::zstd::dict::DecoderDictionary;
+
 use crate::binary::blk_type::BlkString;
 use crate::binary::file::FileType;
+use crate::binary::nm_file::NameMap;
 use crate::binary::parser::parse_blk;
 use crate::binary::zstd::{BlkDecoder, decode_zstd};
 
@@ -21,9 +25,6 @@ mod blk_block_hierarchy;
 mod blk_to_ref_json;
 pub mod output_formatting_conf;
 mod error;
-
-pub use ::zstd::dict::DecoderDictionary;
-use crate::binary::nm_file::NameMap;
 
 fn test_parse_dir(pile: &mut Vec<(String, Vec<u8>)>, dir: ReadDir, total_files_processed: &AtomicUsize) {
 	for file in dir {
@@ -52,5 +53,5 @@ pub fn parse_file(mut file: Vec<u8>, fd: Arc<BlkDecoder>, shared_name_map: Rc<Na
 	};
 
 
-	Some(serde_json::to_string(&parse_blk(&file[offset..],  file_type.is_slim(), shared_name_map).ok()?).unwrap())
+	Some(serde_json::to_string(&parse_blk(&file[offset..], file_type.is_slim(), shared_name_map).ok()?).unwrap())
 }

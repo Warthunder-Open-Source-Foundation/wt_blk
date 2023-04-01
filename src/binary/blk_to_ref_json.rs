@@ -32,7 +32,7 @@ impl BlkField {
 			BlkField::Struct(name, fields) => {
 				let mut indent = fmt.indent(*indent_level);
 				*indent_level += 1;
-				let children = fields.iter().enumerate().map(|(i,x)| format!("{indent}{}", x._as_ref_json(indent_level, false, fmt, i == fields.len() - 1))).collect::<Vec<_>>().join("\n");
+				let children = fields.iter().enumerate().map(|(i, x)| format!("{indent}{}", x._as_ref_json(indent_level, false, fmt, i == fields.len() - 1))).collect::<Vec<_>>().join("\n");
 				*indent_level -= 1;
 
 				let indent_closing = fmt.indent(indent_level.saturating_sub(1));
@@ -56,7 +56,6 @@ impl BlkField {
 						""
 					};
 					format!("\"{name}\"{name_delimiter} {{{block_delimiter}{children}{block_delimiter}{indent_closing}}}{trail_comma}")
-
 				}
 			}
 		}

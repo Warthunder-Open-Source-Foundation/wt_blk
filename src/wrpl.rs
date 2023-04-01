@@ -1,12 +1,10 @@
-
-
 #[cfg(test)]
 mod test {
 	use std::fs;
 	use std::mem::size_of;
 
 	#[test]
-	fn extract_wrpl_1_floats()  {
+	fn extract_wrpl_1_floats() {
 		let file = fs::read("./samples/decompressed wrplu_1").unwrap();
 
 		let mut floats = vec![];
@@ -17,8 +15,8 @@ mod test {
 
 				let parsed_floats = all_floats
 					.chunks(size_of::<f32>())
-					.map(|bin|f32::from_le_bytes(bin[..4].try_into().unwrap()))
-					.map(|x|format!("{x:<15}"))
+					.map(|bin| f32::from_le_bytes(bin[..4].try_into().unwrap()))
+					.map(|x| format!("{x:<15}"))
 					.collect::<Vec<_>>();
 				floats.push(parsed_floats.join("\t"));
 			}

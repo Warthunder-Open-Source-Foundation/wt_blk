@@ -15,7 +15,7 @@ pub fn uleb128(bytes: &[u8]) -> Result<(usize, usize), ParseError> {
 
 		// Shifting the bit into alignment and storing them in the intermediate variable
 		// For example: 3 bytes of ULEB yield 3 * 7 = 21 bits, which would have 1-bit spacing between them if not for this alignment
-		result |=  bits << (7 * i);
+		result |= bits << (7 * i);
 
 		// The leading bit of the current byte is set, therefore the integer is complete and yields
 		if MASK & current == 0 {

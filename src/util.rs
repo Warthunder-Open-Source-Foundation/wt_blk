@@ -1,4 +1,3 @@
-
 macro_rules! time {
     ($e:expr) => {{
         let start = std::time::Instant::now();

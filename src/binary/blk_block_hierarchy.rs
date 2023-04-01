@@ -1,12 +1,13 @@
 use std::ops::Range;
 use std::rc::Rc;
+
 use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::BlkString;
 
 #[derive(Debug, Clone)]
 pub struct FlatBlock {
 	pub name: BlkString,
-	pub fields:  Vec<BlkField>,
+	pub fields: Vec<BlkField>,
 	pub blocks: usize,
 	pub offset: usize,
 }

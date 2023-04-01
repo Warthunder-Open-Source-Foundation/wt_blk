@@ -1,6 +1,8 @@
 use std::rc::Rc;
+
 use serde::{Deserialize, Serialize};
 use serde_json::to_string;
+
 use crate::binary::blk_type::{BlkString, BlkType};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -36,8 +38,8 @@ impl BlkField {
 
 	pub fn get_name(&self) -> String {
 		match self {
-			BlkField::Value(name, _) => {name.to_string()}
-			BlkField::Struct(name, _) => {name.to_string()}
+			BlkField::Value(name, _) => { name.to_string() }
+			BlkField::Struct(name, _) => { name.to_string() }
 		}
 	}
 
@@ -46,7 +48,7 @@ impl BlkField {
 	/// Only takes relative path from current object
 	/// If the current variant is not a struct, it will return an error `NoSuchField`
 	pub fn pointer(&self, ptr: impl ToString) -> Result<Self, BlkFieldError> {
-		let commands = ptr.to_string().split("/").map(|x|x.to_string()).collect();
+		let commands = ptr.to_string().split("/").map(|x| x.to_string()).collect();
 		self.pointer_internal(commands, &mut 0_usize)
 	}
 

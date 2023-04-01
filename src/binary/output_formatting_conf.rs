@@ -1,8 +1,5 @@
-
-
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct FormattingConfiguration {
-
 	/// Char used to indent n times
 	/// Examples:
 	/// ('\t', 1) will indent using tabs, once for each level of indentation

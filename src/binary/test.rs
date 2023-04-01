@@ -8,9 +8,9 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
+
 use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::BlkString;
-
 use crate::binary::file::FileType;
 use crate::binary::parser::parse_blk;
 use crate::binary::zstd::{BlkDecoder, decode_zstd};
@@ -27,16 +27,17 @@ mod test {
 	use std::sync::{Arc, Mutex};
 	use std::sync::atomic::{AtomicUsize, Ordering};
 	use std::time::Instant;
+
 	use zstd::Decoder;
 	use zstd::dict::DecoderDictionary;
 
+	use crate::binary::{parse_file, test_parse_dir};
 	use crate::binary::blk_type::BlkType;
 	use crate::binary::file::FileType;
 	use crate::binary::leb128::uleb128;
-	use crate::binary::nm_file::{NameMap};
-	use crate::binary::parser::parse_blk;
-	use crate::binary::{parse_file, test_parse_dir};
+	use crate::binary::nm_file::NameMap;
 	use crate::binary::output_formatting_conf::FormattingConfiguration;
+	use crate::binary::parser::parse_blk;
 	use crate::binary::zstd::{BlkDecoder, decode_zstd};
 
 	#[test]

@@ -1,9 +1,10 @@
 use std::io::Read;
 use std::rc::Rc;
+
 use zstd::Decoder;
+
 use crate::binary::blk_type::BlkString;
 use crate::binary::leb128::uleb128;
-
 
 #[derive(Clone, Debug)]
 pub struct NameMap {
@@ -13,7 +14,7 @@ pub struct NameMap {
 
 impl NameMap {
 	// Used for testing purposes
-	pub const DUMMY: fn() -> Rc<NameMap> = ||{
+	pub const DUMMY: fn() -> Rc<NameMap> = || {
 		Rc::new(Self {
 			// TODO: The binary vec still includes pre-uleb integers so im not sure if there might be an offset issue later on
 			binary: Rc::new(vec![]),
@@ -25,7 +26,7 @@ impl NameMap {
 		self.parsed.get(idx)
 	}
 
-	pub fn from_encoded_file(file: & [u8]) -> Option<Self> {
+	pub fn from_encoded_file(file: &[u8]) -> Option<Self> {
 		let decoded = Self::decode_nm_file(file)?;
 
 		let names = Self::parse_slim_nm(&decoded);
@@ -52,7 +53,7 @@ impl NameMap {
 		for (i, val) in file.iter().enumerate() {
 			if *val == 0 {
 				names.push(Rc::new(String::from_utf8_lossy(&file[start..i]).to_string()));
-				start = i +1;
+				start = i + 1;
 			}
 		}
 		names
@@ -80,13 +81,14 @@ impl NameMap {
 #[cfg(test)]
 mod test {
 	use std::fs;
+
 	use crate::binary::leb128::uleb128;
 	use crate::binary::nm_file::NameMap;
 
 	#[test]
 	fn test_any_stream() {
 		let decoded = NameMap::parse_name_section("a\0b\0c\0".as_bytes());
-		assert_eq!(vec!["a", "b", "c"], decoded.iter().map( |x|x.to_string()).collect::<Vec<String>>())
+		assert_eq!(vec!["a", "b", "c"], decoded.iter().map(|x| x.to_string()).collect::<Vec<String>>())
 	}
 
 	#[test]

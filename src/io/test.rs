@@ -15,12 +15,12 @@ fn read_seq() {
 
 	let start = Instant::now();
 	for file in out {
-		fs::write(format!("{}{}", "./samples/vromfs/out/",file.0.file_name().unwrap().to_str().unwrap()), &file.1).unwrap();
+		fs::write(format!("{}{}", "./samples/vromfs/out/", file.0.file_name().unwrap().to_str().unwrap()), &file.1).unwrap();
 	}
 	// println!("Writing: {:?}", start.elapsed());
 }
 
-pub fn test_parse_dir(dir:ReadDir, stack: &mut Vec<(PathBuf, Vec<u8>)>) {
+pub fn test_parse_dir(dir: ReadDir, stack: &mut Vec<(PathBuf, Vec<u8>)>) {
 	for file in dir {
 		let f = file.unwrap();
 		if f.file_type().unwrap().is_dir() {

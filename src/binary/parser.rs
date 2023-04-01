@@ -2,8 +2,10 @@ use std::borrow::Cow;
 use std::ops::DerefMut;
 use std::rc::Rc;
 use std::time::Instant;
+
 use tracing::{error, warn};
 use zstd::zstd_safe::WriteBuf;
+
 use crate::binary::blk_block_hierarchy::FlatBlock;
 use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::{BlkString, BlkType};
@@ -58,7 +60,7 @@ pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Rc<NameMap>) -> Re
 
 	let params_data = idx_file_offset(&mut ptr, params_data_size)?;
 
-	let params_info= idx_file_offset(&mut ptr, params_count * 8)?;
+	let params_info = idx_file_offset(&mut ptr, params_count * 8)?;
 
 	let block_info = &file.get(ptr..).ok_or(ResidualBlockBuffer)?;
 
