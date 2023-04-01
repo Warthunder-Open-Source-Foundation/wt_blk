@@ -3,12 +3,12 @@ use crate::binary::blk_structure::BlkField;
 impl BlkField {
 	// Public facing formatting fn
 	pub fn as_blk_text(&self) -> String {
-		self._as_blk_text(&mut 0, true)
+		self.inner_as_blk_text(&mut 0, true)
 	}
 
 	// TODO: Make this generic with a configuration file
 	// Internal fn that actually formats
-	fn _as_blk_text(&self, indent_level: &mut usize, is_root: bool) -> String {
+	fn inner_as_blk_text(&self, indent_level: &mut usize, is_root: bool) -> String {
 		match self {
 			BlkField::Value(name, value) => {
 				format!("\"{name}\":{value}")
@@ -16,7 +16,7 @@ impl BlkField {
 			BlkField::Struct(name, fields) => {
 				let indent = "\t".repeat(*indent_level);
 				*indent_level += 1;
-				let children = fields.iter().map(|x| format!("{indent}{}", x._as_blk_text(indent_level, false))).collect::<Vec<_>>().join("\n");
+				let children = fields.iter().map(|x| format!("{indent}{}", x.inner_as_blk_text(indent_level, false))).collect::<Vec<_>>().join("\n");
 				*indent_level -= 1;
 
 				let indent_closing = "\t".repeat(indent_level.saturating_sub(1));
@@ -40,6 +40,7 @@ mod test {
 
 	#[test]
 	fn test_expected() {
+		// For testing purposes i should probably make a better way for this
 		let mut root = BlkField::new_root();
 		root.insert_field(BlkField::Value(Rc::new("vec4f".to_owned()), BlkType::Float4([1.25, 2.5, 5.0, 10.0]))).unwrap();
 		root.insert_field(BlkField::Value(Rc::new("int".to_owned()), BlkType::Int(42))).unwrap();
@@ -64,6 +65,6 @@ mod test {
 		root.insert_field(beta).unwrap();
 
 
-		println!("{}", root._as_blk_text(&mut 0, true));
+		println!("{}", root.inner_as_blk_text(&mut 0, true));
 	}
 }
