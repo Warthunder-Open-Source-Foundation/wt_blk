@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::ops::DerefMut;
 use std::rc::Rc;
+use std::sync::Arc;
 use std::time::Instant;
 
 use tracing::{error, warn};
@@ -15,7 +16,7 @@ use crate::binary::file::FileType;
 use crate::binary::leb128::uleb128;
 use crate::binary::nm_file::NameMap;
 
-pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Rc<NameMap>) -> Result<BlkField, ParseError> {
+pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Arc<NameMap>) -> Result<BlkField, ParseError> {
 	let mut ptr = 0;
 
 	// Globally increments ptr and returns next uleb integer from file

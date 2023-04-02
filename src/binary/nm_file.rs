@@ -1,5 +1,6 @@
 use std::io::Read;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use zstd::Decoder;
 
@@ -14,8 +15,8 @@ pub struct NameMap {
 
 impl NameMap {
 	// Used for testing purposes
-	pub const DUMMY: fn() -> Rc<NameMap> = || {
-		Rc::new(Self {
+	pub const DUMMY: fn() -> Arc<NameMap> = || {
+		Arc::new(Self {
 			// TODO: The binary vec still includes pre-uleb integers so im not sure if there might be an offset issue later on
 			binary: Rc::new(vec![]),
 			parsed: Rc::new(vec![]),

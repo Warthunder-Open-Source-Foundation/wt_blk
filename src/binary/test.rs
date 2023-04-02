@@ -52,7 +52,7 @@ mod test {
 		let mut file = fs::read("./samples/su_r_27er.blk").unwrap();
 		file = decode_zstd(&file, Arc::new(frame_decoder)).unwrap();
 		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
-		let output = parse_blk(&file, true, Rc::new(shared_name_map));
+		let output = parse_blk(&file, true, Arc::new(shared_name_map));
 		assert_eq!(output.unwrap().as_ref_json(FormattingConfiguration::GSZABI_REPO), fs::read_to_string("./samples/su_r_27er.blkx").unwrap())
 	}
 
@@ -92,7 +92,7 @@ mod test {
 		}
 
 		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
-		let parsed = parse_blk(&file[offset..], file_type.is_slim(), Rc::new(shared_name_map)).unwrap();
+		let parsed = parse_blk(&file[offset..], file_type.is_slim(), Arc::new(shared_name_map)).unwrap();
 	}
 
 	#[test]
@@ -101,7 +101,7 @@ mod test {
 		let nm = fs::read("./samples/nm").unwrap();
 
 		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
-		let output = parse_blk(&file[1..], true, Rc::new(shared_name_map)).unwrap();
+		let output = parse_blk(&file[1..], true, Arc::new(shared_name_map)).unwrap();
 	}
 
 	#[test]
@@ -119,7 +119,7 @@ mod test {
 		let mut pile = vec![];
 		test_parse_dir(&mut pile, dir, &total);
 
-		let shared_name_map = Rc::new(NameMap::from_encoded_file(&nm).unwrap());
+		let shared_name_map = Arc::new(NameMap::from_encoded_file(&nm).unwrap());
 		let arced_fd = Arc::new(frame_decoder);
 		let out = pile.into_iter().map(|file| {
 			parse_file(file.1, arced_fd.clone(), shared_name_map.clone())

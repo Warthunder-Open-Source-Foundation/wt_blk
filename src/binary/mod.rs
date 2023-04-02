@@ -42,7 +42,7 @@ fn test_parse_dir(pile: &mut Vec<(String, Vec<u8>)>, dir: ReadDir, total_files_p
 	}
 }
 
-pub fn parse_file(mut file: Vec<u8>, fd: Arc<BlkDecoder>, shared_name_map: Rc<NameMap>) -> Option<String> {
+pub fn parse_file(mut file: Vec<u8>, fd: Arc<BlkDecoder>, shared_name_map: Arc<NameMap>) -> Option<String> {
 	let mut offset = 0;
 	let file_type = FileType::from_byte(file[0])?;
 	if file_type.is_zstd() {
