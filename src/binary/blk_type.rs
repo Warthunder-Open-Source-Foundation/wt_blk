@@ -4,11 +4,27 @@ use std::io::BufRead;
 use std::rc::Rc;
 
 use serde::{Deserialize, Serialize};
+use crate::binary::blk_type::blk_type_id::*;
 
 use crate::binary::nm_file::NameMap;
 use crate::binary::output_formatting_conf::FormattingConfiguration;
 
 pub type BlkString = Rc<String>;
+
+pub mod blk_type_id {
+	pub const STRING: u8 = 0x01;
+	pub const INT: u8 = 0x02;
+	pub const INT2: u8 = 0x07;
+	pub const INT3: u8 = 0x08;
+	pub const LONG: u8 = 0x0C;
+	pub const FLOAT: u8 = 0x03;
+	pub const FLOAT2: u8 = 0x04;
+	pub const FLOAT3: u8 = 0x05;
+	pub const FLOAT4: u8 = 0x06;
+	pub const FLOAT12: u8 = 0x0B;
+	pub const BOOL: u8 = 0x09;
+	pub const COLOR: u8 = 0x0A;
+}
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
 pub enum BlkType {
@@ -39,7 +55,7 @@ impl BlkType {
 		}
 
 		return match type_id {
-			0x01 => {
+			STRING => {
 				// Explanation:
 				// Strings have their offset encoded as a LE integer constructed from 31 bits
 				// The first bit in their field is an indicator whether or not to search in the regular data region or name map
@@ -63,13 +79,13 @@ impl BlkType {
 
 				Some(Self::Str(res))
 			}
-			0x02 => {
+			INT => {
 				Some(Self::Int(bytes_to_int(field)?))
 			}
-			0x03 => {
+			FLOAT => {
 				Some(Self::Float(bytes_to_float(field)?))
 			}
-			0x04 => {
+			FLOAT2 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
 				Some(Self::Float2([
@@ -77,7 +93,7 @@ impl BlkType {
 					bytes_to_float(&data_region[4..8])?,
 				]))
 			}
-			0x05 => {
+			FLOAT3 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 12)];
 				Some(Self::Float3([
@@ -86,7 +102,7 @@ impl BlkType {
 					bytes_to_float(&data_region[8..12])?,
 				]))
 			}
-			0x06 => {
+			FLOAT4 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 16)];
 				Some(Self::Float4([
@@ -96,7 +112,7 @@ impl BlkType {
 					bytes_to_float(&data_region[12..16])?,
 				]))
 			}
-			0x07 => {
+			INT2 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
 				Some(Self::Int2([
@@ -104,7 +120,7 @@ impl BlkType {
 					bytes_to_int(&data_region[4..8])?,
 				]))
 			}
-			0x08 => {
+			INT3 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 12)];
 				Some(Self::Int3([
@@ -113,10 +129,10 @@ impl BlkType {
 					bytes_to_int(&data_region[8..12])?,
 				]))
 			}
-			0x09 => {
+			BOOL => {
 				Some(Self::Bool(field[0] != 0))
 			}
-			0x0a => {
+			COLOR => {
 				// Game stores them in BGRA order
 				Some(Self::Color([
 					field[2],
@@ -125,7 +141,7 @@ impl BlkType {
 					field[3],
 				]))
 			}
-			0x0b => {
+			FLOAT12 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 48)];
 				Some(Self::Float12(Box::new([
@@ -143,7 +159,7 @@ impl BlkType {
 					bytes_to_float(&data_region[44..48])?,
 				])))
 			}
-			0x0c => {
+			LONG => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
 				Some(Self::Long(bytes_to_long(data_region)?))
@@ -154,18 +170,18 @@ impl BlkType {
 
 	pub const fn type_code(&self) -> u8 {
 		match self {
-			BlkType::Str(_) => { 0x01 }
-			BlkType::Int(_) => { 0x02 }
-			BlkType::Int2(_) => { 0x7 }
-			BlkType::Int3(_) => { 0x08 }
-			BlkType::Long(_) => { 0x0c }
-			BlkType::Float(_) => { 0x04 }
-			BlkType::Float2(_) => { 0x04 }
-			BlkType::Float3(_) => { 0x05 }
-			BlkType::Float4(_) => { 0x06 }
-			BlkType::Float12(_) => { 0x0b }
-			BlkType::Bool(_) => { 0x09 }
-			BlkType::Color(_) => { 0x0a }
+			BlkType::Str(_) => { STRING }
+			BlkType::Int(_) => { INT }
+			BlkType::Int2(_) => { INT2 }
+			BlkType::Int3(_) => { INT3 }
+			BlkType::Long(_) => { LONG }
+			BlkType::Float(_) => { FLOAT }
+			BlkType::Float2(_) => { FLOAT2 }
+			BlkType::Float3(_) => { FLOAT3 }
+			BlkType::Float4(_) => { FLOAT4 }
+			BlkType::Float12(_) => { FLOAT12 }
+			BlkType::Bool(_) => { BOOL }
+			BlkType::Color(_) => { COLOR }
 		}
 	}
 	pub const fn is_inline(&self) -> bool {

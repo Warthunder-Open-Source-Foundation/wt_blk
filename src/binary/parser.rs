@@ -10,6 +10,7 @@ use zstd::zstd_safe::WriteBuf;
 use crate::binary::blk_block_hierarchy::FlatBlock;
 use crate::binary::blk_structure::BlkField;
 use crate::binary::blk_type::{BlkString, BlkType};
+use crate::binary::blk_type::blk_type_id::STRING;
 use crate::binary::error::ParseError;
 use crate::binary::error::ParseError::{BadBlkValue, ResidualBlockBuffer};
 use crate::binary::file::FileType;
@@ -83,7 +84,7 @@ pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Arc<NameMap>) -> R
 		let data = &chunk[4..];
 		let name = names[name_id as usize].clone();
 
-		let parsed = if is_slim && type_id == 0x01 {
+		let parsed = if is_slim && type_id == STRING {
 			BlkType::from_raw_param_info(type_id, data, shared_name_map.binary.as_slice(), shared_name_map.parsed.clone()).ok_or(BadBlkValue)?
 		} else {
 			BlkType::from_raw_param_info(type_id, data, params_data, names.clone()).ok_or(BadBlkValue)?
