@@ -93,6 +93,8 @@ mod test {
 
 		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
 		let parsed = parse_blk(&file[offset..], file_type.is_slim(), Arc::new(shared_name_map)).unwrap();
+
+		assert_eq!(fs::read_to_string("./samples/rendist_sample_stability.txt").unwrap(), serde_json::to_string_pretty(&parsed).unwrap());
 	}
 
 	#[test]
