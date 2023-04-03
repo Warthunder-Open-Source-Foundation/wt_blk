@@ -46,9 +46,6 @@ mod test {
 		let dict = fs::read("./samples/rendist/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
 		let mut frame_decoder = DecoderDictionary::copy(&dict);
 
-		// let nm = NameMap::decode_nm_file(&nm).unwrap();
-		// let parsed_nm = NameMap::parse_slim_nm(&nm);
-
 		let mut file = fs::read("./samples/su_r_27er.blk").unwrap();
 		file = decode_zstd(&file, Arc::new(frame_decoder)).unwrap();
 		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
@@ -78,9 +75,6 @@ mod test {
 		let dict = fs::read("./samples/rendist/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
 
 		let mut frame_decoder = DecoderDictionary::copy(&dict);
-
-		// let nm = NameMap::decode_nm_file(&nm).unwrap();
-		// let parsed_nm = NameMap::parse_slim_nm(&nm);
 
 		let mut offset = 0;
 		let file_type = FileType::from_byte(file[0]).unwrap();
