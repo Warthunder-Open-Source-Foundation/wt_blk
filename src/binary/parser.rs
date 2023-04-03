@@ -83,8 +83,6 @@ pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Arc<NameMap>) -> R
 		let data = &chunk[4..];
 		let name = names[name_id as usize].clone();
 
-
-		// TODO: Validate wether or not slim files store only strings in the name map
 		let parsed = if is_slim && type_id == 0x01 {
 			BlkType::from_raw_param_info(type_id, data, shared_name_map.binary.as_slice(), shared_name_map.parsed.clone()).ok_or(BadBlkValue)?
 		} else {
