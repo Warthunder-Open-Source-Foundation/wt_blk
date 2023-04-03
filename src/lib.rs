@@ -2,6 +2,7 @@
 
 
 #![feature(arc_unwrap_or_clone)]
+#![feature(array_chunks)]
 
 pub mod binary;
 pub mod output_parsing;
