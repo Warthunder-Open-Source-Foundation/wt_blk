@@ -50,6 +50,8 @@ impl BlkField {
 					} else {
 						"\n"
 					};
+
+					// An object might be formatted as such: `object: {}` or as `object {}`
 					let name_delimiter = if fmt.object_colon {
 						":"
 					} else {
