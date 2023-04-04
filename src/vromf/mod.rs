@@ -38,6 +38,7 @@ pub fn decode_bin_vromf(file: &[u8]) {
 			panic!("Ruh oh")
 		}
 	};
+	println!("{} {:x}", is_extended_header, header_type);
 
 	let platform = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
 
@@ -48,9 +49,17 @@ pub fn decode_bin_vromf(file: &[u8]) {
 			panic!("Ruh oh")
 		}
 	}
+	println!("{:x}", platform);
 
 	let size = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
+	println!("{}", size);
 
+	let header_packed = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
+	const TYPE_MASK: u32 = 0b11111100000000;
+	const SIZE_MASK: u32 = !TYPE_MASK;
+	println!("{:?}", header_packed.to_le_bytes().map(|x|format!("{x:x}")));
+	let pack_type = ((header_packed & TYPE_MASK) >> 26) as u8;
+	println!("{}", pack_type);
 
 }
 
@@ -62,7 +71,13 @@ mod test {
 
 	#[test]
 	fn decode_simple() {
-		let f = fs::read("./samples/char.vromfs.bin").unwrap();
+		let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
+		decode_bin_vromf(&f);
+	}
+
+	#[test]
+	fn decode_compressed() {
+		let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
 		decode_bin_vromf(&f);
 	}
 }
