@@ -9,3 +9,4 @@ pub mod output_parsing;
 mod io;
 mod util;
 mod wrpl;
+pub mod vromf;

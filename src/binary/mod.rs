@@ -25,6 +25,7 @@ mod blk_block_hierarchy;
 mod blk_to_ref_json;
 pub mod output_formatting_conf;
 mod error;
+pub mod util;
 
 fn test_parse_dir(pile: &mut Vec<(String, Vec<u8>)>, dir: ReadDir, total_files_processed: &AtomicUsize) {
 	for file in dir {
