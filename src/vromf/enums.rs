@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter};
+use serde_json::ser::CharEscape::Solidus;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 #[allow(non_camel_case_types)]
@@ -83,4 +84,17 @@ pub enum Packing {
 
 	// Same as ZSTD_OBFS_NOCHECK except with digest
 	ZSTD_OBFS = 0x30,
+}
+
+impl TryFrom<u8> for Packing {
+	type Error = ();
+
+	fn try_from(value: u8) -> Result<Self, Self::Error> {
+		return match value {
+			0x10 => Ok(Self::ZSTD_OBFS_NOCHECK),
+			0x20 => Ok(Self::PLAIN),
+			0x30 => Ok(Self::ZSTD_OBFS),
+			_ => {Err(())}
+		}
+	}
 }
