@@ -1,23 +1,7 @@
+mod enums;
+
 use crate::binary::util::bytes_to_int;
-
-pub const VRFS: u32 = 0x73465256;
-// 'VRFs' in binary, stands for simple header
-pub const VRFX: u32 = 0x78465256; // ' VRFx' in binary, stands for extended header
-
-pub mod platform_type {
-	pub const PC: u32 = 0x43500000;
-	// b'\x00\x00PC'
-	pub const IOS: u32 = 0x534f6900;
-	// b'\x00iOS'
-	pub const ANDROID: u32 = 0x646e6100; // b'\x00and'
-}
-
-// While stored as bytes, the true encoding is just 6 bits
-pub const ZSTD_OBFS_NOCHECK: u8 = 0x10;
-// ZSTD compressed and obfuscated. No digest
-pub const PLAIN: u8 = 0x20;
-// Image in plain form. With digest
-pub const ZSTD_OBFS: u8 = 0x30; // Same as ZSTD_OBFS_NOCHECK except with digest
+use crate::vromf::enums::{HeaderType, PlatformType};
 
 
 pub fn decode_bin_vromf(file: &[u8]) {
@@ -31,36 +15,25 @@ pub fn decode_bin_vromf(file: &[u8]) {
 	};
 
 	let header_type = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
-	let is_extended_header = match header_type {
-		VRFS => false,
-		VRFX => true,
-		_ => {
-			panic!("Ruh oh")
-		}
-	};
-	println!("{} {:x}", is_extended_header, header_type);
+	let is_extended_header = HeaderType::try_from(header_type).unwrap().is_extended();
 
-	let platform = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
-
-	// Just validating here
-	match platform {
-		platform_type::PC | platform_type::IOS | platform_type::ANDROID => {}
-		_ => {
-			panic!("Ruh oh")
-		}
-	}
-	println!("{:x}", platform);
+	let platform_raw = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
+	let _platform = PlatformType::try_from(platform_raw).unwrap();
 
 	let size = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
-	println!("{}", size);
 
-	let header_packed = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
-	const TYPE_MASK: u32 = 0b11111100000000;
-	const SIZE_MASK: u32 = !TYPE_MASK;
-	println!("{:?}", header_packed.to_le_bytes().map(|x|format!("{x:x}")));
-	let pack_type = ((header_packed & TYPE_MASK) >> 26) as u8;
-	println!("{}", pack_type);
+	let header_packed: u32 = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
+	const SIZE_MASK: u32 = 0b0000001111111111111111111111111;
 
+	// Yields the first 6 bytes
+	let pack_type = (header_packed.to_be_bytes()[0]) >> 2;
+
+	// yields the last 26 bytes
+	let pack_size = header_packed & SIZE_MASK;
+
+
+	println!("{:?}", header_packed.to_le_bytes().map(|x| format!("0x{x:X}")));
+	println!("{:?} {pack_type:x}", pack_type.to_le_bytes().map(|x| format!("0x{x:X}")));
 }
 
 #[cfg(test)]
