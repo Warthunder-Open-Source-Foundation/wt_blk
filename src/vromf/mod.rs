@@ -1,5 +1,6 @@
 mod enums;
 mod util;
+mod de_obfuscation;
 
 use std::fs;
 use std::mem::size_of;
