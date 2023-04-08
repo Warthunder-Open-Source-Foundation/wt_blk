@@ -1,7 +1,9 @@
 mod enums;
+mod util;
 
 use crate::binary::util::bytes_to_int;
 use crate::vromf::enums::{HeaderType, PlatformType};
+use crate::vromf::util::pack_type_from_aligned;
 
 
 pub fn decode_bin_vromf(file: &[u8]) {
@@ -23,17 +25,8 @@ pub fn decode_bin_vromf(file: &[u8]) {
 	let size = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
 
 	let header_packed: u32 = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
-	const SIZE_MASK: u32 = 0b0000001111111111111111111111111;
-
-	// Yields the first 6 bytes
-	let pack_type = (header_packed.to_be_bytes()[0]) >> 2;
-
-	// yields the last 26 bytes
-	let pack_size = header_packed & SIZE_MASK;
-
-
-	println!("{:?}", header_packed.to_le_bytes().map(|x| format!("0x{x:X}")));
-	println!("{:?} {pack_type:x}", pack_type.to_le_bytes().map(|x| format!("0x{x:X}")));
+	let (pack_type, size) = pack_type_from_aligned(header_packed).unwrap();
+	println!("{:?}", pack_type);
 }
 
 #[cfg(test)]

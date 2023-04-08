@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
 use serde_json::ser::CharEscape::Solidus;
 
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[allow(non_camel_case_types)]
 pub enum HeaderType {
 	// Simple header format
@@ -38,7 +38,7 @@ impl TryFrom<u32> for HeaderType {
 	}
 }
 
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 pub enum PlatformType {
 	// b'\x00\x00PC'
 	Pc = 0x43500000,
@@ -73,7 +73,7 @@ impl TryFrom<u32> for PlatformType {
 	}
 }
 
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[allow(non_camel_case_types)]
 pub enum Packing {
 	// ZSTD compressed and obfuscated. No digest
