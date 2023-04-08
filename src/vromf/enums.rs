@@ -86,6 +86,16 @@ pub enum Packing {
 	ZSTD_OBFS = 0x30,
 }
 
+impl Packing {
+	pub fn is_obfuscated(&self) -> bool {
+		match self {
+			Packing::ZSTD_OBFS_NOCHECK => {true}
+			Packing::PLAIN => {false}
+			Packing::ZSTD_OBFS => {true}
+		}
+	}
+}
+
 impl TryFrom<u8> for Packing {
 	type Error = ();
 

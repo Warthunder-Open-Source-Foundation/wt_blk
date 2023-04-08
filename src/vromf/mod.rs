@@ -1,12 +1,14 @@
 mod enums;
 mod util;
 
+use std::fs;
+use std::mem::size_of;
 use crate::binary::util::bytes_to_int;
 use crate::vromf::enums::{HeaderType, PlatformType};
 use crate::vromf::util::pack_type_from_aligned;
 
 
-pub fn decode_bin_vromf(file: &[u8]) {
+pub fn decode_bin_vromf(file: &[u8]) -> Vec<u8> {
 	let mut ptr = 0_usize;
 
 	// Returns slice offset from file, incrementing the ptr by offset
@@ -17,7 +19,7 @@ pub fn decode_bin_vromf(file: &[u8]) {
 	};
 
 	let header_type = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
-	let is_extended_header = HeaderType::try_from(header_type).unwrap().is_extended();
+	let header_type = HeaderType::try_from(header_type).unwrap();
 
 	let platform_raw = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
 	let _platform = PlatformType::try_from(platform_raw).unwrap();
@@ -25,8 +27,24 @@ pub fn decode_bin_vromf(file: &[u8]) {
 	let size = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
 
 	let header_packed: u32 = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
-	let (pack_type, size) = pack_type_from_aligned(header_packed).unwrap();
-	println!("{:?}", pack_type);
+	let (pack_type, extended_header_size) = pack_type_from_aligned(header_packed).unwrap();
+
+	let inner_data = if header_type.is_extended() {
+		let extended_header_section = idx_file_offset(&mut ptr, size_of::<u16>() + size_of::<u16>() + size_of::<u32>());
+		idx_file_offset(&mut ptr, extended_header_size as usize)
+	} else {
+		idx_file_offset(&mut ptr, size as usize)
+	};
+
+	// Directly return when data is not obfuscated
+	if !pack_type.is_obfuscated() {
+		return inner_data.to_vec()
+	}
+
+	let output = Vec::with_capacity(inner_data.len());
+
+
+	output
 }
 
 #[cfg(test)]
