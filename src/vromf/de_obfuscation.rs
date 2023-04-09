@@ -19,7 +19,6 @@ pub fn deob(input: &mut [u8]) {
 		0..=15 => return,
 		16..=31 => {
 			xor_at_with(input, 0, *HEAD);
-			let test = input.array_chunks_mut::<{ size_of::<usize>() }>();
 		}
 		32.. => {
 			xor_at_with(input, 0, *HEAD);
