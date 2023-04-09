@@ -94,6 +94,13 @@ impl Packing {
 			Packing::ZSTD_OBFS => {true}
 		}
 	}
+	pub fn is_compressed(&self) -> bool {
+		match self {
+			Packing::ZSTD_OBFS_NOCHECK => {true}
+			Packing::PLAIN => {false}
+			Packing::ZSTD_OBFS => {true}
+		}
+	}
 }
 
 impl TryFrom<u8> for Packing {

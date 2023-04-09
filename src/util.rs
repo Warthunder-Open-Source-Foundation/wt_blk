@@ -9,3 +9,7 @@ macro_rules! time {
 }
 
 pub(crate) use time;
+
+pub(crate) fn debug_hex(hex: &[u8]) {
+    eprintln!("{:?}", hex.iter().map( |x|format!("0x{x:X}")).collect::<Vec<_>>());
+}

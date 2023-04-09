@@ -2,6 +2,7 @@
 use std::fs;
 use std::mem::size_of;
 use crate::binary::util::bytes_to_int;
+use crate::util::debug_hex;
 use crate::vromf::de_obfuscation::deobfuscate;
 use crate::vromf::enums::{HeaderType, PlatformType};
 use crate::vromf::util::pack_type_from_aligned;
@@ -49,8 +50,12 @@ pub fn decode_bin_vromf(file: &[u8]) -> Vec<u8> {
 		return inner_data.to_vec()
 	}
 
-	let mut output = Vec::with_capacity(inner_data.len());
+	let mut output = inner_data.to_vec();
 	deobfuscate(&mut output);
+
+	if pack_type.is_compressed() {
+		output = zstd::decode_all(output.as_slice()).unwrap();
+	}
 
 	output
 }
