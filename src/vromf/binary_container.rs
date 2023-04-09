@@ -2,7 +2,7 @@
 use std::fs;
 use std::mem::size_of;
 use crate::binary::util::bytes_to_int;
-use crate::vromf::de_obfuscation::deob;
+use crate::vromf::de_obfuscation::deobfuscate;
 use crate::vromf::enums::{HeaderType, PlatformType};
 use crate::vromf::util::pack_type_from_aligned;
 
@@ -29,12 +29,14 @@ pub fn decode_bin_vromf(file: &[u8]) -> Vec<u8> {
 	let (pack_type, extended_header_size) = pack_type_from_aligned(header_packed).unwrap();
 
 	let inner_data = if header_type.is_extended() {
-		let extended_header_section = idx_file_offset(&mut ptr, size_of::<u16>() + size_of::<u16>() + size_of::<u32>());
+		let extended_header = idx_file_offset(&mut ptr, size_of::<u16>() + size_of::<u16>() + size_of::<u32>());
+		let s = extended_header; // Copying ptr such that indexing below is less verbose
 
 		// Unused header elements, for now
-		let _header_size = u16::from_le_bytes([extended_header_section[0], extended_header_section[1]]);
-		let _flags = u16::from_le_bytes([extended_header_section[2], extended_header_section[3]]);
-		let _version = (extended_header_section[7],extended_header_section[6],extended_header_section[5],extended_header_section[4]);
+		let _header_size = u16::from_le_bytes([s[0], s[1]]);
+		let _flags = u16::from_le_bytes([s[2], s[3]]);
+		// The version is always reversed in order. It may never exceed 255
+		let _version = (s[7],s[6],s[5],s[4]);
 
 		idx_file_offset(&mut ptr, extended_header_size as usize)
 
@@ -48,7 +50,7 @@ pub fn decode_bin_vromf(file: &[u8]) -> Vec<u8> {
 	}
 
 	let mut output = Vec::with_capacity(inner_data.len());
-	deob(&mut output);
+	deobfuscate(&mut output);
 
 	output
 }

@@ -14,7 +14,7 @@ lazy_static! {
 	};
 }
 
-pub fn deob(input: &mut [u8]) {
+pub fn deobfuscate(input: &mut [u8]) {
 	match input.len() {
 		0..=15 => return,
 		16..=31 => {
@@ -39,12 +39,12 @@ fn xor_at_with(input: &mut [u8], at: usize, with: u128) {
 
 #[cfg(test)]
 mod test {
-	use crate::vromf::de_obfuscation::deob;
+	use crate::vromf::de_obfuscation::deobfuscate;
 
 	#[test]
 	pub fn test_24() {
 		let mut start = vec![0xFF_u8; 24];
-		deob(&mut start);
+		deobfuscate(&mut start);
 
 		let expected: &[u8] = &[
 			0xAA, 0x55, 0xAA, 0x55, 0xF0, 0x0F, 0xF0, 0x0F,
@@ -58,7 +58,7 @@ mod test {
 	#[test]
 	pub fn test_38() {
 		let mut start = vec![0xFF_u8; 38];
-		deob(&mut start);
+		deobfuscate(&mut start);
 
 		let expected: &[u8] = &[
 			0xAA, 0x55, 0xAA, 0x55, 0xF0, 0x0F, 0xF0, 0x0F,
