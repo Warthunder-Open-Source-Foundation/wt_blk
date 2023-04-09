@@ -47,6 +47,7 @@ pub fn decode_inner_vromf(file: &[u8]) {
 				buff.push(*byte)
 			}
 		}
+		// The nm file has a special case, where it has additional "garbage" bytes leading in-front of it
 		const NM_BYTE_ID: &[u8] = b"\xff\x3fnm";
 		if let Some(leading_bytes) = buff.get(..4) {
 			if leading_bytes == NM_BYTE_ID {
