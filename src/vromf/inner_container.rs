@@ -57,7 +57,7 @@ pub fn decode_inner_vromf(file: &[u8]) {
 		String::from_utf8(buff).unwrap()
 	}).collect::<Vec<_>>();
 	dbg!(file_names);
-
+	// TODO: dont forget to align names to 16 bytes
 
 
 }
