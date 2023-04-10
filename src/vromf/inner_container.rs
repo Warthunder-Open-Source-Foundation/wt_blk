@@ -1,9 +1,10 @@
 use std::ffi::OsString;
 use std::mem::size_of;
+
 use crate::binary::util::{bytes_to_int, bytes_to_long};
 use crate::util::debug_hex;
 
-pub fn decode_inner_vromf(file: &[u8]) {
+pub fn decode_inner_vromf(file: &[u8]) -> Vec<(String, Vec<u8>)> {
 	// Returns slice offset from file, incrementing the ptr by offset
 	let idx_file_offset = |ptr: &mut usize, offset: usize| {
 		let res = file.get(*ptr..(*ptr + offset)).unwrap();
@@ -16,15 +17,15 @@ pub fn decode_inner_vromf(file: &[u8]) {
 	let has_digest = match names_header[0] {
 		0x20 => false,
 		0x30 => true,
-		_ => {panic!("uh oh, unknown container type")}
+		_ => { panic!("uh oh, unknown container type") }
 	};
 
-	let names_offset = bytes_to_int(names_header).unwrap()as usize;
+	let names_offset = bytes_to_int(names_header).unwrap() as usize;
 	let names_count = bytes_to_int(idx_file_offset(&mut ptr, size_of::<u32>())).unwrap() as usize;
 	ptr += size_of::<u32>() * 2; // Padding to 16 byte alignment
 
-	let data_info_offset = bytes_to_int(idx_file_offset(&mut ptr, size_of::<u32>())).unwrap();
-	let data_info_count = bytes_to_int(idx_file_offset(&mut ptr, size_of::<u32>())).unwrap();
+	let data_info_offset = bytes_to_int(idx_file_offset(&mut ptr, size_of::<u32>())).unwrap() as usize;
+	let data_info_count = bytes_to_int(idx_file_offset(&mut ptr, size_of::<u32>())).unwrap() as usize;
 	ptr += size_of::<u32>() * 2; // Padding to 16 byte alignment
 
 	if has_digest {
@@ -34,11 +35,11 @@ pub fn decode_inner_vromf(file: &[u8]) {
 	}
 
 	// Names info is a set of u64s, pointing at each name
-	let names_info_len =  names_count * size_of::<u64>();
+	let names_info_len = names_count * size_of::<u64>();
 	let names_info = &file[names_offset..(names_offset + names_info_len)];
 	let names_info_chunks = names_info.array_chunks::<{ size_of::<u64>() }>(); // No remainder from chunks as it is infallible
-	let parsed_names_offsets = names_info_chunks.into_iter().map(|x|usize::try_from(u64::from_le_bytes(*x)).unwrap());
-	let file_names = parsed_names_offsets.into_iter().map(|start|{
+	let parsed_names_offsets = names_info_chunks.into_iter().map(|x| usize::try_from(u64::from_le_bytes(*x)).unwrap());
+	let file_names = parsed_names_offsets.into_iter().map(|start| {
 		let mut buff = vec![];
 		for byte in &file[start..] {
 			if *byte == 0 {
@@ -56,10 +57,22 @@ pub fn decode_inner_vromf(file: &[u8]) {
 		}
 		String::from_utf8(buff).unwrap()
 	}).collect::<Vec<_>>();
-	dbg!(file_names);
-	// TODO: dont forget to align names to 16 bytes
 
 
+	let data_info_len = data_info_count * size_of::<u32>() * 2;
+	let data_info = &file[data_info_offset..(data_info_offset + data_info_len)];
+	let data_info_split = data_info.array_chunks::<{ size_of::<u32>() }>();
+	if data_info_split.remainder().len() != 0 {
+		panic!("Ruh oh")
+	}
+	let data_info_full = data_info_split.array_chunks::<2>();
+	let data = data_info_full.map(|x|
+											(u32::from_le_bytes(*x[0]) as usize, u32::from_le_bytes(*x[1]) as usize
+									 )).map(|(offset, size)| {
+											file[offset..(offset + size)].to_vec()
+									}).collect::<Vec<_>>();
+
+	return file_names.into_iter().zip(data.into_iter()).collect::<Vec<_>>();
 }
 
 
@@ -67,6 +80,7 @@ pub fn decode_inner_vromf(file: &[u8]) {
 mod test {
 	use std::fs;
 	use std::time::{Duration, Instant};
+
 	use crate::util::time;
 	use crate::vromf::binary_container::decode_bin_vromf;
 	use crate::vromf::inner_container::decode_inner_vromf;
@@ -75,13 +89,22 @@ mod test {
 	fn test_uncompressed() {
 		let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
 		let decoded = decode_bin_vromf(&f);
-		decode_inner_vromf(&decoded);
+		let inner = decode_inner_vromf(&decoded);
 	}
 
 	#[test]
 	fn test_compressed() {
 		let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
 		let decoded = decode_bin_vromf(&f);
-		decode_inner_vromf(&decoded);
+		let inner = decode_inner_vromf(&decoded);
+	}
+
+	#[test]
+	fn test_aces() {
+		let f = fs::read("./samples/aces.vromfs.bin").unwrap();
+		let decoded = decode_bin_vromf(&f);
+		let inner = decode_inner_vromf(&decoded);
+		for i in inner {
+		}
 	}
 }
