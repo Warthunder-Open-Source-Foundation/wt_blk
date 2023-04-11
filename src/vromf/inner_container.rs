@@ -72,7 +72,6 @@ pub fn decode_inner_vromf(file: &[u8]) -> Vec<(String, Vec<u8>)> {
 	let data = data_info_full.map(|x|
 											(u32::from_le_bytes(*x[0]) as usize, u32::from_le_bytes(*x[1]) as usize
 									 )).map(|(offset, size)| {
-											println!("{}", size);
 											file[offset..(offset + size)].to_vec()
 									}).collect::<Vec<_>>();
 
