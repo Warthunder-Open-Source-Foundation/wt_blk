@@ -59,16 +59,20 @@ pub fn decode_inner_vromf(file: &[u8]) -> Vec<(String, Vec<u8>)> {
 	}).collect::<Vec<_>>();
 
 
-	let data_info_len = data_info_count * size_of::<u32>() * 2;
+	// FYI:
+	// Each data-info-block consists of 4x u32
+	// Only the first two values are used, as offset and length, the remaining two values are 0
+	let data_info_len = data_info_count * size_of::<u32>() * 4; // Total length of the data-info block
 	let data_info = &file[data_info_offset..(data_info_offset + data_info_len)];
-	let data_info_split = data_info.array_chunks::<{ size_of::<u32>() }>();
+	let data_info_split = data_info.array_chunks::<{ size_of::<u32>() }>(); // Data-info consists of u32 pairs, so we will split them once
 	if data_info_split.remainder().len() != 0 {
 		panic!("Ruh oh")
 	}
-	let data_info_full = data_info_split.array_chunks::<2>();
+	let data_info_full = data_info_split.array_chunks::<4>(); // Join together pairs of offset and length
 	let data = data_info_full.map(|x|
 											(u32::from_le_bytes(*x[0]) as usize, u32::from_le_bytes(*x[1]) as usize
 									 )).map(|(offset, size)| {
+											println!("{}", size);
 											file[offset..(offset + size)].to_vec()
 									}).collect::<Vec<_>>();
 
@@ -100,11 +104,15 @@ mod test {
 	}
 
 	#[test]
+	fn test_checked() {
+		let f = fs::read("./samples/checked.vromfs").unwrap();
+		let inner = decode_inner_vromf(&f);
+	}
+
+	#[test]
 	fn test_aces() {
 		let f = fs::read("./samples/aces.vromfs.bin").unwrap();
 		let decoded = decode_bin_vromf(&f);
 		let inner = decode_inner_vromf(&decoded);
-		for i in inner {
-		}
 	}
 }
