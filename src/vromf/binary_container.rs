@@ -1,12 +1,11 @@
 
 use std::fs;
 use std::mem::size_of;
-use crate::blk::util::bytes_to_int;
 use crate::util::debug_hex;
 use crate::vromf::de_obfuscation::deobfuscate;
 use crate::vromf::enums::{HeaderType, PlatformType};
 use crate::vromf::error::VromfError;
-use crate::vromf::error::VromfError::IndexingFileOutOfBounds;
+use crate::vromf::error::VromfError::{IndexingFileOutOfBounds, InvalidIntegerBuffer};
 use crate::vromf::util::pack_type_from_aligned;
 
 
@@ -27,15 +26,15 @@ pub fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 		}
 	};
 
-	let header_type = bytes_to_int(idx_file_offset(&mut ptr, 4)?).unwrap();
+	let header_type = bytes_to_int(idx_file_offset(&mut ptr, 4)?)?;
 	let header_type = HeaderType::try_from(header_type)?;
 
-	let platform_raw = bytes_to_int(idx_file_offset(&mut ptr, 4)?).unwrap();
+	let platform_raw = bytes_to_int(idx_file_offset(&mut ptr, 4)?)?;
 	let _platform = PlatformType::try_from(platform_raw).unwrap();
 
-	let size = bytes_to_int(idx_file_offset(&mut ptr, 4)?).unwrap();
+	let size = bytes_to_int(idx_file_offset(&mut ptr, 4)?)?;
 
-	let header_packed: u32 = bytes_to_int(idx_file_offset(&mut ptr, 4)?).unwrap();
+	let header_packed: u32 = bytes_to_int(idx_file_offset(&mut ptr, 4)?)?;
 	let (pack_type, extended_header_size) = pack_type_from_aligned(header_packed).unwrap();
 
 	let inner_data = if header_type.is_extended() {
@@ -67,6 +66,19 @@ pub fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 	}
 
 	Ok(output)
+}
+
+fn bytes_to_int(input: &[u8]) -> Result<u32, VromfError> {
+	if input.len() != 4 {
+		return Err(InvalidIntegerBuffer { expected_size: 4, found_buff: input.to_vec() });
+	}
+
+	Ok(u32::from_le_bytes([
+		input[0],
+		input[1],
+		input[2],
+		input[3],
+	]))
 }
 
 #[cfg(test)]
