@@ -70,7 +70,7 @@ pub fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 
 fn bytes_to_int(input: &[u8]) -> Result<u32, VromfError> {
 	if input.len() != 4 {
-		return Err(InvalidIntegerBuffer { expected_size: 4, found_buff: input.to_vec() });
+		return Err(InvalidIntegerBuffer { expected_size: 4, found_buff: input.len() });
 	}
 
 	Ok(u32::from_le_bytes([
