@@ -5,10 +5,11 @@ use crate::binary::util::bytes_to_int;
 use crate::util::debug_hex;
 use crate::vromf::de_obfuscation::deobfuscate;
 use crate::vromf::enums::{HeaderType, PlatformType};
+use crate::vromf::error::VromfError;
 use crate::vromf::util::pack_type_from_aligned;
 
 
-pub fn decode_bin_vromf(file: &[u8]) -> Vec<u8> {
+pub fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 	let mut ptr = 0_usize;
 
 	// Returns slice offset from file, incrementing the ptr by offset
@@ -47,7 +48,7 @@ pub fn decode_bin_vromf(file: &[u8]) -> Vec<u8> {
 
 	// Directly return when data is not obfuscated
 	if !pack_type.is_obfuscated() {
-		return inner_data.to_vec()
+		return Ok(inner_data.to_vec())
 	}
 
 	let mut output = inner_data.to_vec();
@@ -57,7 +58,7 @@ pub fn decode_bin_vromf(file: &[u8]) -> Vec<u8> {
 		output = zstd::decode_all(output.as_slice()).unwrap();
 	}
 
-	output
+	Ok(output)
 }
 
 #[cfg(test)]

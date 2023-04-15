@@ -91,14 +91,14 @@ mod test {
 	#[test]
 	fn test_uncompressed() {
 		let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
-		let decoded = decode_bin_vromf(&f);
+		let decoded = decode_bin_vromf(&f).unwrap();
 		let inner = decode_inner_vromf(&decoded);
 	}
 
 	#[test]
 	fn test_compressed() {
 		let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
-		let decoded = decode_bin_vromf(&f);
+		let decoded = decode_bin_vromf(&f).unwrap();
 		let inner = decode_inner_vromf(&decoded);
 	}
 
@@ -111,7 +111,7 @@ mod test {
 	#[test]
 	fn test_aces() {
 		let f = fs::read("./samples/aces.vromfs.bin").unwrap();
-		let decoded = decode_bin_vromf(&f);
+		let decoded = decode_bin_vromf(&f).unwrap();
 		let inner = decode_inner_vromf(&decoded);
 	}
 }

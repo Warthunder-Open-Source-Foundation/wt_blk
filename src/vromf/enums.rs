@@ -1,5 +1,7 @@
 use std::fmt::{Display, Formatter};
 use serde_json::ser::CharEscape::Solidus;
+use crate::vromf::error::VromfError;
+use crate::vromf::error::VromfError::{InvalidHeaderType, InvalidPackingConfiguration, InvalidPlatformType};
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[allow(non_camel_case_types)]
@@ -27,13 +29,13 @@ impl Display for HeaderType {
 }
 
 impl TryFrom<u32> for HeaderType {
-	type Error = ();
+	type Error = VromfError;
 
 	fn try_from(value: u32) -> Result<Self, Self::Error> {
 		return match value {
 			0x73465256 => Ok(Self::VRFS),
 			0x78465256 => Ok(Self::VRFX),
-			_ => {Err(())}
+			_ => {Err(InvalidHeaderType { found: value })}
 		}
 	}
 }
@@ -61,14 +63,14 @@ impl Display for PlatformType {
 }
 
 impl TryFrom<u32> for PlatformType {
-	type Error = ();
+	type Error = VromfError;
 
 	fn try_from(value: u32) -> Result<Self, Self::Error> {
 		return match value {
 			0x43500000 => Ok(Self::Pc),
 			0x534f6900 => Ok(Self::Ios),
 			0x646e6100 => Ok(Self::Android),
-			_ => {Err(())}
+			_ => {Err(InvalidPlatformType { found: value })}
 		}
 	}
 }
@@ -104,14 +106,14 @@ impl Packing {
 }
 
 impl TryFrom<u8> for Packing {
-	type Error = ();
+	type Error = VromfError;
 
 	fn try_from(value: u8) -> Result<Self, Self::Error> {
 		return match value {
 			0x10 => Ok(Self::ZSTD_OBFS_NOCHECK),
 			0x20 => Ok(Self::PLAIN),
 			0x30 => Ok(Self::ZSTD_OBFS),
-			_ => {Err(())}
+			_ => {Err(InvalidPackingConfiguration { found: value })}
 		}
 	}
 }
