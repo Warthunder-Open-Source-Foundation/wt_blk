@@ -20,4 +20,11 @@ pub enum VromfError {
 	InvalidPackingConfiguration {
 		found: u8,
 	},
+
+	#[error("current ptr {current_ptr} + {requested_len} bytes are out of bounds for file of size: {file_size}")]
+	IndexingFileOutOfBounds {
+		current_ptr: usize,
+		file_size: usize,
+		requested_len: usize,
+	}
 }

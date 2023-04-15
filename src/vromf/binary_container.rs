@@ -6,6 +6,7 @@ use crate::util::debug_hex;
 use crate::vromf::de_obfuscation::deobfuscate;
 use crate::vromf::enums::{HeaderType, PlatformType};
 use crate::vromf::error::VromfError;
+use crate::vromf::error::VromfError::IndexingFileOutOfBounds;
 use crate::vromf::util::pack_type_from_aligned;
 
 
@@ -14,24 +15,31 @@ pub fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 
 	// Returns slice offset from file, incrementing the ptr by offset
 	let idx_file_offset = |ptr: &mut usize, offset: usize| {
-		let res = file.get(*ptr..(*ptr + offset)).unwrap();
-		*ptr += offset;
-		res
+		if let Some(buff) = file.get(*ptr..(*ptr + offset)) {
+			*ptr += offset;
+			Ok(buff)
+		} else {
+			return Err(IndexingFileOutOfBounds {
+				current_ptr: *ptr,
+				file_size: file.len(),
+				requested_len: offset,
+			})
+		}
 	};
 
-	let header_type = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
-	let header_type = HeaderType::try_from(header_type).unwrap();
+	let header_type = bytes_to_int(idx_file_offset(&mut ptr, 4)?).unwrap();
+	let header_type = HeaderType::try_from(header_type)?;
 
-	let platform_raw = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
+	let platform_raw = bytes_to_int(idx_file_offset(&mut ptr, 4)?).unwrap();
 	let _platform = PlatformType::try_from(platform_raw).unwrap();
 
-	let size = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
+	let size = bytes_to_int(idx_file_offset(&mut ptr, 4)?).unwrap();
 
-	let header_packed: u32 = bytes_to_int(idx_file_offset(&mut ptr, 4)).unwrap();
+	let header_packed: u32 = bytes_to_int(idx_file_offset(&mut ptr, 4)?).unwrap();
 	let (pack_type, extended_header_size) = pack_type_from_aligned(header_packed).unwrap();
 
 	let inner_data = if header_type.is_extended() {
-		let extended_header = idx_file_offset(&mut ptr, size_of::<u16>() + size_of::<u16>() + size_of::<u32>());
+		let extended_header = idx_file_offset(&mut ptr, size_of::<u16>() + size_of::<u16>() + size_of::<u32>())?;
 		let s = extended_header; // Copying ptr such that indexing below is less verbose
 
 		// Unused header elements, for now
@@ -40,10 +48,10 @@ pub fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 		// The version is always reversed in order. It may never exceed 255
 		let _version = (s[7],s[6],s[5],s[4]);
 
-		idx_file_offset(&mut ptr, extended_header_size as usize)
+		idx_file_offset(&mut ptr, extended_header_size as usize)?
 
 	} else {
-		idx_file_offset(&mut ptr, size as usize)
+		idx_file_offset(&mut ptr, size as usize)?
 	};
 
 	// Directly return when data is not obfuscated
