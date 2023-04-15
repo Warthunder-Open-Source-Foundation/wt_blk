@@ -9,11 +9,11 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use rayon::iter::ParallelIterator;
 use rayon::prelude::IntoParallelRefIterator;
 
-use crate::binary::blk_structure::BlkField;
-use crate::binary::blk_type::BlkString;
-use crate::binary::file::FileType;
-use crate::binary::parser::parse_blk;
-use crate::binary::zstd::{BlkDecoder, decode_zstd};
+use crate::blk::blk_structure::BlkField;
+use crate::blk::blk_type::BlkString;
+use crate::blk::file::FileType;
+use crate::blk::parser::parse_blk;
+use crate::blk::zstd::{BlkDecoder, decode_zstd};
 use crate::util::time;
 
 #[cfg(test)]
@@ -31,14 +31,14 @@ mod test {
 	use zstd::Decoder;
 	use zstd::dict::DecoderDictionary;
 
-	use crate::binary::{parse_file, test_parse_dir};
-	use crate::binary::blk_type::BlkType;
-	use crate::binary::file::FileType;
-	use crate::binary::leb128::uleb128;
-	use crate::binary::nm_file::NameMap;
-	use crate::binary::output_formatting_conf::FormattingConfiguration;
-	use crate::binary::parser::parse_blk;
-	use crate::binary::zstd::{BlkDecoder, decode_zstd};
+	use crate::blk::{parse_file, test_parse_dir};
+	use crate::blk::blk_type::BlkType;
+	use crate::blk::file::FileType;
+	use crate::blk::leb128::uleb128;
+	use crate::blk::nm_file::NameMap;
+	use crate::blk::output_formatting_conf::FormattingConfiguration;
+	use crate::blk::parser::parse_blk;
+	use crate::blk::zstd::{BlkDecoder, decode_zstd};
 
 	#[test]
 	fn json_parity() {

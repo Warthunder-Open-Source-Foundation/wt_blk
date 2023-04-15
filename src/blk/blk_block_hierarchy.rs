@@ -1,8 +1,8 @@
 use std::ops::Range;
 use std::rc::Rc;
 
-use crate::binary::blk_structure::BlkField;
-use crate::binary::blk_type::BlkString;
+use crate::blk::blk_structure::BlkField;
+use crate::blk::blk_type::BlkString;
 
 #[derive(Debug, Clone)]
 pub struct FlatBlock {

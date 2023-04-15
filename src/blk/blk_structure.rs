@@ -3,7 +3,7 @@ use std::rc::Rc;
 use serde::{Deserialize, Serialize};
 use serde_json::to_string;
 
-use crate::binary::blk_type::{BlkString, BlkType};
+use crate::blk::blk_type::{BlkString, BlkType};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BlkField {

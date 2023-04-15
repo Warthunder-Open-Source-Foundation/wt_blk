@@ -8,7 +8,7 @@ use std::time::Duration;
 use zstd::Decoder;
 use zstd::dict::DecoderDictionary;
 
-use crate::binary::file::FileType;
+use crate::blk::file::FileType;
 
 pub type BlkDecoder<'a> = DecoderDictionary<'a>;
 
@@ -80,7 +80,7 @@ mod test {
 	use zstd::Decoder;
 	use zstd::dict::DecoderDictionary;
 
-	use crate::binary::zstd::decode_zstd;
+	use crate::blk::zstd::decode_zstd;
 
 	pub(crate) static DUMMY_DICT: fn() -> Arc<DecoderDictionary<'static>> = || Arc::new(DecoderDictionary::copy(&[]));
 

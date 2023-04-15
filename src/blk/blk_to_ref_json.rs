@@ -1,6 +1,6 @@
-use crate::binary::blk_structure::BlkField;
-use crate::binary::blk_type::{BlkString, BlkType};
-use crate::binary::output_formatting_conf::FormattingConfiguration;
+use crate::blk::blk_structure::BlkField;
+use crate::blk::blk_type::{BlkString, BlkType};
+use crate::blk::output_formatting_conf::FormattingConfiguration;
 
 /// Reference JSON is an output format dedicated to mirroring the behaviour of existing formatters
 

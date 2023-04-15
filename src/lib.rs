@@ -5,7 +5,7 @@
 #![feature(array_chunks)]
 #![feature(iter_array_chunks)]
 
-pub mod binary;
+pub mod blk;
 pub mod output_parsing;
 mod io;
 mod util;

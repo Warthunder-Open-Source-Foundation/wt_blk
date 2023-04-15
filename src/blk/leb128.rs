@@ -1,4 +1,4 @@
-use crate::binary::error::ParseError;
+use crate::blk::error::ParseError;
 
 // Yields length in buffer and value
 // ULEB variable length integer format: `https://en.wikipedia.org/wiki/LEB128`

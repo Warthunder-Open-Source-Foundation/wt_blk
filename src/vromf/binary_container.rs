@@ -1,7 +1,7 @@
 
 use std::fs;
 use std::mem::size_of;
-use crate::binary::util::bytes_to_int;
+use crate::blk::util::bytes_to_int;
 use crate::util::debug_hex;
 use crate::vromf::de_obfuscation::deobfuscate;
 use crate::vromf::enums::{HeaderType, PlatformType};

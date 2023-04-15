@@ -6,11 +6,11 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub use ::zstd::dict::DecoderDictionary;
 
-use crate::binary::blk_type::BlkString;
-use crate::binary::file::FileType;
-use crate::binary::nm_file::NameMap;
-use crate::binary::parser::parse_blk;
-use crate::binary::zstd::{BlkDecoder, decode_zstd};
+use crate::blk::blk_type::BlkString;
+use crate::blk::file::FileType;
+use crate::blk::nm_file::NameMap;
+use crate::blk::parser::parse_blk;
+use crate::blk::zstd::{BlkDecoder, decode_zstd};
 
 pub mod file;
 pub mod test;

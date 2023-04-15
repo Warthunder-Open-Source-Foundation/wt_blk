@@ -4,11 +4,11 @@ use std::io::BufRead;
 use std::rc::Rc;
 
 use serde::{Deserialize, Serialize};
-use crate::binary::blk_type::blk_type_id::*;
+use crate::blk::blk_type::blk_type_id::*;
 
-use crate::binary::nm_file::NameMap;
-use crate::binary::output_formatting_conf::FormattingConfiguration;
-use crate::binary::util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset};
+use crate::blk::nm_file::NameMap;
+use crate::blk::output_formatting_conf::FormattingConfiguration;
+use crate::blk::util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset};
 
 pub type BlkString = Rc<String>;
 

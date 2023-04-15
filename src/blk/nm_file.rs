@@ -4,8 +4,8 @@ use std::sync::Arc;
 
 use zstd::Decoder;
 
-use crate::binary::blk_type::BlkString;
-use crate::binary::leb128::uleb128;
+use crate::blk::blk_type::BlkString;
+use crate::blk::leb128::uleb128;
 
 #[derive(Clone, Debug)]
 pub struct NameMap {
@@ -83,8 +83,8 @@ impl NameMap {
 mod test {
 	use std::fs;
 
-	use crate::binary::leb128::uleb128;
-	use crate::binary::nm_file::NameMap;
+	use crate::blk::leb128::uleb128;
+	use crate::blk::nm_file::NameMap;
 
 	#[test]
 	fn test_any_stream() {

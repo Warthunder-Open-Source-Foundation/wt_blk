@@ -3,11 +3,11 @@ use std::rc::Rc;
 
 use criterion::{black_box, Criterion, criterion_group, criterion_main};
 use ruzstd::FrameDecoder;
-use wt_blk::binary::leb128::uleb128;
-use wt_blk::binary::nm_file::{decode_nm_file, parse_name_section};
-use wt_blk::binary::parser::parse_blk;
-use wt_blk::binary::zstd::decode_zstd;
-use wt_blk::binary::zstd::eep;
+use wt_blk::blk::leb128::uleb128;
+use wt_blk::blk::nm_file::{decode_nm_file, parse_name_section};
+use wt_blk::blk::parser::parse_blk;
+use wt_blk::blk::zstd::decode_zstd;
+use wt_blk::blk::zstd::eep;
 
 
 pub fn blk_fat(c: &mut Criterion) {

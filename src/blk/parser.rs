@@ -7,15 +7,15 @@ use std::time::Instant;
 use tracing::{error, warn};
 use zstd::zstd_safe::WriteBuf;
 
-use crate::binary::blk_block_hierarchy::FlatBlock;
-use crate::binary::blk_structure::BlkField;
-use crate::binary::blk_type::{BlkString, BlkType};
-use crate::binary::blk_type::blk_type_id::STRING;
-use crate::binary::error::ParseError;
-use crate::binary::error::ParseError::{BadBlkValue, ResidualBlockBuffer};
-use crate::binary::file::FileType;
-use crate::binary::leb128::uleb128;
-use crate::binary::nm_file::NameMap;
+use crate::blk::blk_block_hierarchy::FlatBlock;
+use crate::blk::blk_structure::BlkField;
+use crate::blk::blk_type::{BlkString, BlkType};
+use crate::blk::blk_type::blk_type_id::STRING;
+use crate::blk::error::ParseError;
+use crate::blk::error::ParseError::{BadBlkValue, ResidualBlockBuffer};
+use crate::blk::file::FileType;
+use crate::blk::leb128::uleb128;
+use crate::blk::nm_file::NameMap;
 
 pub fn parse_blk(file: &[u8], is_slim: bool, shared_name_map: Arc<NameMap>) -> Result<BlkField, ParseError> {
 	let mut ptr = 0;

@@ -1,7 +1,7 @@
 use std::ffi::OsString;
 use std::mem::size_of;
 
-use crate::binary::util::{bytes_to_int, bytes_to_long};
+use crate::blk::util::{bytes_to_int, bytes_to_long};
 use crate::util::debug_hex;
 
 pub fn decode_inner_vromf(file: &[u8]) -> Vec<(String, Vec<u8>)> {

@@ -1,4 +1,4 @@
-use crate::binary::blk_structure::BlkField;
+use crate::blk::blk_structure::BlkField;
 
 impl BlkField {
 	// Public facing formatting fn
@@ -35,8 +35,8 @@ mod test {
 	use std::borrow::Cow;
 	use std::rc::Rc;
 
-	use crate::binary::blk_structure::BlkField;
-	use crate::binary::blk_type::BlkType;
+	use crate::blk::blk_structure::BlkField;
+	use crate::blk::blk_type::BlkType;
 
 	#[test]
 	fn test_expected() {
