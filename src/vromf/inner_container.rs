@@ -3,8 +3,8 @@ use std::mem::size_of;
 
 use crate::util::debug_hex;
 use crate::vromf::error::VromfError;
-use crate::vromf::error::VromfError::IndexingFileOutOfBounds;
-use crate::vromf::util::{bytes_to_int, bytes_to_long};
+use crate::vromf::error::VromfError::{IndexingFileOutOfBounds, UsizeFromU64};
+use crate::vromf::util::{bytes_to_int, bytes_to_long, bytes_to_usize};
 
 pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfError> {
     // Returns slice offset from file, incrementing the ptr by offset
@@ -47,7 +47,7 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
     let names_info_len = names_count * size_of::<u64>();
     let names_info = &file[names_offset..(names_offset + names_info_len)];
     let names_info_chunks = names_info.array_chunks::<{ size_of::<u64>() }>(); // No remainder from chunks as it is infallible
-    let parsed_names_offsets = names_info_chunks.into_iter().map(|x| usize::try_from(u64::from_le_bytes(*x)).unwrap());
+    let parsed_names_offsets: Vec<usize> = names_info_chunks.into_iter().map(|x| bytes_to_usize(x)).collect::<Result<_, VromfError>>()?;
     let file_names = parsed_names_offsets.into_iter().map(|start| {
         let mut buff = vec![];
         for byte in &file[start..] {
@@ -101,26 +101,26 @@ mod test {
     fn test_uncompressed() {
         let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
         let decoded = decode_bin_vromf(&f).unwrap();
-        let inner = decode_inner_vromf(&decoded);
+        let inner = decode_inner_vromf(&decoded).unwrap();
     }
 
     #[test]
     fn test_compressed() {
         let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
         let decoded = decode_bin_vromf(&f).unwrap();
-        let inner = decode_inner_vromf(&decoded);
+        let inner = decode_inner_vromf(&decoded).unwrap();
     }
 
     #[test]
     fn test_checked() {
         let f = fs::read("./samples/checked.vromfs").unwrap();
-        let inner = decode_inner_vromf(&f);
+        let inner = decode_inner_vromf(&f).unwrap();
     }
 
     #[test]
     fn test_aces() {
         let f = fs::read("./samples/aces.vromfs.bin").unwrap();
         let decoded = decode_bin_vromf(&f).unwrap();
-        let inner = decode_inner_vromf(&decoded);
+        let inner = decode_inner_vromf(&decoded).unwrap();
     }
 }
