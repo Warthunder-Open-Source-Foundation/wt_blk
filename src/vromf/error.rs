@@ -11,6 +11,11 @@ pub enum VromfError {
         found: u32,
     },
 
+    #[error("{found:X} is not a valid digest-heaader")]
+    DigestHeader {
+        found: u8
+    },
+
     #[error("{found} is not a valid platform-type")]
     InvalidPlatformType {
         found: u32
@@ -32,4 +37,11 @@ pub enum VromfError {
     UsizeFromU64 {
         from: u64,
     },
+
+    #[error("Unaligned chunks: the data-set of size {len} was supposed to align/chunk into {align}, but {rem} remained")]
+    UnalignedChunks {
+        len: usize,
+        align: usize,
+        rem: usize,
+    }
 }

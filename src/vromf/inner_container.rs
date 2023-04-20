@@ -3,7 +3,7 @@ use std::mem::size_of;
 
 use crate::util::debug_hex;
 use crate::vromf::error::VromfError;
-use crate::vromf::error::VromfError::{IndexingFileOutOfBounds, UsizeFromU64};
+use crate::vromf::error::VromfError::{DigestHeader, IndexingFileOutOfBounds, UnalignedChunks, UsizeFromU64};
 use crate::vromf::util::{bytes_to_int, bytes_to_long, bytes_to_usize};
 
 pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfError> {
@@ -22,14 +22,17 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
     };
     let mut ptr = 0;
 
+    // The header indicates existence of a digest
     let names_header = idx_file_offset(&mut ptr, size_of::<u32>())?;
     let has_digest = match names_header[0] {
         0x20 => false,
         0x30 => true,
-        _ => { panic!("uh oh, unknown container type") }
+        _ => {
+            return Err(DigestHeader {found: names_header[0]})
+        }
     };
 
-    let names_offset = bytes_to_int(names_header).unwrap() as usize;
+    let names_offset = bytes_to_int(names_header)? as usize;
     let names_count = bytes_to_int(idx_file_offset(&mut ptr, size_of::<u32>())?)? as usize;
     ptr += size_of::<u32>() * 2; // Padding to 16 byte alignment
 
@@ -75,16 +78,22 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
     let data_info = &file[data_info_offset..(data_info_offset + data_info_len)];
     let data_info_split = data_info.array_chunks::<{ size_of::<u32>() }>(); // Data-info consists of u32 pairs, so we will split them once
     if data_info_split.remainder().len() != 0 {
-        panic!("Ruh oh")
+        return Err(UnalignedChunks {
+            len: data_info.len(),
+            align: size_of::<u32>(),
+            rem: data_info_split.remainder().len(),
+        })
     }
-    let data_info_full = data_info_split.array_chunks::<4>(); // Join together pairs of offset and length
+
+    // This has to align to 4, because of previous chunk checks
+    let data_info_full = data_info_split.array_chunks::<4>(); // Join together pairs of offset and length with 2 trailing bytes
     let data = data_info_full.map(|x|
         (u32::from_le_bytes(*x[0]) as usize, u32::from_le_bytes(*x[1]) as usize
         )).map(|(offset, size)| {
         file[offset..(offset + size)].to_vec()
     }).collect::<Vec<_>>();
 
-    return Ok(file_names.into_iter().zip(data.into_iter()).collect::<Vec<_>>());
+    return Ok(file_names.into_iter().zip(data.into_iter()).collect());
 }
 
 
