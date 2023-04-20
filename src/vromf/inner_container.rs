@@ -41,9 +41,9 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
     ptr += size_of::<u32>() * 2; // Padding to 16 byte alignment
 
     if has_digest {
-        let digest_end = bytes_to_long(idx_file_offset(&mut ptr, size_of::<u64>())?)?;
-        let digest_begin = bytes_to_long(idx_file_offset(&mut ptr, size_of::<u64>())?)?;
-        let digest_data = &file[digest_begin.try_into().unwrap()..digest_end.try_into().unwrap()];
+        let digest_end = bytes_to_usize(idx_file_offset(&mut ptr, size_of::<u64>())?)?;
+        let digest_begin = bytes_to_usize(idx_file_offset(&mut ptr, size_of::<u64>())?)?;
+        let digest_data = &file[digest_begin..digest_end];
     }
 
     // Names info is a set of u64s, pointing at each name
@@ -51,7 +51,7 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
     let names_info = &file[names_offset..(names_offset + names_info_len)];
     let names_info_chunks = names_info.array_chunks::<{ size_of::<u64>() }>(); // No remainder from chunks as it is infallible
     let parsed_names_offsets: Vec<usize> = names_info_chunks.into_iter().map(|x| bytes_to_usize(x)).collect::<Result<_, VromfError>>()?;
-    let file_names = parsed_names_offsets.into_iter().map(|start| {
+    let file_names: Vec<_> = parsed_names_offsets.into_iter().map(|start| {
         let mut buff = vec![];
         for byte in &file[start..] {
             if *byte == 0 {
@@ -67,8 +67,8 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
                 buff = b"nm".to_vec();
             }
         }
-        String::from_utf8(buff).unwrap()
-    }).collect::<Vec<_>>();
+        String::from_utf8(buff).map_err(|e|VromfError::Utf8 { invalid: e.into_bytes()})
+    }).collect::<Result<_, VromfError>>()?;
 
 
     // FYI:

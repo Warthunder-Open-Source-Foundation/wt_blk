@@ -1,3 +1,5 @@
+use std::string::FromUtf8Error;
+
 #[derive(Debug, thiserror::Error)]
 pub enum VromfError {
     #[error("Expected buffer of length {expected_size}, found {found_buff}")]
@@ -33,7 +35,7 @@ pub enum VromfError {
         requested_len: usize,
     },
 
-    #[error("Could not create usize from u64 with bytes: {from}, because usize may exactly hold {} bytes", std::mem::size_of::<usize>())]
+    #[error("Could not parse usize from u64: {from}, because usize may exactly hold {} bytes", std::mem::size_of::<usize>())]
     UsizeFromU64 {
         from: u64,
     },
@@ -43,5 +45,10 @@ pub enum VromfError {
         len: usize,
         align: usize,
         rem: usize,
-    }
+    },
+
+    #[error("Invalid UTF-8 string: {invalid}")]
+    Utf8{
+        invalid: String,
+    },
 }
