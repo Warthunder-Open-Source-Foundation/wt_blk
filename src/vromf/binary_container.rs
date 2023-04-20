@@ -6,7 +6,7 @@ use crate::vromf::de_obfuscation::deobfuscate;
 use crate::vromf::enums::{HeaderType, PlatformType};
 use crate::vromf::error::VromfError;
 use crate::vromf::error::VromfError::{IndexingFileOutOfBounds, InvalidIntegerBuffer};
-use crate::vromf::util::pack_type_from_aligned;
+use crate::vromf::util::{bytes_to_int, pack_type_from_aligned};
 
 
 pub fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
@@ -66,19 +66,6 @@ pub fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 	}
 
 	Ok(output)
-}
-
-fn bytes_to_int(input: &[u8]) -> Result<u32, VromfError> {
-	if input.len() != 4 {
-		return Err(InvalidIntegerBuffer { expected_size: 4, found_buff: input.len() });
-	}
-
-	Ok(u32::from_le_bytes([
-		input[0],
-		input[1],
-		input[2],
-		input[3],
-	]))
 }
 
 #[cfg(test)]

@@ -1,10 +1,10 @@
 use std::ffi::OsString;
 use std::mem::size_of;
 
-use crate::blk::util::{bytes_to_int, bytes_to_long};
 use crate::util::debug_hex;
 use crate::vromf::error::VromfError;
 use crate::vromf::error::VromfError::IndexingFileOutOfBounds;
+use crate::vromf::util::{bytes_to_int, bytes_to_long};
 
 pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfError> {
     // Returns slice offset from file, incrementing the ptr by offset
@@ -30,16 +30,16 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
     };
 
     let names_offset = bytes_to_int(names_header).unwrap() as usize;
-    let names_count = bytes_to_int(idx_file_offset(&mut ptr, size_of::<u32>())?).unwrap() as usize;
+    let names_count = bytes_to_int(idx_file_offset(&mut ptr, size_of::<u32>())?)? as usize;
     ptr += size_of::<u32>() * 2; // Padding to 16 byte alignment
 
-    let data_info_offset = bytes_to_int(idx_file_offset(&mut ptr, size_of::<u32>())?).unwrap() as usize;
-    let data_info_count = bytes_to_int(idx_file_offset(&mut ptr, size_of::<u32>())?).unwrap() as usize;
+    let data_info_offset = bytes_to_int(idx_file_offset(&mut ptr, size_of::<u32>())?)? as usize;
+    let data_info_count = bytes_to_int(idx_file_offset(&mut ptr, size_of::<u32>())?)? as usize;
     ptr += size_of::<u32>() * 2; // Padding to 16 byte alignment
 
     if has_digest {
-        let digest_end = bytes_to_long(idx_file_offset(&mut ptr, size_of::<u64>())?).unwrap();
-        let digest_begin = bytes_to_long(idx_file_offset(&mut ptr, size_of::<u64>())?).unwrap();
+        let digest_end = bytes_to_long(idx_file_offset(&mut ptr, size_of::<u64>())?)?;
+        let digest_begin = bytes_to_long(idx_file_offset(&mut ptr, size_of::<u64>())?)?;
         let digest_data = &file[digest_begin.try_into().unwrap()..digest_end.try_into().unwrap()];
     }
 
