@@ -30,7 +30,7 @@ pub fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 	let header_type = HeaderType::try_from(header_type)?;
 
 	let platform_raw = bytes_to_int(idx_file_offset(&mut ptr, 4)?)?;
-	let _platform = PlatformType::try_from(platform_raw).unwrap();
+	let _platform = PlatformType::try_from(platform_raw)?;
 
 	let size = bytes_to_int(idx_file_offset(&mut ptr, 4)?)?;
 

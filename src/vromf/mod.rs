@@ -17,6 +17,6 @@ pub mod error;
 
 pub fn decode_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfError> {
 	let decoded = decode_bin_vromf(&file)?;
-	let inner = decode_inner_vromf(&decoded);
+	let inner = decode_inner_vromf(&decoded)?;
 	Ok(inner)
 }
