@@ -14,7 +14,7 @@ pub enum VromfError {
         found: u32,
     },
 
-    #[error("{found:X} is not a valid digest-heaader")]
+    #[error("{found:X} is not a valid digest-header")]
     DigestHeader {
         found: u8
     },
