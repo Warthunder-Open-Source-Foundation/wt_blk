@@ -6,9 +6,11 @@ use crate::{
 	dxp::DxpError::{IndexingFileOutOfBounds, NotADxp},
 };
 
-/// IF YOU WISH TO SEE THE CONTENTS OF DXP FILES, YOU SHOULD OPEN AN ISSUE AND I WILL ADD FUNCTIONALITY FOR IT
-/// The data section is pretty much similar to the inner-vromf container
-/// It has a section of offsets + sizes, followed by the data region indexed by said offsets and sizes
+/// This function yields the names from a DXP file
+
+// IF YOU WISH TO SEE THE CONTENTS OF DXP FILES, YOU SHOULD OPEN AN ISSUE AND I WILL ADD FUNCTIONALITY FOR IT
+// The data section is pretty much similar to the inner-vromf container
+// It has a section of offsets + sizes, followed by the data region indexed by said offsets and sizes
 
 pub fn parse_dxp(file: &[u8]) -> Result<Vec<String>, DxpError> {
 	// Return empty names for empty file
