@@ -1,6 +1,8 @@
-use crate::vromf::binary_container::decode_bin_vromf;
-use crate::vromf::error::VromfError;
-use crate::vromf::inner_container::decode_inner_vromf;
+use crate::vromf::{
+	binary_container::decode_bin_vromf,
+	error::VromfError,
+	inner_container::decode_inner_vromf,
+};
 
 mod de_obfuscation;
 mod enums;
@@ -15,7 +17,7 @@ pub mod error;
 mod inner_container;
 
 pub fn decode_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfError> {
-    let decoded = decode_bin_vromf(&file)?;
-    let inner = decode_inner_vromf(&decoded)?;
-    Ok(inner)
+	let decoded = decode_bin_vromf(&file)?;
+	let inner = decode_inner_vromf(&decoded)?;
+	Ok(inner)
 }

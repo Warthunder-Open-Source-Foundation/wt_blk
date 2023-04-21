@@ -1,16 +1,22 @@
-use std::fs;
-use std::fs::ReadDir;
-use std::rc::Rc;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Arc;
+use std::{
+	fs,
+	fs::ReadDir,
+	rc::Rc,
+	sync::{
+		atomic::{AtomicUsize, Ordering},
+		Arc,
+	},
+};
 
 pub use ::zstd::dict::DecoderDictionary;
 
-use crate::blk::blk_type::BlkString;
-use crate::blk::file::FileType;
-use crate::blk::nm_file::NameMap;
-use crate::blk::parser::parse_blk;
-use crate::blk::zstd::{decode_zstd, BlkDecoder};
+use crate::blk::{
+	blk_type::BlkString,
+	file::FileType,
+	nm_file::NameMap,
+	parser::parse_blk,
+	zstd::{decode_zstd, BlkDecoder},
+};
 
 mod blk_block_hierarchy;
 pub mod blk_structure;
@@ -28,43 +34,43 @@ pub mod util;
 pub mod zstd;
 
 fn test_parse_dir(
-    pile: &mut Vec<(String, Vec<u8>)>,
-    dir: ReadDir,
-    total_files_processed: &AtomicUsize,
+	pile: &mut Vec<(String, Vec<u8>)>,
+	dir: ReadDir,
+	total_files_processed: &AtomicUsize,
 ) {
-    for file in dir {
-        let file = file.as_ref().unwrap();
-        if file.metadata().unwrap().is_dir() {
-            test_parse_dir(pile, file.path().read_dir().unwrap(), total_files_processed);
-        } else {
-            let fname = file.file_name().to_str().unwrap().to_owned();
-            if fname.ends_with(".blk") {
-                let mut read = fs::read(file.path()).unwrap();
-                pile.push((fname, read));
-                total_files_processed.fetch_add(1, Ordering::Relaxed);
-            }
-        }
-    }
+	for file in dir {
+		let file = file.as_ref().unwrap();
+		if file.metadata().unwrap().is_dir() {
+			test_parse_dir(pile, file.path().read_dir().unwrap(), total_files_processed);
+		} else {
+			let fname = file.file_name().to_str().unwrap().to_owned();
+			if fname.ends_with(".blk") {
+				let mut read = fs::read(file.path()).unwrap();
+				pile.push((fname, read));
+				total_files_processed.fetch_add(1, Ordering::Relaxed);
+			}
+		}
+	}
 }
 
 pub fn parse_file(
-    mut file: Vec<u8>,
-    fd: Arc<BlkDecoder>,
-    shared_name_map: Arc<NameMap>,
+	mut file: Vec<u8>,
+	fd: Arc<BlkDecoder>,
+	shared_name_map: Arc<NameMap>,
 ) -> Option<String> {
-    let mut offset = 0;
-    let file_type = FileType::from_byte(file[0])?;
-    if file_type.is_zstd() {
-        file = decode_zstd(&file, fd.clone()).unwrap();
-    } else {
-        // uncompressed Slim and Fat files retain their initial magic bytes
-        offset = 1;
-    };
+	let mut offset = 0;
+	let file_type = FileType::from_byte(file[0])?;
+	if file_type.is_zstd() {
+		file = decode_zstd(&file, fd.clone()).unwrap();
+	} else {
+		// uncompressed Slim and Fat files retain their initial magic bytes
+		offset = 1;
+	};
 
-    Some(
-        serde_json::to_string(
-            &parse_blk(&file[offset..], file_type.is_slim(), shared_name_map).ok()?,
-        )
-        .unwrap(),
-    )
+	Some(
+		serde_json::to_string(
+			&parse_blk(&file[offset..], file_type.is_slim(), shared_name_map).ok()?,
+		)
+		.unwrap(),
+	)
 }
