@@ -36,7 +36,7 @@ pub enum VromfError {
         requested_len: usize,
     },
 
-    #[error("Could not parse usize from u64: {from}, because usize may exactly hold {} bytes", std::mem::size_of::<usize>())]
+    #[error("Could not parse usize from u64: {from}, because usize may exactly hold {} bytes", std::mem::size_of::< usize > ())]
     UsizeFromU64 {
         from: u64,
     },
@@ -48,12 +48,19 @@ pub enum VromfError {
         rem: usize,
     },
 
-    #[error("{}", fmt_utf8_erro(utf8e))]
-    Utf8{
+    #[error("{}", fmt_utf8_error(buff, utf8e))]
+    Utf8 {
+        buff: Vec<u8>,
         utf8e: Utf8Error,
     },
 }
 
-fn fmt_utf8_erro(e: &Utf8Error) -> String {
-    "".to_owned()
+fn fmt_utf8_error(buff: &Vec<u8>, e: &Utf8Error) -> String {
+    if let Some(len) = e.error_len() {
+        let invalid = &buff[e.valid_up_to()..len];
+        format!("The sequence {invalid:?} is not a valid UTF-8 sequence, byte offset into buffer: {}..{len}", e.valid_up_to())
+    } else {
+        let invalid = &buff[e.valid_up_to()..];
+        format!("Buffer terminated within UTF-8 sequence {invalid:?} was ended early")
+    }
 }

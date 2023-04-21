@@ -28,7 +28,7 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
         0x20 => false,
         0x30 => true,
         _ => {
-            return Err(DigestHeader {found: names_header[0]})
+            return Err(DigestHeader { found: names_header[0] });
         }
     };
 
@@ -67,7 +67,15 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
                 buff = b"nm".to_vec();
             }
         }
-        String::from_utf8(buff).map_err(|e| VromfError::Utf8 { utf8e: e.utf8_error()})
+        match String::from_utf8(buff) {
+            Ok(res) => Ok(res),
+            Err(e) => {
+                Err(VromfError::Utf8 {
+                    utf8e: e.utf8_error(),
+                    buff: e.into_bytes(),
+                })
+            }
+        }
     }).collect::<Result<_, VromfError>>()?;
 
 
@@ -82,7 +90,7 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
             len: data_info.len(),
             align: size_of::<u32>(),
             rem: data_info_split.remainder().len(),
-        })
+        });
     }
 
     // This has to align to 4, because of previous chunk checks
