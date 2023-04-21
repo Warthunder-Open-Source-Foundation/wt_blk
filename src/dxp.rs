@@ -29,7 +29,7 @@ pub fn parse_dxp(file: &[u8]) -> Result<Vec<String>, DxpError> {
 			file_size:   file.len(),
 		},
 	)?)
-	.unwrap();
+	.expect("Infallible");
 
 	// Names begin at 0x48, usual CString sequence
 	let mut ptr: usize = 0x48;
