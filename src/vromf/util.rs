@@ -19,35 +19,29 @@ pub fn pack_type_from_aligned(input: u32) -> Option<(Packing, u32)> {
 
 pub fn bytes_to_int(input: &[u8]) -> Result<u32, VromfError> {
     if input.len() != 4 {
-        return Err(InvalidIntegerBuffer { expected_size: 4, found_buff: input.len() });
+        return Err(InvalidIntegerBuffer {
+            expected_size: 4,
+            found_buff: input.len(),
+        });
     }
 
-    Ok(u32::from_le_bytes([
-        input[0],
-        input[1],
-        input[2],
-        input[3],
-    ]))
+    Ok(u32::from_le_bytes([input[0], input[1], input[2], input[3]]))
 }
 
 pub fn bytes_to_long(input: &[u8]) -> Result<u64, VromfError> {
     if input.len() != size_of::<u64>() {
-        return Err(InvalidIntegerBuffer { expected_size: size_of::<u64>(), found_buff: input.len() });
+        return Err(InvalidIntegerBuffer {
+            expected_size: size_of::<u64>(),
+            found_buff: input.len(),
+        });
     }
 
     Ok(u64::from_le_bytes([
-        input[0],
-        input[1],
-        input[2],
-        input[3],
-        input[4],
-        input[5],
-        input[6],
-        input[7],
+        input[0], input[1], input[2], input[3], input[4], input[5], input[6], input[7],
     ]))
 }
 
 pub fn bytes_to_usize(input: &[u8]) -> Result<usize, VromfError> {
     let long = bytes_to_long(input)?;
-    usize::try_from(long).map_err(|_|VromfError::UsizeFromU64 {from: long})
+    usize::try_from(long).map_err(|_| VromfError::UsizeFromU64 { from: long })
 }

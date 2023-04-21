@@ -3,7 +3,9 @@ use std::mem::size_of;
 
 use crate::util::debug_hex;
 use crate::vromf::error::VromfError;
-use crate::vromf::error::VromfError::{DigestHeader, IndexingFileOutOfBounds, UnalignedChunks, UsizeFromU64};
+use crate::vromf::error::VromfError::{
+    DigestHeader, IndexingFileOutOfBounds, UnalignedChunks, UsizeFromU64,
+};
 use crate::vromf::util::{bytes_to_int, bytes_to_long, bytes_to_usize};
 
 pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfError> {
@@ -28,7 +30,9 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
         0x20 => false,
         0x30 => true,
         _ => {
-            return Err(DigestHeader { found: names_header[0] });
+            return Err(DigestHeader {
+                found: names_header[0],
+            });
         }
     };
 
@@ -50,34 +54,37 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
     let names_info_len = names_count * size_of::<u64>();
     let names_info = &file[names_offset..(names_offset + names_info_len)];
     let names_info_chunks = names_info.array_chunks::<{ size_of::<u64>() }>(); // No remainder from chunks as it is infallible
-    let parsed_names_offsets: Vec<usize> = names_info_chunks.into_iter().map(|x| bytes_to_usize(x)).collect::<Result<_, VromfError>>()?;
-    let file_names: Vec<_> = parsed_names_offsets.into_iter().map(|start| {
-        let mut buff = vec![];
-        for byte in &file[start..] {
-            if *byte == 0 {
-                break;
-            } else {
-                buff.push(*byte)
+    let parsed_names_offsets: Vec<usize> = names_info_chunks
+        .into_iter()
+        .map(|x| bytes_to_usize(x))
+        .collect::<Result<_, VromfError>>()?;
+    let file_names: Vec<_> = parsed_names_offsets
+        .into_iter()
+        .map(|start| {
+            let mut buff = vec![];
+            for byte in &file[start..] {
+                if *byte == 0 {
+                    break;
+                } else {
+                    buff.push(*byte)
+                }
             }
-        }
-        // The nm file has a special case, where it has additional "garbage" bytes leading in-front of it
-        const NM_BYTE_ID: &[u8] = b"\xff\x3fnm";
-        if let Some(leading_bytes) = buff.get(..4) {
-            if leading_bytes == NM_BYTE_ID {
-                buff = b"nm".to_vec();
+            // The nm file has a special case, where it has additional "garbage" bytes leading in-front of it
+            const NM_BYTE_ID: &[u8] = b"\xff\x3fnm";
+            if let Some(leading_bytes) = buff.get(..4) {
+                if leading_bytes == NM_BYTE_ID {
+                    buff = b"nm".to_vec();
+                }
             }
-        }
-        match String::from_utf8(buff) {
-            Ok(res) => Ok(res),
-            Err(e) => {
-                Err(VromfError::Utf8 {
+            match String::from_utf8(buff) {
+                Ok(res) => Ok(res),
+                Err(e) => Err(VromfError::Utf8 {
                     utf8e: e.utf8_error(),
                     buff: e.into_bytes(),
-                })
+                }),
             }
-        }
-    }).collect::<Result<_, VromfError>>()?;
-
+        })
+        .collect::<Result<_, VromfError>>()?;
 
     // FYI:
     // Each data-info-block consists of 4x u32
@@ -95,15 +102,18 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
 
     // This has to align to 4, because of previous chunk checks
     let data_info_full = data_info_split.array_chunks::<4>(); // Join together pairs of offset and length with 2 trailing bytes
-    let data = data_info_full.map(|x|
-        (u32::from_le_bytes(*x[0]) as usize, u32::from_le_bytes(*x[1]) as usize
-        )).map(|(offset, size)| {
-        file[offset..(offset + size)].to_vec()
-    }).collect::<Vec<_>>();
+    let data = data_info_full
+        .map(|x| {
+            (
+                u32::from_le_bytes(*x[0]) as usize,
+                u32::from_le_bytes(*x[1]) as usize,
+            )
+        })
+        .map(|(offset, size)| file[offset..(offset + size)].to_vec())
+        .collect::<Vec<_>>();
 
     return Ok(file_names.into_iter().zip(data.into_iter()).collect());
 }
-
 
 #[cfg(test)]
 mod test {

@@ -10,24 +10,16 @@ pub enum VromfError {
     },
 
     #[error("{found} is not a valid header")]
-    InvalidHeaderType {
-        found: u32,
-    },
+    InvalidHeaderType { found: u32 },
 
     #[error("{found:X} is not a valid digest-header")]
-    DigestHeader {
-        found: u8
-    },
+    DigestHeader { found: u8 },
 
     #[error("{found} is not a valid platform-type")]
-    InvalidPlatformType {
-        found: u32
-    },
+    InvalidPlatformType { found: u32 },
 
     #[error("{found:X} is not a valid vromf-packing-configuration")]
-    InvalidPackingConfiguration {
-        found: u8,
-    },
+    InvalidPackingConfiguration { found: u8 },
 
     #[error("current ptr {current_ptr} + {requested_len} bytes are out of bounds for file of size: {file_size}")]
     IndexingFileOutOfBounds {
@@ -37,9 +29,7 @@ pub enum VromfError {
     },
 
     #[error("Could not parse usize from u64: {from}, because usize may exactly hold {} bytes", std::mem::size_of::< usize > ())]
-    UsizeFromU64 {
-        from: u64,
-    },
+    UsizeFromU64 { from: u64 },
 
     #[error("Unaligned chunks: the data-set of size {len} was supposed to align/chunk into {align}, but {rem} remained")]
     UnalignedChunks {
@@ -49,10 +39,7 @@ pub enum VromfError {
     },
 
     #[error("{}", fmt_utf8_error(buff, utf8e))]
-    Utf8 {
-        buff: Vec<u8>,
-        utf8e: Utf8Error,
-    },
+    Utf8 { buff: Vec<u8>, utf8e: Utf8Error },
 }
 
 fn fmt_utf8_error(buff: &Vec<u8>, e: &Utf8Error) -> String {
