@@ -57,7 +57,6 @@ impl BlkField {
 				} else {
 					// Empty blocks will not be opened or indented
 					let block_delimiter = if fields.len() == 0 {
-						indent = "".to_owned();
 						""
 					} else {
 						"\n"
