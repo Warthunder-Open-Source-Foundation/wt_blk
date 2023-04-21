@@ -1,0 +1,1 @@
+cargo fmt -- --config-path ./.rustfmt/rustfmt.toml
