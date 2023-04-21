@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use serde::{Deserialize, Serialize};
-use serde_json::to_string;
+
 
 use crate::blk::blk_type::{BlkString, BlkType};
 
@@ -54,7 +54,7 @@ impl BlkField {
 		pointers: Vec<String>,
 		at: &mut usize,
 	) -> Result<Self, BlkFieldError> {
-		let current_search = pointers.get(*at);
+		let _current_search = pointers.get(*at);
 		unimplemented!();
 	}
 }

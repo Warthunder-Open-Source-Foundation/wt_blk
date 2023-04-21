@@ -1,13 +1,12 @@
-use std::{ffi::OsString, mem::size_of};
+use std::{mem::size_of};
 
 use crate::{
-	util::debug_hex,
 	vromf::{
 		error::{
 			VromfError,
-			VromfError::{DigestHeader, IndexingFileOutOfBounds, UnalignedChunks, UsizeFromU64},
+			VromfError::{DigestHeader, IndexingFileOutOfBounds, UnalignedChunks},
 		},
-		util::{bytes_to_int, bytes_to_long, bytes_to_usize},
+		util::{bytes_to_int, bytes_to_usize},
 	},
 };
 
@@ -50,7 +49,7 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
 	if has_digest {
 		let digest_end = bytes_to_usize(idx_file_offset(&mut ptr, size_of::<u64>())?)?;
 		let digest_begin = bytes_to_usize(idx_file_offset(&mut ptr, size_of::<u64>())?)?;
-		let digest_data = &file[digest_begin..digest_end];
+		let _digest_data = &file[digest_begin..digest_end];
 	}
 
 	// Names info is a set of u64s, pointing at each name
@@ -122,11 +121,9 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
 mod test {
 	use std::{
 		fs,
-		time::{Duration, Instant},
 	};
 
 	use crate::{
-		util::time,
 		vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf},
 	};
 
@@ -134,26 +131,26 @@ mod test {
 	fn test_uncompressed() {
 		let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
 		let decoded = decode_bin_vromf(&f).unwrap();
-		let inner = decode_inner_vromf(&decoded).unwrap();
+		let _inner = decode_inner_vromf(&decoded).unwrap();
 	}
 
 	#[test]
 	fn test_compressed() {
 		let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
 		let decoded = decode_bin_vromf(&f).unwrap();
-		let inner = decode_inner_vromf(&decoded).unwrap();
+		let _inner = decode_inner_vromf(&decoded).unwrap();
 	}
 
 	#[test]
 	fn test_checked() {
 		let f = fs::read("./samples/checked.vromfs").unwrap();
-		let inner = decode_inner_vromf(&f).unwrap();
+		let _inner = decode_inner_vromf(&f).unwrap();
 	}
 
 	#[test]
 	fn test_aces() {
 		let f = fs::read("./samples/aces.vromfs.bin").unwrap();
 		let decoded = decode_bin_vromf(&f).unwrap();
-		let inner = decode_inner_vromf(&decoded).unwrap();
+		let _inner = decode_inner_vromf(&decoded).unwrap();
 	}
 }

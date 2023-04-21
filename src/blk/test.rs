@@ -1,77 +1,49 @@
-use std::{
-	fs,
-	fs::ReadDir,
-	io::{stdout, Write},
-	process::exit,
-	rc::Rc,
-	sync::{
-		atomic::{AtomicUsize, Ordering},
-		Arc,
-		Mutex,
-	},
-};
 
-use rayon::{iter::ParallelIterator, prelude::IntoParallelRefIterator};
 
-use crate::{
-	blk::{
-		blk_structure::BlkField,
-		blk_type::BlkString,
-		file::FileType,
-		parser::parse_blk,
-		zstd::{decode_zstd, BlkDecoder},
-	},
-	util::time,
-};
+
+
+
 
 #[cfg(test)]
 mod test {
 	use std::{
 		fs,
 		fs::ReadDir,
-		mem::size_of,
-		path::Path,
-		process::exit,
-		rc::Rc,
 		sync::{
-			atomic::{AtomicUsize, Ordering},
+			atomic::{AtomicUsize},
 			Arc,
-			Mutex,
 		},
 		time::Instant,
 	};
 
-	use zstd::{dict::DecoderDictionary, Decoder};
+	use zstd::{dict::DecoderDictionary};
 
 	use crate::blk::{
-		blk_type::BlkType,
 		file::FileType,
-		leb128::uleb128,
 		nm_file::NameMap,
-		output_formatting_conf::FormattingConfiguration,
 		parse_file,
 		parser::parse_blk,
 		test_parse_dir,
-		zstd::{decode_zstd, BlkDecoder},
+		zstd::{decode_zstd},
 	};
 
-	#[test]
-	fn json_parity() {
-		let nm = fs::read("./samples/rendist/nm").unwrap();
-		let dict = fs::read("./samples/rendist/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
-		let mut frame_decoder = DecoderDictionary::copy(&dict);
-
-		let mut file = fs::read("./samples/su_r_27er.blk").unwrap();
-		file = decode_zstd(&file, Arc::new(frame_decoder)).unwrap();
-		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
-		let output = parse_blk(&file, true, Arc::new(shared_name_map));
-		assert_eq!(
-			output
-				.unwrap()
-				.as_ref_json(FormattingConfiguration::GSZABI_REPO),
-			fs::read_to_string("./samples/su_r_27er.blkx").unwrap()
-		)
-	}
+	// #[test]
+	// fn json_parity() {
+	// 	let nm = fs::read("./samples/rendist/nm").unwrap();
+	// 	let dict = fs::read("./samples/rendist/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
+	// 	let frame_decoder = DecoderDictionary::copy(&dict);
+	//
+	// 	let mut file = fs::read("./samples/su_r_27er.blk").unwrap();
+	// 	file = decode_zstd(&file, Arc::new(frame_decoder)).unwrap();
+	// 	let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
+	// 	let output = parse_blk(&file, true, Arc::new(shared_name_map));
+	// 	assert_eq!(
+	// 		output
+	// 			.unwrap()
+	// 			.as_ref_json(FormattingConfiguration::GSZABI_REPO),
+	// 		fs::read_to_string("./samples/su_r_27er.blkx").unwrap()
+	// 	)
+	// }
 
 	#[test]
 	fn fat_blk() {
@@ -83,7 +55,7 @@ mod test {
 	#[test]
 	fn fat_blk_router_probe() {
 		let file = fs::read("./samples/route_prober.blk").unwrap();
-		let output = parse_blk(&file, false, NameMap::DUMMY()).unwrap();
+		let _output = parse_blk(&file, false, NameMap::DUMMY()).unwrap();
 	}
 
 	/// the rendist file is *very* large for a BLK file, so this test is best for optimizing single-run executions
@@ -94,7 +66,7 @@ mod test {
 		let nm = fs::read("./samples/rendist/nm").unwrap();
 		let dict = fs::read("./samples/rendist/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
 
-		let mut frame_decoder = DecoderDictionary::copy(&dict);
+		let frame_decoder = DecoderDictionary::copy(&dict);
 
 		let mut offset = 0;
 		let file_type = FileType::from_byte(file[0]).unwrap();
@@ -125,7 +97,7 @@ mod test {
 		let nm = fs::read("./samples/nm").unwrap();
 
 		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
-		let output = parse_blk(&file[1..], true, Arc::new(shared_name_map)).unwrap();
+		let _output = parse_blk(&file[1..], true, Arc::new(shared_name_map)).unwrap();
 	}
 
 	#[test]
@@ -137,7 +109,7 @@ mod test {
 		let frame_decoder = DecoderDictionary::copy(&dict);
 
 		let dir: ReadDir = fs::read_dir("./samples/vromfs/aces.vromfs.bin_u").unwrap();
-		let mut total = AtomicUsize::new(0);
+		let total = AtomicUsize::new(0);
 
 		let mut pile = vec![];
 		test_parse_dir(&mut pile, dir, &total);

@@ -1,13 +1,12 @@
-use std::{fs, mem::size_of};
+use std::{mem::size_of};
 
 use crate::{
-	util::debug_hex,
 	vromf::{
 		de_obfuscation::deobfuscate,
 		enums::{HeaderType, PlatformType},
 		error::{
 			VromfError,
-			VromfError::{IndexingFileOutOfBounds, InvalidIntegerBuffer},
+			VromfError::{IndexingFileOutOfBounds},
 		},
 		util::{bytes_to_int, pack_type_from_aligned},
 	},
@@ -83,12 +82,12 @@ mod test {
 	#[test]
 	fn decode_simple() {
 		let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
-		decode_bin_vromf(&f);
+		decode_bin_vromf(&f).unwrap();
 	}
 
 	#[test]
 	fn decode_compressed() {
 		let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
-		decode_bin_vromf(&f);
+		decode_bin_vromf(&f).unwrap();
 	}
 }

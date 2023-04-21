@@ -1,3 +1,5 @@
+
+#[allow(unused)]
 macro_rules! time {
 	($e:expr) => {{
 		let start = std::time::Instant::now();
@@ -8,8 +10,10 @@ macro_rules! time {
 	}};
 }
 
+#[allow(unused)]
 pub(crate) use time;
 
+#[allow(unused)]
 pub(crate) fn debug_hex(hex: &[u8]) {
 	eprintln!(
 		"{:?}",

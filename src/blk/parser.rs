@@ -1,17 +1,15 @@
-use std::{borrow::Cow, ops::DerefMut, rc::Rc, sync::Arc, time::Instant};
+use std::{rc::Rc, sync::Arc};
 
-use tracing::{error, warn};
-use zstd::zstd_safe::WriteBuf;
+use tracing::{error};
 
 use crate::blk::{
 	blk_block_hierarchy::FlatBlock,
 	blk_structure::BlkField,
-	blk_type::{blk_type_id::STRING, BlkString, BlkType},
+	blk_type::{blk_type_id::STRING, BlkType},
 	error::{
 		ParseError,
 		ParseError::{BadBlkValue, ResidualBlockBuffer},
 	},
-	file::FileType,
 	leb128::uleb128,
 	nm_file::NameMap,
 };
@@ -71,7 +69,7 @@ pub fn parse_blk(
 
 	let block_info = &file.get(ptr..).ok_or(ResidualBlockBuffer)?;
 
-	let ptr = (); // Shadowing ptr causes it to become unusable, especially on accident
+	let _ptr = (); // Shadowing ptr causes it to become unusable, especially on accident
 
 	let mut results: Vec<(usize, BlkField)> = Vec::with_capacity(params_info.len() / 8);
 

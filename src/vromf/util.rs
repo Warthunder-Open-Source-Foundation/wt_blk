@@ -1,4 +1,4 @@
-use std::{convert::Infallible, mem::size_of};
+use std::{mem::size_of};
 
 use crate::vromf::{
 	enums::Packing,

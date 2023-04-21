@@ -1,4 +1,4 @@
-use std::{str::Utf8Error, string::FromUtf8Error};
+use std::{str::Utf8Error};
 
 #[derive(Debug, thiserror::Error)]
 pub enum VromfError {

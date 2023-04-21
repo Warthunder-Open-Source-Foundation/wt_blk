@@ -1,8 +1,6 @@
 use std::{
 	io::Read,
-	ops::Deref,
-	rc::Rc,
-	sync::{Arc, Mutex},
+	sync::{Arc},
 	thread::sleep,
 	time::Duration,
 };
@@ -13,14 +11,14 @@ use crate::blk::file::FileType;
 
 pub type BlkDecoder<'a> = DecoderDictionary<'a>;
 
-pub fn decode_zstd(file: &[u8], mut frame_decoder: Arc<BlkDecoder>) -> Option<Vec<u8>> {
+pub fn decode_zstd(file: &[u8], frame_decoder: Arc<BlkDecoder>) -> Option<Vec<u8>> {
 	// validate magic byte
 	let file_type = FileType::from_byte(*file.get(0)?)?;
 
-	let (len, mut to_decode) = if !file_type.is_slim() {
+	let (len, to_decode) = if !file_type.is_slim() {
 		let len_raw = &file[1..4];
 		let len = u32::from_be_bytes([0, len_raw[2], len_raw[1], len_raw[0]]);
-		let mut to_decode = &file[4..(len as usize + 4)];
+		let to_decode = &file[4..(len as usize + 4)];
 		(len as usize, to_decode)
 	} else {
 		(file.len() - 1, &file[1..])
@@ -66,7 +64,7 @@ pub fn eep() -> u8 {
 
 #[cfg(test)]
 mod test {
-	use std::{fs, io, io::Read, rc::Rc, sync::Arc};
+	use std::{fs, io::Read, sync::Arc};
 
 	use zstd::{dict::DecoderDictionary, Decoder};
 
@@ -105,7 +103,7 @@ mod test {
 			"./samples/bfb732560ad45234690acad246d7b14c2f25ad418a146e5e7ef68ba3386a315c.dict",
 		)
 		.unwrap();
-		let mut frame_decoder = DecoderDictionary::copy(&dict);
+		let frame_decoder = DecoderDictionary::copy(&dict);
 
 		let mut decoder = Decoder::with_prepared_dictionary(&file[1..], &frame_decoder).unwrap();
 		let mut out = vec![];

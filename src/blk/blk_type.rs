@@ -1,7 +1,5 @@
 use std::{
-	borrow::Cow,
 	fmt::{Display, Formatter},
-	io::BufRead,
 	rc::Rc,
 };
 
@@ -9,7 +7,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::blk::{
 	blk_type::blk_type_id::*,
-	nm_file::NameMap,
 	output_formatting_conf::FormattingConfiguration,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset},
 };

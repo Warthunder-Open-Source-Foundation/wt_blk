@@ -1,7 +1,6 @@
 use std::{
 	fs,
 	fs::ReadDir,
-	rc::Rc,
 	sync::{
 		atomic::{AtomicUsize, Ordering},
 		Arc,
@@ -11,7 +10,6 @@ use std::{
 pub use ::zstd::dict::DecoderDictionary;
 
 use crate::blk::{
-	blk_type::BlkString,
 	file::FileType,
 	nm_file::NameMap,
 	parser::parse_blk,
@@ -45,7 +43,7 @@ fn test_parse_dir(
 		} else {
 			let fname = file.file_name().to_str().unwrap().to_owned();
 			if fname.ends_with(".blk") {
-				let mut read = fs::read(file.path()).unwrap();
+				let read = fs::read(file.path()).unwrap();
 				pile.push((fname, read));
 				total_files_processed.fetch_add(1, Ordering::Relaxed);
 			}

@@ -110,13 +110,13 @@ mod test {
 
 		let mut nm_ptr = 0;
 
-		let (offset, names_count) = uleb128(&nm[nm_ptr..]).unwrap();
+		let (offset, _names_count) = uleb128(&nm[nm_ptr..]).unwrap();
 		nm_ptr += offset;
 
 		let (offset, names_data_size) = uleb128(&nm[nm_ptr..]).unwrap();
 		nm_ptr += offset;
 
-		let old = {
+		let _old = {
 			let mut buff = vec![];
 			let mut names = vec![];
 			for val in &nm[nm_ptr..(nm_ptr + names_data_size)] {

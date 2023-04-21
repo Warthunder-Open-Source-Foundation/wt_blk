@@ -1,6 +1,5 @@
 use crate::blk::{
 	blk_structure::BlkField,
-	blk_type::{BlkString, BlkType},
 	output_formatting_conf::FormattingConfiguration,
 };
 

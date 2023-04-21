@@ -1,8 +1,8 @@
 use core::ffi::FromBytesUntilNulError;
-use std::{ffi::CStr, mem::size_of, ops::Index, str::Utf8Error, string::FromUtf8Error};
+use std::{ffi::CStr, mem::size_of, str::Utf8Error};
 
 use crate::{
-	blk::util::{bytes_to_int, bytes_to_offset},
+	blk::util::{bytes_to_offset},
 	dxp::DxpError::{IndexingFileOutOfBounds, NotADxp},
 };
 
@@ -67,13 +67,13 @@ pub enum DxpError {
 
 #[cfg(test)]
 mod test {
-	use std::{fs, time::Instant};
+	use std::{fs};
 
 	use crate::dxp::parse_dxp;
 
 	#[test]
 	fn fat_hq_tex() {
 		let f = fs::read("./samples/dxp/hq_tex_water_garbage_piles.dxp.bin").unwrap();
-		let out = parse_dxp(&f).unwrap();
+		let _out = parse_dxp(&f).unwrap();
 	}
 }
