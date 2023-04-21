@@ -67,7 +67,7 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
                 buff = b"nm".to_vec();
             }
         }
-        String::from_utf8(buff).map_err(|e|VromfError::Utf8 { invalid: e.into_bytes()})
+        String::from_utf8(buff).map_err(|e| VromfError::Utf8 { utf8e: e.utf8_error()})
     }).collect::<Result<_, VromfError>>()?;
 
 

@@ -1,3 +1,4 @@
+use std::str::Utf8Error;
 use std::string::FromUtf8Error;
 
 #[derive(Debug, thiserror::Error)]
@@ -47,8 +48,12 @@ pub enum VromfError {
         rem: usize,
     },
 
-    #[error("Invalid UTF-8 string: {invalid}")]
+    #[error("{}", fmt_utf8_erro(utf8e))]
     Utf8{
-        invalid: String,
+        utf8e: Utf8Error,
     },
+}
+
+fn fmt_utf8_erro(e: &Utf8Error) -> String {
+    "".to_owned()
 }
