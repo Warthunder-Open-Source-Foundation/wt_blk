@@ -11,3 +11,4 @@ mod io;
 mod util;
 mod wrpl;
 pub mod vromf;
+pub mod dxp;
