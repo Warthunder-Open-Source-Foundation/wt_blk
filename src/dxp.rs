@@ -3,7 +3,7 @@ use std::{ffi::CStr, mem::size_of, ops::Index, str::Utf8Error, string::FromUtf8E
 
 use crate::{
 	blk::util::{bytes_to_int, bytes_to_offset},
-	dxp::DxpError::IndexingFileOutOfBounds,
+	dxp::DxpError::{IndexingFileOutOfBounds, NotADxp},
 };
 
 /// IF YOU WISH TO SEE THE CONTENTS OF DXP FILES, YOU SHOULD OPEN AN ISSUE AND I WILL ADD FUNCTIONALITY FOR IT
@@ -12,14 +12,13 @@ use crate::{
 
 pub fn parse_dxp(file: &[u8]) -> Result<Vec<String>, DxpError> {
 	// Return empty names for empty file
-	let dxp_header = match String::from_utf8(file[0..4].to_owned()) {
-		Ok(header) => header,
-		Err(_) => {
-			return Ok(vec![]);
-		},
-	};
+	if file.len() == 0 {
+		return Ok(vec![]);
+	}
+
+	let dxp_header = String::from_utf8(file[0..4].to_owned()).map_err(|e| e.utf8_error())?;
 	if dxp_header != "DxP2" {
-		panic!("Guh, this is not a dxp idiot")
+		return Err(NotADxp { found: dxp_header });
 	}
 
 	// Fixed offset at 0x8
@@ -50,8 +49,8 @@ pub fn parse_dxp(file: &[u8]) -> Result<Vec<String>, DxpError> {
 
 #[derive(Clone, Debug, thiserror::Error)]
 pub enum DxpError {
-	#[error("The files header indicates it is not a DXP")]
-	NotADxp,
+	#[error("The files header that was found: {found}, is not the expected header \"DxP2\"")]
+	NotADxp { found: String },
 
 	#[error(transparent)]
 	CStringError(#[from] FromBytesUntilNulError),
@@ -59,7 +58,7 @@ pub enum DxpError {
 	#[error(transparent)]
 	Utf8Error(#[from] Utf8Error),
 
-	#[error("current ptr {current_ptr} is out of bounds for file of size: {file_size}")]
+	#[error("current ptr {current_ptr} is out of bounds for buffer: {file_size} bytes")]
 	IndexingFileOutOfBounds {
 		current_ptr: usize,
 		file_size:   usize,
