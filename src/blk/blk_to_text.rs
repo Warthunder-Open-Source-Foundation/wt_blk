@@ -36,7 +36,7 @@ impl BlkField {
 
 #[cfg(test)]
 mod test {
-	use std::{rc::Rc};
+	use std::rc::Rc;
 
 	use crate::blk::{blk_structure::BlkField, blk_type::BlkType};
 

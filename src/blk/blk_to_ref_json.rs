@@ -1,7 +1,4 @@
-use crate::blk::{
-	blk_structure::BlkField,
-	output_formatting_conf::FormattingConfiguration,
-};
+use crate::blk::{blk_structure::BlkField, output_formatting_conf::FormattingConfiguration};
 
 /// Reference JSON is an output format dedicated to mirroring the behaviour of existing formatters
 
@@ -56,11 +53,7 @@ impl BlkField {
 					}
 				} else {
 					// Empty blocks will not be opened or indented
-					let block_delimiter = if fields.len() == 0 {
-						""
-					} else {
-						"\n"
-					};
+					let block_delimiter = if fields.len() == 0 { "" } else { "\n" };
 
 					// An object might be formatted as such: `object: {}` or as `object {}`
 					let name_delimiter = if fmt.object_colon { ":" } else { "" };

@@ -1,6 +1,6 @@
 use std::{rc::Rc, sync::Arc};
 
-use tracing::{error};
+use tracing::error;
 
 use crate::blk::{
 	blk_block_hierarchy::FlatBlock,

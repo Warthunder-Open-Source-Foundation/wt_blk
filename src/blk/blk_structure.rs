@@ -2,7 +2,6 @@ use std::rc::Rc;
 
 use serde::{Deserialize, Serialize};
 
-
 use crate::blk::blk_type::{BlkString, BlkType};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

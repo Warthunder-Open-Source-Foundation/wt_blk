@@ -1,15 +1,10 @@
-use std::{mem::size_of};
+use std::mem::size_of;
 
-use crate::{
-	vromf::{
-		de_obfuscation::deobfuscate,
-		enums::{HeaderType, PlatformType},
-		error::{
-			VromfError,
-			VromfError::{IndexingFileOutOfBounds},
-		},
-		util::{bytes_to_int, pack_type_from_aligned},
-	},
+use crate::vromf::{
+	de_obfuscation::deobfuscate,
+	enums::{HeaderType, PlatformType},
+	error::{VromfError, VromfError::IndexingFileOutOfBounds},
+	util::{bytes_to_int, pack_type_from_aligned},
 };
 
 pub fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {

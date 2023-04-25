@@ -1,4 +1,3 @@
-
 #[allow(unused)]
 macro_rules! time {
 	($e:expr) => {{

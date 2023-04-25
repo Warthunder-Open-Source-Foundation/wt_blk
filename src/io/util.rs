@@ -1,8 +1,4 @@
-use std::{
-	fs,
-	fs::ReadDir,
-	path::PathBuf,
-};
+use std::{fs, fs::ReadDir, path::PathBuf};
 
 #[allow(unused)]
 pub fn test_parse_dir(dir: ReadDir, stack: &mut Vec<(PathBuf, Vec<u8>)>) {

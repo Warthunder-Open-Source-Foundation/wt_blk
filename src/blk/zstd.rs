@@ -1,9 +1,4 @@
-use std::{
-	io::Read,
-	sync::{Arc},
-	thread::sleep,
-	time::Duration,
-};
+use std::{io::Read, sync::Arc, thread::sleep, time::Duration};
 
 use zstd::{dict::DecoderDictionary, Decoder};
 

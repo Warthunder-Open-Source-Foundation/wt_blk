@@ -1,22 +1,13 @@
-
-
-
-
-
-
 #[cfg(test)]
 mod test {
 	use std::{
 		fs,
 		fs::ReadDir,
-		sync::{
-			atomic::{AtomicUsize},
-			Arc,
-		},
+		sync::{atomic::AtomicUsize, Arc},
 		time::Instant,
 	};
 
-	use zstd::{dict::DecoderDictionary};
+	use zstd::dict::DecoderDictionary;
 
 	use crate::blk::{
 		file::FileType,
@@ -24,7 +15,7 @@ mod test {
 		parse_file,
 		parser::parse_blk,
 		test_parse_dir,
-		zstd::{decode_zstd},
+		zstd::decode_zstd,
 	};
 
 	// #[test]

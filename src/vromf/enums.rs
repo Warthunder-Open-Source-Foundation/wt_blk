@@ -1,7 +1,5 @@
 use std::fmt::{Display, Formatter};
 
-
-
 use crate::vromf::error::{
 	VromfError,
 	VromfError::{InvalidHeaderType, InvalidPackingConfiguration, InvalidPlatformType},

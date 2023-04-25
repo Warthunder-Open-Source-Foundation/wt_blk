@@ -1,13 +1,11 @@
-use std::{mem::size_of};
+use std::mem::size_of;
 
-use crate::{
-	vromf::{
-		error::{
-			VromfError,
-			VromfError::{DigestHeader, IndexingFileOutOfBounds, UnalignedChunks},
-		},
-		util::{bytes_to_int, bytes_to_usize},
+use crate::vromf::{
+	error::{
+		VromfError,
+		VromfError::{DigestHeader, IndexingFileOutOfBounds, UnalignedChunks},
 	},
+	util::{bytes_to_int, bytes_to_usize},
 };
 
 pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfError> {
@@ -119,13 +117,9 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
 
 #[cfg(test)]
 mod test {
-	use std::{
-		fs,
-	};
+	use std::fs;
 
-	use crate::{
-		vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf},
-	};
+	use crate::vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf};
 
 	#[test]
 	fn test_uncompressed() {
