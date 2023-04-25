@@ -2,8 +2,8 @@ use core::ffi::FromBytesUntilNulError;
 use std::{ffi::CStr, mem::size_of, str::Utf8Error};
 
 use crate::{
-	blk::util::{bytes_to_offset},
-	dxp::DxpError::{IndexingFileOutOfBounds, NotADxp},
+	blk::util::bytes_to_offset,
+	dxp::DxpError::{FileTooShort, IndexingFileOutOfBounds, NotADxp},
 };
 
 /// This function yields the names from a DXP file
@@ -16,6 +16,9 @@ pub fn parse_dxp(file: &[u8]) -> Result<Vec<String>, DxpError> {
 	// Return empty names for empty file
 	if file.len() == 0 {
 		return Ok(vec![]);
+	}
+	if file.len() < 0x48 {
+		return Err(FileTooShort { len: file.len() });
 	}
 
 	let dxp_header = String::from_utf8(file[0..4].to_owned()).map_err(|e| e.utf8_error())?;
@@ -65,11 +68,14 @@ pub enum DxpError {
 		current_ptr: usize,
 		file_size:   usize,
 	},
+
+	#[error("The file was a valid, but cut short before the names section, minimum bytes are 0x48, but the file was only {len:X}")]
+	FileTooShort { len: usize },
 }
 
 #[cfg(test)]
 mod test {
-	use std::{fs};
+	use std::fs;
 
 	use crate::dxp::parse_dxp;
 
