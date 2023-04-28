@@ -1,7 +1,6 @@
-mod buffered;
-
 use core::ffi::FromBytesUntilNulError;
 use std::{ffi::CStr, mem::size_of, str::Utf8Error};
+use std::fs::File;
 
 use crate::{
 	blk::util::bytes_to_offset,
@@ -54,7 +53,19 @@ pub fn parse_dxp(file: &[u8]) -> Result<Vec<String>, DxpError> {
 	Ok(names)
 }
 
-#[derive(Clone, Debug, thiserror::Error)]
+/// This function yields the names from a DXP file, using a relative OS buffer
+/// # Safety
+/// Do not modify or change the file during this call, as it will result in UB
+/// It is recommended to open the file in Read-Write mode, to avoid  invalid external accesses
+pub fn parse_dxp_buffered(file: &File) -> Result<Vec<String>, DxpError> {
+	let file = unsafe {
+		memmap2::Mmap::map(file)?
+	};
+
+	parse_dxp(&file)
+}
+
+#[derive(Debug, thiserror::Error)]
 pub enum DxpError {
 	#[error("The files header that was found: {found}, is not the expected header \"DxP2\"")]
 	NotADxp { found: String },
@@ -73,6 +84,9 @@ pub enum DxpError {
 
 	#[error("The file was a valid, but cut short before the names section, minimum bytes are 0x48, but the file was only {len:X}")]
 	FileTooShort { len: usize },
+
+	#[error(transparent)]
+	IoError(#[from] std::io::Error)
 }
 
 #[cfg(test)]
