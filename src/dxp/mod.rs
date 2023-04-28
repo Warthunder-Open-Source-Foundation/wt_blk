@@ -1,3 +1,5 @@
+mod buffered;
+
 use core::ffi::FromBytesUntilNulError;
 use std::{ffi::CStr, mem::size_of, str::Utf8Error};
 
