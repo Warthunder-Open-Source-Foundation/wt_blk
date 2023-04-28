@@ -92,12 +92,18 @@ pub enum DxpError {
 #[cfg(test)]
 mod test {
 	use std::fs;
+	use std::fs::File;
 
-	use crate::dxp::parse_dxp;
+	use crate::dxp::{parse_dxp, parse_dxp_buffered};
 
 	#[test]
 	fn fat_hq_tex() {
 		let f = fs::read("./samples/dxp/hq_tex_water_garbage_piles.dxp.bin").unwrap();
 		let _out = parse_dxp(&f).unwrap();
+	}
+
+	#[test]
+	fn fat_hq_tex_buffered() {
+		let _out = parse_dxp_buffered(&File::open("./samples/dxp/hq_tex_water_garbage_piles.dxp.bin").unwrap()).unwrap();
 	}
 }
