@@ -6,9 +6,9 @@ use crate::dxp_and_grp::{
 	grp::parse_grp,
 };
 
-mod dxp;
-mod error;
-mod grp;
+pub mod dxp;
+pub mod error;
+pub mod grp;
 
 pub fn parse_either(file: &[u8]) -> Result<Vec<String>, DxpGrpError> {
 	if file.len() < 4 {
