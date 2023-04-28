@@ -19,7 +19,7 @@ pub fn parse_grp(file: &[u8]) -> Result<Vec<String>, DxpGrpError> {
 	}
 
 	// Fixed offset at 0x8
-	let file_count = bytes_to_offset(&file.get(0x24..(0x24 + size_of::<u32>())).ok_or(
+	let file_count = bytes_to_offset(&file.get(0x14..(0x14 + size_of::<u32>())).ok_or(
 		IndexingFileOutOfBounds {
 			current_ptr: 0x24,
 			file_size:   file.len(),
