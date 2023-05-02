@@ -3,7 +3,7 @@ use crate::vromf::{
 	error::VromfError,
 	inner_container::decode_inner_vromf,
 };
-use crate::vromf::binary_container::FileMode;
+use crate::vromf::enums::FileMode;
 
 mod de_obfuscation;
 pub mod enums;

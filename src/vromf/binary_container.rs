@@ -6,6 +6,7 @@ use crate::vromf::{
 	error::{VromfError, VromfError::IndexingFileOutOfBounds},
 	util::{bytes_to_int, pack_type_from_aligned},
 };
+use crate::vromf::enums::FileMode;
 
 pub fn decode_bin_vromf(file: &[u8], file_mode: FileMode) -> Result<Vec<u8>, VromfError> {
 	let mut ptr = 0_usize;
@@ -82,7 +83,8 @@ pub fn decode_bin_vromf(file: &[u8], file_mode: FileMode) -> Result<Vec<u8>, Vro
 mod test {
 	use std::fs;
 
-	use crate::vromf::binary_container::{decode_bin_vromf, FileMode};
+	use crate::vromf::binary_container::{decode_bin_vromf};
+	use crate::vromf::enums::FileMode;
 
 	#[test]
 	fn decode_simple() {
