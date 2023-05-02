@@ -55,7 +55,17 @@ pub fn decode_bin_vromf(file: &[u8], file_mode: FileMode) -> Result<Vec<u8>, Vro
 
 		idx_file_offset(&mut ptr, extended_header_size as usize)?
 	} else {
-		idx_file_offset(&mut ptr, size as usize)?
+		match file_mode {
+			FileMode::Regular => {
+				idx_file_offset(&mut ptr, size as usize)?
+			}
+			FileMode::Grp => {
+				// We dont really know much about the Grp header, so we just yoink everything and hope it goes well
+				// If something ends up erroring here, ¯\_(ツ)_/¯
+				let len = file.len() - ptr;
+				idx_file_offset(&mut ptr, len)?
+			}
+		}
 	};
 
 	// Directly return when data is not obfuscated
