@@ -6,7 +6,7 @@ use crate::vromf::{
 use crate::vromf::binary_container::FileMode;
 
 mod de_obfuscation;
-mod enums;
+pub mod enums;
 mod util;
 
 /// It is generally expected to directly call into the public interfaces from this module, ignoring the inner lower-level functions

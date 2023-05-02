@@ -7,11 +7,6 @@ use crate::vromf::{
 	util::{bytes_to_int, pack_type_from_aligned},
 };
 
-pub enum FileMode  {
-	Regular, // All files such as aces.vromfs.bin lang* gui* etc
-	Grp, // Relatively unexplored header, its header is not exactly well known at this time
-}
-
 pub fn decode_bin_vromf(file: &[u8], file_mode: FileMode) -> Result<Vec<u8>, VromfError> {
 	let mut ptr = 0_usize;
 
