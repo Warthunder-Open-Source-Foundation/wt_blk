@@ -7,7 +7,12 @@ use crate::vromf::{
 	util::{bytes_to_int, pack_type_from_aligned},
 };
 
-pub fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
+pub enum FileMode  {
+	Regular, // All files such as aces.vromfs.bin lang* gui* etc
+	Grp, // Relatively unexplored header, its header is not exactly well known at this time
+}
+
+pub fn decode_bin_vromf(file: &[u8], file_mode: FileMode) -> Result<Vec<u8>, VromfError> {
 	let mut ptr = 0_usize;
 
 	// Returns slice offset from file, incrementing the ptr by offset
@@ -72,17 +77,17 @@ pub fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 mod test {
 	use std::fs;
 
-	use crate::vromf::binary_container::decode_bin_vromf;
+	use crate::vromf::binary_container::{decode_bin_vromf, FileMode};
 
 	#[test]
 	fn decode_simple() {
 		let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
-		decode_bin_vromf(&f).unwrap();
+		decode_bin_vromf(&f, FileMode::Regular).unwrap();
 	}
 
 	#[test]
 	fn decode_compressed() {
 		let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
-		decode_bin_vromf(&f).unwrap();
+		decode_bin_vromf(&f, FileMode::Regular).unwrap();
 	}
 }

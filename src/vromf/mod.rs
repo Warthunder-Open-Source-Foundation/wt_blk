@@ -3,6 +3,7 @@ use crate::vromf::{
 	error::VromfError,
 	inner_container::decode_inner_vromf,
 };
+use crate::vromf::binary_container::FileMode;
 
 mod de_obfuscation;
 mod enums;
@@ -15,9 +16,11 @@ mod binary_container;
 // This module unpacks the inner parts of the binary image
 pub mod error;
 mod inner_container;
+#[cfg(test)]
+mod test;
 
-pub fn decode_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfError> {
-	let decoded = decode_bin_vromf(&file)?;
+pub fn decode_vromf(file: &[u8], file_mode: FileMode) -> Result<Vec<(String, Vec<u8>)>, VromfError> {
+	let decoded = decode_bin_vromf(&file, file_mode)?;
 	let inner = decode_inner_vromf(&decoded)?;
 	Ok(inner)
 }
