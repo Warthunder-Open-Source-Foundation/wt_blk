@@ -1,3 +1,4 @@
+use std::io;
 use std::ops::Range;
 
 use thiserror::Error;
@@ -20,4 +21,17 @@ pub enum ParseError {
 
 	#[error("Blk value parsing failed")]
 	BadBlkValue,
+
+	#[error("Attempted to parse SLIM blk file without a NN")]
+	SlimBlkWithoutNm,
+
+	#[error("Invalid BLK header: {header:X}")]
+	UnrecognizedBlkHeader {
+		header: u8,
+	},
+
+	#[error("Dictionary was invalid")]
+	InvalidDict {
+
+	},
 }

@@ -17,7 +17,7 @@ use crate::blk::{
 pub fn parse_blk(
 	file: &[u8],
 	is_slim: bool,
-	shared_name_map: Arc<NameMap>,
+	shared_name_map: Arc<Option<NameMap>>,
 ) -> Result<BlkField, ParseError> {
 	let mut ptr = 0;
 
@@ -46,7 +46,7 @@ pub fn parse_blk(
 
 	let names = if is_slim {
 		// TODO Figure out if names_count dictates the existence of a name map or if it may be 0 without requiring a name map
-		shared_name_map.parsed.clone()
+		shared_name_map.as_ref().ok_or(ParseError::SlimBlkWithoutNm)?.parsed.clone()
 	} else {
 		let names_data_size = next_uleb(&mut ptr)?;
 
@@ -88,8 +88,8 @@ pub fn parse_blk(
 			BlkType::from_raw_param_info(
 				type_id,
 				data,
-				shared_name_map.binary.as_slice(),
-				shared_name_map.parsed.clone(),
+				shared_name_map.ok_or(ParseError::SlimBlkWithoutNm)?.binary.as_slice(),
+				shared_name_map.ok_or(ParseError::SlimBlkWithoutNm)?.parsed.clone(),
 			)
 			.ok_or(BadBlkValue)?
 		} else {

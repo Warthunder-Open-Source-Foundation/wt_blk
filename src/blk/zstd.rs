@@ -1,14 +1,16 @@
 use std::{io::Read, sync::Arc, thread::sleep, time::Duration};
+use std::ops::Range;
 
 use zstd::{dict::DecoderDictionary, Decoder};
+use crate::blk::error::ParseError;
 
 use crate::blk::file::FileType;
 
 pub type BlkDecoder<'a> = DecoderDictionary<'a>;
 
-pub fn decode_zstd(file: &[u8], frame_decoder: Arc<BlkDecoder>) -> Option<Vec<u8>> {
+pub fn decode_zstd(file: &[u8], frame_decoder: Arc<BlkDecoder>) -> Result<Vec<u8>, ParseError> {
 	// validate magic byte
-	let file_type = FileType::from_byte(*file.get(0)?)?;
+	let file_type = FileType::from_byte(*file.get(0).ok_or(ParseError::DataRegionBoundsExceeded(0..1))?)?;
 
 	let (len, to_decode) = if !file_type.is_slim() {
 		let len_raw = &file[1..4];
@@ -22,15 +24,15 @@ pub fn decode_zstd(file: &[u8], frame_decoder: Arc<BlkDecoder>) -> Option<Vec<u8
 	let decoded = if file_type.needs_dict() {
 		let mut out = Vec::with_capacity(len);
 		let mut decoder = Decoder::with_prepared_dictionary(&file[1..], &frame_decoder).unwrap();
-		let _ = decoder.read_to_end(&mut out).ok()?;
+		let _ = decoder.read_to_end(&mut out).map_err(|_|ParseError::InvalidDict {})?;
 		out
 	} else {
 		let mut out = Vec::with_capacity(len);
 		let mut decoder = Decoder::with_prepared_dictionary(to_decode, &frame_decoder).unwrap();
-		let _ = decoder.read_to_end(&mut out).ok()?;
+		let _ = decoder.read_to_end(&mut out).map_err(|_|ParseError::InvalidDict {})?;
 		out
 	};
-	Some(decoded)
+	Ok(decoded)
 }
 
 // UNUSED ATM

@@ -21,7 +21,7 @@ pub mod blk_structure;
 mod blk_to_ref_json;
 mod blk_to_text;
 pub mod blk_type;
-mod error;
+pub mod error;
 pub mod file;
 pub mod leb128;
 pub mod nm_file;
@@ -54,10 +54,10 @@ fn test_parse_dir(
 pub fn parse_file(
 	mut file: Vec<u8>,
 	fd: Arc<BlkDecoder>,
-	shared_name_map: Arc<NameMap>,
+	shared_name_map: Arc<Option<NameMap>>,
 ) -> Option<String> {
 	let mut offset = 0;
-	let file_type = FileType::from_byte(file[0])?;
+	let file_type = FileType::from_byte(file[0]).ok()?;
 	if file_type.is_zstd() {
 		file = decode_zstd(&file, fd.clone()).unwrap();
 	} else {
@@ -67,8 +67,14 @@ pub fn parse_file(
 
 	Some(
 		serde_json::to_string(
-			&parse_blk(&file[offset..], file_type.is_slim(), shared_name_map).ok()?,
+			&parse_blk(&file[offset..], file_type.is_slim(),  shared_name_map).ok()?,
 		)
 		.unwrap(),
 	)
+}
+
+
+pub enum BlkOutputFormat {
+	Json,
+	BlkText,
 }

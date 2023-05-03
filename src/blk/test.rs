@@ -9,14 +9,7 @@ mod test {
 
 	use zstd::dict::DecoderDictionary;
 
-	use crate::blk::{
-		file::FileType,
-		nm_file::NameMap,
-		parse_file,
-		parser::parse_blk,
-		test_parse_dir,
-		zstd::decode_zstd,
-	};
+	use crate::blk::{file::FileType, nm_file::NameMap, parse_file, parser::parse_blk, test_parse_dir, zstd::decode_zstd};
 
 	// #[test]
 	// fn json_parity() {
@@ -72,7 +65,7 @@ mod test {
 		let parsed = parse_blk(
 			&file[offset..],
 			file_type.is_slim(),
-			Arc::new(shared_name_map),
+			Arc::new(Some(shared_name_map)),
 		)
 		.unwrap();
 
@@ -88,7 +81,7 @@ mod test {
 		let nm = fs::read("./samples/nm").unwrap();
 
 		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
-		let _output = parse_blk(&file[1..], true, Arc::new(shared_name_map)).unwrap();
+		let _output = parse_blk(&file[1..], true, Arc::new(Some(shared_name_map))).unwrap();
 	}
 
 	#[test]
@@ -105,7 +98,7 @@ mod test {
 		let mut pile = vec![];
 		test_parse_dir(&mut pile, dir, &total);
 
-		let shared_name_map = Arc::new(NameMap::from_encoded_file(&nm).unwrap());
+		let shared_name_map = Arc::new(Some(NameMap::from_encoded_file(&nm).unwrap()));
 		let arced_fd = Arc::new(frame_decoder);
 		let out = pile
 			.into_iter()

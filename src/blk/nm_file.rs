@@ -12,12 +12,12 @@ pub struct NameMap {
 
 impl NameMap {
 	// Used for testing purposes
-	pub const DUMMY: fn() -> Arc<NameMap> = || {
-		Arc::new(Self {
+	pub const DUMMY: fn() -> Arc<Option<NameMap>> = || {
+		Arc::new(Some(Self {
 			// TODO: The binary vec still includes pre-uleb integers so im not sure if there might be an offset issue later on
 			binary: Rc::new(vec![]),
 			parsed: Rc::new(vec![]),
-		})
+		}))
 	};
 
 	pub fn idx_parsed(&self, idx: usize) -> Option<&BlkString> {
@@ -36,7 +36,7 @@ impl NameMap {
 	}
 
 	pub fn decode_nm_file(file: &[u8]) -> Option<Vec<u8>> {
-		let _names_digest = &file[0..8];
+		let _names_digest = &file.get(0..8)?;
 		let _dict_digest = &file[8..40];
 		let mut zstd_stream = &file[40..];
 		let mut decoder = Decoder::new(&mut zstd_stream).ok()?;

@@ -1,4 +1,6 @@
 use std::mem::size_of;
+use std::path::PathBuf;
+use std::str::FromStr;
 
 use crate::vromf::{
 	error::{
@@ -8,7 +10,7 @@ use crate::vromf::{
 	util::{bytes_to_int, bytes_to_usize},
 };
 
-pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfError> {
+pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, VromfError> {
 	// Returns slice offset from file, incrementing the ptr by offset
 	let idx_file_offset = |ptr: &mut usize, offset: usize| {
 		if let Some(res) = file.get(*ptr..(*ptr + offset)) {
@@ -77,7 +79,9 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(String, Vec<u8>)>, VromfEr
 				}
 			}
 			match String::from_utf8(buff) {
-				Ok(res) => Ok(res),
+				Ok(res) => Ok(
+					PathBuf::from_str(&res).expect("Infallible")
+				),
 				Err(e) => Err(VromfError::Utf8 {
 					utf8e: e.utf8_error(),
 					buff:  e.into_bytes(),
@@ -120,19 +124,19 @@ mod test {
 	use std::fs;
 
 	use crate::vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf};
-	use crate::vromf::enums::FileMode;
+	use crate::vromf::enums::VromfType;
 
 	#[test]
 	fn test_uncompressed() {
 		let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
-		let decoded = decode_bin_vromf(&f, FileMode::Regular).unwrap();
+		let decoded = decode_bin_vromf(&f, VromfType::Regular).unwrap();
 		let _inner = decode_inner_vromf(&decoded).unwrap();
 	}
 
 	#[test]
 	fn test_compressed() {
 		let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
-		let decoded = decode_bin_vromf(&f, FileMode::Regular).unwrap();
+		let decoded = decode_bin_vromf(&f, VromfType::Regular).unwrap();
 		let _inner = decode_inner_vromf(&decoded).unwrap();
 	}
 
@@ -145,7 +149,7 @@ mod test {
 	#[test]
 	fn test_aces() {
 		let f = fs::read("./samples/aces.vromfs.bin").unwrap();
-		let decoded = decode_bin_vromf(&f, FileMode::Regular).unwrap();
+		let decoded = decode_bin_vromf(&f, VromfType::Regular).unwrap();
 		let _inner = decode_inner_vromf(&decoded).unwrap();
 	}
 }

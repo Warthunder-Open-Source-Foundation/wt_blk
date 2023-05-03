@@ -140,7 +140,7 @@ impl TryFrom<u8> for Packing {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub enum FileMode  {
+pub enum VromfType {
 	Regular, // All files such as aces.vromfs.bin lang* gui* etc
 	Grp, // Relatively unexplored header, its header is not exactly well known at this time
 }
