@@ -9,8 +9,12 @@ use crate::vromf::unpacker::VromfUnpacker;
 
 #[test]
 fn grp_vromf() {
-	let file = fs::read("./samples/grp_hdr.vromfs.bin").unwrap();
-	// let out = decode_vromf(&file, VromfType::Grp).unwrap();
+	let start = Instant::now();
+	let p = PathBuf::from_str("./samples/grp_hdr.vromfs.bin").unwrap();
+	let file = fs::read(&p).unwrap();
+	let out = VromfUnpacker::from_file((p, file), VromfType::Grp).unwrap();
+	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json(FormattingConfiguration::GSZABI_REPO))).unwrap();
+	assert_eq!(2322, unpacked.len())
 }
 
 #[test]
