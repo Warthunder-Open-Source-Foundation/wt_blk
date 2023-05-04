@@ -34,4 +34,8 @@ pub enum ParseError {
 	InvalidDict {
 
 	},
+
+	#[error("Missing dictionary")]
+	MissingDict {
+	},
 }

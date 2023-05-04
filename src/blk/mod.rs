@@ -61,7 +61,7 @@ pub fn parse_file(
 	let mut offset = 0;
 	let file_type = FileType::from_byte(file[0]).ok()?;
 	if file_type.is_zstd() {
-		file = decode_zstd(&file, fd.as_ref()).unwrap();
+		file = decode_zstd(&file, Some(fd.as_ref())).unwrap();
 	} else {
 		// uncompressed Slim and Fat files retain their initial magic bytes
 		offset = 1;

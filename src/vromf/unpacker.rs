@@ -70,8 +70,7 @@ impl VromfUnpacker<'_> {
 							let mut offset = 0;
 							let file_type = FileType::from_byte(file.1[0])?;
 							if file_type.is_zstd() {
-								let dict =  &self.dict.clone().ok_or(MissingDict { file_name: path_stringify(&file.0)? })?.0;
-								file.1 = decode_zstd(&file.1,&dict).unwrap();
+									file.1 = decode_zstd(&file.1,self.dict.as_ref().map(|e|&e.0)).unwrap();
 							} else {
 								// uncompressed Slim and Fat files retain their initial magic bytes
 								offset = 1;
