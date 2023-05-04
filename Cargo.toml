@@ -18,10 +18,10 @@ tracing = "^0.1.37"
 hex = "^0.4.3"
 memmap2 = "0.5.10"
 
-#[profile.test]
-#opt-level = 3
-#lto = "thin"
-#debug = true
+[profile.test]
+opt-level = 3
+lto = "thin"
+debug = true
 
 [profile.bench]
 opt-level = 3

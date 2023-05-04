@@ -16,6 +16,7 @@ use crate::blk::{
 	parser::parse_blk,
 	zstd::{decode_zstd, BlkDecoder},
 };
+use crate::blk::output_formatting_conf::FormattingConfiguration;
 
 mod blk_block_hierarchy;
 pub mod blk_structure;
@@ -75,7 +76,8 @@ pub fn parse_file(
 }
 
 
+#[derive(Copy, Clone)]
 pub enum BlkOutputFormat {
-	Json,
+	Json(FormattingConfiguration),
 	BlkText,
 }

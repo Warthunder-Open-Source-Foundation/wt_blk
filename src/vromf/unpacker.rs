@@ -67,7 +67,7 @@ impl VromfUnpacker<'_> {
 			.map(|mut file| {
 				match () {
 					_ if maybe_blk(&file) => {
-						if let Some(format) = &unpack_blk_into {
+						if let Some(format) = unpack_blk_into {
 							let mut offset = 0;
 							let file_type = FileType::from_byte(file.1[0])?;
 							if file_type.is_zstd() {
@@ -80,8 +80,8 @@ impl VromfUnpacker<'_> {
 
 							let parsed = parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone())?;
 							match format {
-								BlkOutputFormat::Json => {
-									file.1 = parsed.as_ref_json(FormattingConfiguration::GSZABI_REPO).into_bytes();
+								BlkOutputFormat::Json(config) => {
+									file.1 = parsed.as_ref_json(config).into_bytes();
 								}
 								BlkOutputFormat::BlkText => {
 									file.1 = parsed.as_blk_text().into_bytes();
