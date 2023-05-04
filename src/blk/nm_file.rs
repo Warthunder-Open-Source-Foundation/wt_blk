@@ -6,17 +6,17 @@ use crate::blk::{blk_type::BlkString, leb128::uleb128};
 
 #[derive(Clone, Debug)]
 pub struct NameMap {
-	pub binary: Rc<Vec<u8>>,
-	pub parsed: Rc<Vec<BlkString>>,
+	pub binary: Vec<u8>,
+	pub parsed: Vec<BlkString>,
 }
 
 impl NameMap {
 	// Used for testing purposes
-	pub const DUMMY: fn() -> Arc<Option<NameMap>> = || {
-		Arc::new(Some(Self {
+	pub const DUMMY: fn() -> Option<Arc<NameMap>> = || {
+		Some(Arc::new(Self {
 			// TODO: The binary vec still includes pre-uleb integers so im not sure if there might be an offset issue later on
-			binary: Rc::new(vec![]),
-			parsed: Rc::new(vec![]),
+			binary: vec![],
+			parsed: vec![],
 		}))
 	};
 
@@ -30,8 +30,8 @@ impl NameMap {
 		let names = Self::parse_slim_nm(&decoded);
 
 		Some(Self {
-			parsed: Rc::new(names),
-			binary: Rc::new(decoded),
+			parsed: names,
+			binary: decoded,
 		})
 	}
 

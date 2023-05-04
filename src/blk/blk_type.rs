@@ -53,7 +53,7 @@ impl BlkType {
 		type_id: u8,
 		field: &[u8],
 		data_region: &[u8],
-		name_map: Rc<Vec<Rc<String>>>,
+		name_map: Vec<BlkString>,
 	) -> Option<Self> {
 		// Make sure the field is properly sized
 		if field.len() != 4 {

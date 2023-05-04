@@ -54,12 +54,12 @@ fn test_parse_dir(
 pub fn parse_file(
 	mut file: Vec<u8>,
 	fd: Arc<BlkDecoder>,
-	shared_name_map: Arc<Option<NameMap>>,
+	shared_name_map: Option<Arc<NameMap>>,
 ) -> Option<String> {
 	let mut offset = 0;
 	let file_type = FileType::from_byte(file[0]).ok()?;
 	if file_type.is_zstd() {
-		file = decode_zstd(&file, fd.clone()).unwrap();
+		file = decode_zstd(&file, fd.as_ref()).unwrap();
 	} else {
 		// uncompressed Slim and Fat files retain their initial magic bytes
 		offset = 1;

@@ -8,7 +8,7 @@ use crate::blk::file::FileType;
 
 pub type BlkDecoder<'a> = DecoderDictionary<'a>;
 
-pub fn decode_zstd(file: &[u8], frame_decoder: Arc<BlkDecoder>) -> Result<Vec<u8>, ParseError> {
+pub fn decode_zstd(file: &[u8], frame_decoder: &BlkDecoder) -> Result<Vec<u8>, ParseError> {
 	// validate magic byte
 	let file_type = FileType::from_byte(*file.get(0).ok_or(ParseError::DataRegionBoundsExceeded(0..1))?)?;
 
@@ -67,14 +67,14 @@ mod test {
 
 	use crate::blk::zstd::decode_zstd;
 
-	pub(crate) static DUMMY_DICT: fn() -> Arc<DecoderDictionary<'static>> =
-		|| Arc::new(DecoderDictionary::copy(&[]));
+	pub(crate) static DUMMY_DICT: fn() -> DecoderDictionary<'static> =
+		|| DecoderDictionary::copy(&[]);
 
 	#[test]
 	fn fat_zstd() {
 		let decoded = decode_zstd(
 			include_bytes!("../../samples/section_fat_zst.blk"),
-			DUMMY_DICT(),
+			&DUMMY_DICT(),
 		)
 		.unwrap();
 		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_fat.blk"));
@@ -84,7 +84,7 @@ mod test {
 	fn slim_zstd() {
 		let decoded = decode_zstd(
 			include_bytes!("../../samples/section_slim_zst.blk"),
-			DUMMY_DICT(),
+			&DUMMY_DICT(),
 		)
 		.unwrap();
 		pretty_assertions::assert_eq!(

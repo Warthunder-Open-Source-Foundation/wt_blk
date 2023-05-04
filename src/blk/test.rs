@@ -55,7 +55,7 @@ mod test {
 		let mut offset = 0;
 		let file_type = FileType::from_byte(file[0]).unwrap();
 		if file_type.is_zstd() {
-			file = decode_zstd(&file, Arc::new(frame_decoder)).unwrap();
+			file = decode_zstd(&file, &frame_decoder).unwrap();
 		} else {
 			// uncompressed Slim and Fat files retain their initial magic bytes
 			offset = 1;
@@ -65,7 +65,7 @@ mod test {
 		let parsed = parse_blk(
 			&file[offset..],
 			file_type.is_slim(),
-			Arc::new(Some(shared_name_map)),
+			Some(Arc::new(shared_name_map)),
 		)
 		.unwrap();
 
@@ -81,7 +81,7 @@ mod test {
 		let nm = fs::read("./samples/nm").unwrap();
 
 		let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
-		let _output = parse_blk(&file[1..], true, Arc::new(Some(shared_name_map))).unwrap();
+		let _output = parse_blk(&file[1..], true, Some(Arc::new(shared_name_map))).unwrap();
 	}
 
 	#[test]
@@ -98,7 +98,7 @@ mod test {
 		let mut pile = vec![];
 		test_parse_dir(&mut pile, dir, &total);
 
-		let shared_name_map = Arc::new(Some(NameMap::from_encoded_file(&nm).unwrap()));
+		let shared_name_map = Some(Arc::new(NameMap::from_encoded_file(&nm).unwrap()));
 		let arced_fd = Arc::new(frame_decoder);
 		let out = pile
 			.into_iter()
