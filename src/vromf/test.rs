@@ -22,3 +22,13 @@ fn regular_vromf() {
 	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json(FormattingConfiguration::GSZABI_REPO))).unwrap();
 	assert_eq!(15632, unpacked.len())
 }
+
+#[test]
+fn no_nm_vromf() {
+	let start = Instant::now();
+	let p = PathBuf::from_str("./samples/atlases.vromfs.bin").unwrap();
+	let file = fs::read(&p).unwrap();
+	let out = VromfUnpacker::from_file((p, file), VromfType::Regular).unwrap();
+	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json(FormattingConfiguration::GSZABI_REPO))).unwrap();
+	assert_eq!(8924, unpacked.len())
+}
