@@ -13,7 +13,6 @@ use crate::blk::output_formatting_conf::FormattingConfiguration;
 use crate::blk::parser::parse_blk;
 use crate::blk::zstd::decode_zstd;
 use crate::vromf::binary_container::decode_bin_vromf;
-use crate::vromf::enums::VromfType;
 use crate::vromf::error::VromfError;
 use crate::vromf::inner_container::decode_inner_vromf;
 use crate::vromf::util::path_stringify;
@@ -34,8 +33,8 @@ pub struct VromfUnpacker<'a> {
 }
 
 impl VromfUnpacker<'_> {
-	pub fn from_file(file: File, vromf_type: VromfType) -> Result<Self, VromfError> {
-		let decoded = decode_bin_vromf(&file.1, vromf_type)?;
+	pub fn from_file(file: File) -> Result<Self, VromfError> {
+		let decoded = decode_bin_vromf(&file.1)?;
 		let inner = decode_inner_vromf(&decoded)?;
 
 		let nm = inner.iter()

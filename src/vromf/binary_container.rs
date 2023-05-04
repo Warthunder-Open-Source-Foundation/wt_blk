@@ -6,9 +6,8 @@ use crate::vromf::{
 	error::{VromfError, VromfError::IndexingFileOutOfBounds},
 	util::{bytes_to_int, pack_type_from_aligned},
 };
-use crate::vromf::enums::VromfType;
 
-pub(crate) fn decode_bin_vromf(file: &[u8], file_mode: VromfType) -> Result<Vec<u8>, VromfError> {
+pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 	let mut ptr = 0_usize;
 
 	// Returns slice offset from file, incrementing the ptr by offset
@@ -18,8 +17,8 @@ pub(crate) fn decode_bin_vromf(file: &[u8], file_mode: VromfType) -> Result<Vec<
 			Ok(buff)
 		} else {
 			return Err(IndexingFileOutOfBounds {
-				current_ptr:   *ptr,
-				file_size:     file.len(),
+				current_ptr: *ptr,
+				file_size: file.len(),
 				requested_len: offset,
 			});
 		}
@@ -51,20 +50,12 @@ pub(crate) fn decode_bin_vromf(file: &[u8], file_mode: VromfType) -> Result<Vec<
 
 		idx_file_offset(&mut ptr, extended_header_size as usize)?
 	} else {
-		match file_mode {
-			VromfType::Regular => {
-				idx_file_offset(&mut ptr, size as usize)?
-			}
-			VromfType::Grp => {
-				// We dont really know much about the Grp header, so we just yoink everything and hope it goes well
-				// If something ends up erroring here, ¯\_(ツ)_/¯
-				let len = file.len() - ptr;
-				idx_file_offset(&mut ptr, len)?
-			}
-		}
+		// We make the assumption that after the header only data follows
+		let len = file.len() - ptr;
+		idx_file_offset(&mut ptr, len)?
 	};
 
-	// Directly return when data is not obfuscated
+// Directly return when data is not obfuscated
 	if !pack_type.is_obfuscated() {
 		return Ok(inner_data.to_vec());
 	}
@@ -84,17 +75,16 @@ mod test {
 	use std::fs;
 
 	use crate::vromf::binary_container::{decode_bin_vromf};
-	use crate::vromf::enums::VromfType;
 
 	#[test]
 	fn decode_simple() {
 		let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
-		decode_bin_vromf(&f, VromfType::Regular).unwrap();
+		decode_bin_vromf(&f).unwrap();
 	}
 
 	#[test]
 	fn decode_compressed() {
 		let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
-		decode_bin_vromf(&f, VromfType::Regular).unwrap();
+		decode_bin_vromf(&f).unwrap();
 	}
 }

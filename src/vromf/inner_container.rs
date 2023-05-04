@@ -124,19 +124,18 @@ mod test {
 	use std::fs;
 
 	use crate::vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf};
-	use crate::vromf::enums::VromfType;
 
 	#[test]
 	fn test_uncompressed() {
 		let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
-		let decoded = decode_bin_vromf(&f, VromfType::Regular).unwrap();
+		let decoded = decode_bin_vromf(&f).unwrap();
 		let _inner = decode_inner_vromf(&decoded).unwrap();
 	}
 
 	#[test]
 	fn test_compressed() {
 		let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
-		let decoded = decode_bin_vromf(&f, VromfType::Regular).unwrap();
+		let decoded = decode_bin_vromf(&f).unwrap();
 		let _inner = decode_inner_vromf(&decoded).unwrap();
 	}
 
@@ -149,7 +148,7 @@ mod test {
 	#[test]
 	fn test_aces() {
 		let f = fs::read("./samples/aces.vromfs.bin").unwrap();
-		let decoded = decode_bin_vromf(&f, VromfType::Regular).unwrap();
+		let decoded = decode_bin_vromf(&f).unwrap();
 		let _inner = decode_inner_vromf(&decoded).unwrap();
 	}
 }
