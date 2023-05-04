@@ -1,4 +1,5 @@
 use std::{rc::Rc, sync::Arc};
+use std::time::Instant;
 
 use tracing::error;
 
@@ -54,7 +55,7 @@ pub fn parse_blk(
 		if names_count != names.len() {
 			error!("Name count mismatch, expected {names_count}, but found a len of {}. This might mean something is wrong.", names.len());
 		}
-		names
+		Rc::new(names)
 	};
 
 	let blocks_count = next_uleb(&mut ptr)?;

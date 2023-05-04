@@ -32,14 +32,14 @@ mod test {
 	#[test]
 	fn fat_blk() {
 		let file = fs::read("./samples/section_fat.blk").unwrap();
-		let output = parse_blk(&file[1..], false, NameMap::DUMMY());
+		let output = parse_blk(&file[1..], false, None);
 		println!("{}", output.unwrap().as_blk_text());
 	}
 
 	#[test]
 	fn fat_blk_router_probe() {
 		let file = fs::read("./samples/route_prober.blk").unwrap();
-		let _output = parse_blk(&file, false, NameMap::DUMMY()).unwrap();
+		let _output = parse_blk(&file, false, None).unwrap();
 	}
 
 	/// the rendist file is *very* large for a BLK file, so this test is best for optimizing single-run executions
@@ -97,12 +97,11 @@ mod test {
 
 		let mut pile = vec![];
 		test_parse_dir(&mut pile, dir, &total);
-
 		let shared_name_map = Some(Arc::new(NameMap::from_encoded_file(&nm).unwrap()));
 		let arced_fd = Arc::new(frame_decoder);
 		let out = pile
 			.into_iter()
-			.map(|file| parse_file(file.1, arced_fd.clone(), shared_name_map.clone()))
+			.map(|file|parse_file(file.1, arced_fd.clone(), shared_name_map.clone()))
 			.filter_map(|x| x)
 			.collect::<Vec<_>>();
 

@@ -6,6 +6,7 @@ use std::{
 		Arc,
 	},
 };
+use std::time::Instant;
 
 pub use ::zstd::dict::DecoderDictionary;
 

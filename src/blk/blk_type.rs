@@ -2,6 +2,7 @@ use std::{
 	fmt::{Display, Formatter},
 	rc::Rc,
 };
+use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
@@ -10,6 +11,7 @@ use crate::blk::{
 	output_formatting_conf::FormattingConfiguration,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset},
 };
+use crate::blk::nm_file::NameMap;
 
 pub type BlkString = Rc<String>;
 
@@ -53,7 +55,7 @@ impl BlkType {
 		type_id: u8,
 		field: &[u8],
 		data_region: &[u8],
-		name_map: Vec<BlkString>,
+		name_map: Rc<Vec<BlkString>>,
 	) -> Option<Self> {
 		// Make sure the field is properly sized
 		if field.len() != 4 {
