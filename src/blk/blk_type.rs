@@ -278,7 +278,7 @@ impl Display for BlkType {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		let value = match self {
 			BlkType::Str(v) => {
-				format!("\\{}\\", v)
+				format!("\"{}\"", v)
 			},
 			BlkType::Int(v) => v.to_string(),
 			BlkType::Int2(v) => {
@@ -308,5 +308,17 @@ impl Display for BlkType {
 		};
 
 		write!(f, "{} = {}", self.blk_type_name(), value)
+	}
+}
+
+#[cfg(test)]
+mod test {
+	use std::rc::Rc;
+	use crate::blk::blk_type::BlkType;
+
+	#[test]
+	fn test_string() {
+		let t = BlkType::Str(Rc::new("yeet".to_owned()));
+		assert_eq!( t.to_string(),"t = \"yeet\"")
 	}
 }
