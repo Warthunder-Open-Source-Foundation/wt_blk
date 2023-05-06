@@ -40,10 +40,10 @@ impl VromfUnpacker<'_> {
 		let nm = inner.iter()
 			.find(|elem| elem.0.file_name() == Some(OsStr::new("nm")))
 			.map(|elem|
-					NameMap::from_encoded_file(&elem.1).ok_or(VromfError::InvalidNm)
+				NameMap::from_encoded_file(&elem.1).ok_or(VromfError::InvalidNm)
 			)
 			.transpose()?
-			.map(|elem|Arc::new(elem));
+			.map(|elem| Arc::new(elem));
 
 		let dict = inner.iter()
 			.find(|elem| elem.0.extension() == Some(OsStr::new("dict")))
@@ -70,7 +70,7 @@ impl VromfUnpacker<'_> {
 							let mut offset = 0;
 							let file_type = FileType::from_byte(file.1[0])?;
 							if file_type.is_zstd() {
-									file.1 = decode_zstd(&file.1,self.dict.as_ref().map(|e|&e.0)).unwrap();
+								file.1 = decode_zstd(&file.1, self.dict.as_ref().map(|e| &e.0)).unwrap();
 							} else {
 								// uncompressed Slim and Fat files retain their initial magic bytes
 								offset = 1;
@@ -85,11 +85,8 @@ impl VromfUnpacker<'_> {
 									file.1 = parsed.as_blk_text().into_bytes();
 								}
 							}
-
-							Ok(file)
-						} else {
-							Ok(file)
 						}
+						Ok(file)
 					}
 
 					// Default to the raw file
@@ -102,5 +99,5 @@ impl VromfUnpacker<'_> {
 }
 
 fn maybe_blk(file: &File) -> bool {
-	file.0.extension() == Some(OsStr::new("blk")) && FileType::from_byte(file.1[0]).is_ok()
+	file.0.extension() == Some(OsStr::new("blk")) && file.1.len() > 0 && FileType::from_byte(file.1[0]).is_ok()
 }
