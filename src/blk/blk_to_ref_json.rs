@@ -47,7 +47,7 @@ impl BlkField {
 				let indent_closing = fmt.indent(indent_level.saturating_sub(1));
 				if is_root {
 					if fmt.global_curly_bracket {
-						format!("{{\n{children}}}")
+						format!("{{\n{children}\n}}")
 					} else {
 						format!("{children}")
 					}
@@ -61,5 +61,24 @@ impl BlkField {
 				}
 			},
 		}
+	}
+}
+
+#[cfg(test)]
+mod test {
+	use std::fs;
+	use std::path::{Path, PathBuf};
+	use std::str::FromStr;
+	use crate::blk::BlkOutputFormat;
+	use crate::blk::output_formatting_conf::FormattingConfiguration;
+	use crate::vromf::unpacker::VromfUnpacker;
+
+	// #[test]
+	fn test_newline_parity() {
+		let referece = fs::read_to_string("./samples/login_bkg_1_63_nolayers_jp.blk").unwrap();
+		let aces = fs::read("./samples/aces.vromfs.bin").unwrap();
+		let parsed = VromfUnpacker::from_file((PathBuf::from_str("./samples/aces.vromfs.bin").unwrap(),aces)).unwrap().unpack_all(Some(BlkOutputFormat::Json(FormattingConfiguration::GSZABI_REPO))).unwrap();
+		let needed = parsed.iter().filter(|e|e.0.ends_with("login_bkg_1_63_nolayers_jp.blk")).next().unwrap().to_owned();
+		assert_eq!(String::from_utf8(needed.1).unwrap(), referece);
 	}
 }
