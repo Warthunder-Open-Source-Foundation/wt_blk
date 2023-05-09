@@ -43,8 +43,12 @@ pub enum BlkType {
 	Float4([f32; 4]),
 	Float12(Box<[f32; 12]>),
 	Bool(bool),
-	/// Stored as RGBA
-	Color([u8; 4]),
+	Color {
+		r: u8,
+		g: u8,
+		b: u8,
+		a: u8,
+	},
 }
 
 impl BlkType {
@@ -136,7 +140,12 @@ impl BlkType {
 			BOOL => Some(Self::Bool(field[0] != 0)),
 			COLOR => {
 				// Game stores them in BGRA order
-				Some(Self::Color([field[2], field[1], field[0], field[3]]))
+				Some(Self::Color {
+					r: field[0],
+					g: field[1],
+					b: field[2],
+					a: field[3],
+				})
 			},
 			FLOAT12 => {
 				let offset = bytes_to_offset(field)?;
@@ -178,7 +187,7 @@ impl BlkType {
 			BlkType::Float4(_) => FLOAT4,
 			BlkType::Float12(_) => FLOAT12,
 			BlkType::Bool(_) => BOOL,
-			BlkType::Color(_) => COLOR,
+			BlkType::Color{..} => COLOR,
 		}
 	}
 
@@ -195,7 +204,7 @@ impl BlkType {
 			BlkType::Float4(_) => false,
 			BlkType::Float12(_) => false,
 			BlkType::Bool(_) => true,
-			BlkType::Color(_) => true,
+			BlkType::Color{..} => true,
 		}
 	}
 
@@ -212,7 +221,7 @@ impl BlkType {
 			BlkType::Float4(_) => 16,
 			BlkType::Float12(_) => 48,
 			BlkType::Bool(_) => 4,
-			BlkType::Color(_) => 4,
+			BlkType::Color{..} => 4,
 		}
 	}
 
@@ -229,7 +238,7 @@ impl BlkType {
 			BlkType::Float4(_) => "p4",
 			BlkType::Float12(_) => "m",
 			BlkType::Bool(_) => "b",
-			BlkType::Color(_) => "c",
+			BlkType::Color{..} => "c",
 		}
 	}
 
@@ -267,8 +276,8 @@ impl BlkType {
 				format!("{v:#?}")
 			},
 			BlkType::Bool(v) => v.to_string(),
-			BlkType::Color(v) => {
-				format!("{v:?}")
+			BlkType::Color{ r, g, b, a, } => {
+				format!("[{r}, {g}, {b}, {a}]")
 			},
 		}
 	}
@@ -302,8 +311,9 @@ impl Display for BlkType {
 				format!("{:?}", *v)
 			},
 			BlkType::Bool(v) => v.to_string(),
-			BlkType::Color(v) => {
-				format!("{}, {}, {}, {}", v[3], v[2], v[1], v[0])
+			// BGRA
+			BlkType::Color{ r, g, b, a} => {
+				format!("{b}, {g}, {r}, {a}")
 			},
 		};
 

@@ -73,7 +73,12 @@ mod test {
 		alpha
 			.insert_field(BlkField::Value(
 				Rc::new("color".to_owned()),
-				BlkType::Color([1, 2, 3, 4]),
+				BlkType::Color{
+					r: 1,
+					g: 2,
+					b: 3,
+					a: 4,
+				},
 			))
 			.unwrap();
 
