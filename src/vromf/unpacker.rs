@@ -79,7 +79,7 @@ impl VromfUnpacker<'_> {
 							let parsed = parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone())?;
 							match format {
 								BlkOutputFormat::Json(config) => {
-									file.1 = parsed.as_ref_json(config).into_bytes();
+									file.1 = parsed.as_ref_json(config)?.into_bytes();
 								}
 								BlkOutputFormat::BlkText => {
 									file.1 = parsed.as_blk_text().into_bytes();
@@ -114,7 +114,7 @@ impl VromfUnpacker<'_> {
 					let parsed = parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone())?;
 					match format {
 						BlkOutputFormat::Json(config) => {
-							file.1 = parsed.as_ref_json(config).into_bytes();
+							file.1 = parsed.as_ref_json(config)?.into_bytes();
 						}
 						BlkOutputFormat::BlkText => {
 							file.1 = parsed.as_blk_text().into_bytes();

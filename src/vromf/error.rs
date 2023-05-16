@@ -61,6 +61,9 @@ pub enum VromfError {
 	FileNotInVromf {
 		path_name: String,
 	},
+
+	#[error(transparent)]
+	Fmt(#[from] std::fmt::Error),
 }
 
 fn fmt_utf8_error(buff: &Vec<u8>, e: &Utf8Error) -> String {
