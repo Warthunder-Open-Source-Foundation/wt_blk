@@ -10,7 +10,7 @@ use crate::{
 impl BlkField {
 	// Public facing formatting fn
 	pub fn as_ref_json(&self, fmt: FormattingConfiguration) -> Result<String, VromfError> {
-		let mut writer = String::with_capacity(1024 * 1024); // Prealloc 1mb
+		let mut writer = String::with_capacity(1024); // Prealloc 1kb
 		let mut initial_indentation = if fmt.global_curly_bracket { 1 } else { 0 };
 		self._as_ref_json(&mut writer, &mut initial_indentation, true, fmt, true)?;
 		Ok(writer)
@@ -118,7 +118,7 @@ mod test {
 		assert_eq!(String::from_utf8(needed.1).unwrap(), referece);
 	}
 
-	// 3.2 seconds
+	// 550ms
 	#[test]
 	fn perf_all() {
 		let unpacker = VromfUnpacker::from_file((
