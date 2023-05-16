@@ -5,8 +5,9 @@ use crate::blk::{blk_structure::BlkField, output_formatting_conf::FormattingConf
 impl BlkField {
 	// Public facing formatting fn
 	pub fn as_ref_json(&self, fmt: FormattingConfiguration) -> String {
+		let mut writer = String::with_capacity(1024 * 1024); // Prealloc 1mb
 		let mut initial_indentation = if fmt.global_curly_bracket { 1 } else { 0 };
-		self._as_ref_json(&mut initial_indentation, true, fmt, true)
+		self._as_ref_json(&mut writer, &mut initial_indentation, true, fmt, true)
 	}
 
 	// Indent level decides how deeply nested the current fields are
@@ -15,6 +16,7 @@ impl BlkField {
 	// Is last elem prevents trailing commas when the current element is the last of an object
 	fn _as_ref_json(
 		&self,
+		f: &mut String,
 		indent_level: &mut usize,
 		is_root: bool,
 		fmt: FormattingConfiguration,
@@ -37,7 +39,7 @@ impl BlkField {
 					.map(|(i, x)| {
 						format!(
 							"{indent}{}",
-							x._as_ref_json(indent_level, false, fmt, i == fields.len() - 1)
+							x._as_ref_json(f, indent_level, false, fmt, i == fields.len() - 1)
 						)
 					})
 					.collect::<Vec<_>>()
