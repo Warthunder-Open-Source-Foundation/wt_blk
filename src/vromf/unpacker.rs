@@ -96,6 +96,40 @@ impl VromfUnpacker<'_> {
 				}
 			}).collect::<Result<Vec<File>, VromfError>>()
 	}
+
+	pub fn unpack_one(&self, path_name: &Path, unpack_blk_into: Option<BlkOutputFormat>)-> Result<Vec<u8>, VromfError> {
+		let mut file = self.files.iter().find(|e|e.0 == path_name).ok_or(VromfError::FileNotInVromf { path_name: path_name.to_str().unwrap_or("PATH PARSE FAILED, REPORT THIS ERROR").to_string()})?.to_owned();
+		match () {
+			_ if maybe_blk(&file) => {
+				if let Some(format) = unpack_blk_into {
+					let mut offset = 0;
+					let file_type = FileType::from_byte(file.1[0])?;
+					if file_type.is_zstd() {
+						file.1 = decode_zstd(&file.1, self.dict.as_ref().map(|e| &e.0)).unwrap();
+					} else {
+						// uncompressed Slim and Fat files retain their initial magic bytes
+						offset = 1;
+					};
+
+					let parsed = parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone())?;
+					match format {
+						BlkOutputFormat::Json(config) => {
+							file.1 = parsed.as_ref_json(config).into_bytes();
+						}
+						BlkOutputFormat::BlkText => {
+							file.1 = parsed.as_blk_text().into_bytes();
+						}
+					}
+				}
+				Ok(file.1)
+			}
+
+			// Default to the raw file
+			_ => {
+				Ok(file.1)
+			}
+		}
+	}
 }
 
 fn maybe_blk(file: &File) -> bool {

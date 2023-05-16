@@ -55,7 +55,12 @@ pub enum VromfError {
 	},
 
 	#[error(transparent)]
-	BlkParseError(#[from] ParseError)
+	BlkParseError(#[from] ParseError),
+
+	#[error("Failed to cherry pick file {path_name}, it is probably missing?")]
+	FileNotInVromf {
+		path_name: String,
+	},
 }
 
 fn fmt_utf8_error(buff: &Vec<u8>, e: &Utf8Error) -> String {
