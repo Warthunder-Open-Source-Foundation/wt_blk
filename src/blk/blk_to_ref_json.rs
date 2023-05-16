@@ -32,7 +32,7 @@ impl BlkField {
 		match self {
 			BlkField::Value(name, value) => {
 				write!(f, "\"{name}\": ")?;
-				value.as_ref_json(f, fmt, *indent_level);
+				value.as_ref_json(f, fmt, *indent_level)?;
 				write!(f, "{trail_comma}")?;
 			},
 			BlkField::Struct(name, fields) => {
