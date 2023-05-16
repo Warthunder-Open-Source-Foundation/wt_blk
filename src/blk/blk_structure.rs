@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
@@ -14,7 +15,7 @@ pub enum BlkField {
 
 impl BlkField {
 	pub fn new_root() -> Self {
-		BlkField::Struct(Rc::new("root".to_owned()), vec![])
+		BlkField::Struct(Arc::new("root".to_owned()), vec![])
 	}
 
 	pub fn new_struct(name: BlkString) -> Self {

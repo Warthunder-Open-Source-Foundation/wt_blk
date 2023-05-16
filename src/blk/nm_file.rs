@@ -7,7 +7,7 @@ use crate::blk::{blk_type::BlkString, leb128::uleb128};
 #[derive(Clone, Debug)]
 pub struct NameMap {
 	pub binary: Vec<u8>,
-	pub parsed: Rc<Vec<BlkString>>,
+	pub parsed: Arc<Vec<BlkString>>,
 }
 
 impl NameMap {
@@ -21,7 +21,7 @@ impl NameMap {
 		let names = Self::parse_slim_nm(&decoded);
 
 		Some(Self {
-			parsed: Rc::new(names),
+			parsed: Arc::new(names),
 			binary: decoded,
 		})
 	}
@@ -41,7 +41,7 @@ impl NameMap {
 		let mut names = vec![];
 		for (i, val) in file.iter().enumerate() {
 			if *val == 0 {
-				names.push(Rc::new(
+				names.push(Arc::new(
 					String::from_utf8_lossy(&file[start..i]).to_string(),
 				));
 				start = i + 1;

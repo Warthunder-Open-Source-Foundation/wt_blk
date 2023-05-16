@@ -37,6 +37,7 @@ impl BlkField {
 #[cfg(test)]
 mod test {
 	use std::rc::Rc;
+	use std::sync::Arc;
 
 	use crate::blk::{blk_structure::BlkField, blk_type::BlkType};
 
@@ -45,34 +46,34 @@ mod test {
 		// For testing purposes i should probably make a better way for this
 		let mut root = BlkField::new_root();
 		root.insert_field(BlkField::Value(
-			Rc::new("vec4f".to_owned()),
+			Arc::new("vec4f".to_owned()),
 			BlkType::Float4([1.25, 2.5, 5.0, 10.0]),
 		))
 		.unwrap();
-		root.insert_field(BlkField::Value(Rc::new("int".to_owned()), BlkType::Int(42)))
+		root.insert_field(BlkField::Value(Arc::new("int".to_owned()), BlkType::Int(42)))
 			.unwrap();
 		root.insert_field(BlkField::Value(
-			Rc::new("long".to_owned()),
+			Arc::new("long".to_owned()),
 			BlkType::Long(42),
 		))
 		.unwrap();
 
-		let mut alpha = BlkField::new_struct(Rc::new("alpha".to_owned()));
+		let mut alpha = BlkField::new_struct(Arc::new("alpha".to_owned()));
 		alpha
 			.insert_field(BlkField::Value(
-				Rc::new("str".to_owned()),
-				BlkType::Str(Rc::new("hello".to_owned())),
+				Arc::new("str".to_owned()),
+				BlkType::Str(Arc::new("hello".to_owned())),
 			))
 			.unwrap();
 		alpha
 			.insert_field(BlkField::Value(
-				Rc::new("bool".to_owned()),
+				Arc::new("bool".to_owned()),
 				BlkType::Bool(true),
 			))
 			.unwrap();
 		alpha
 			.insert_field(BlkField::Value(
-				Rc::new("color".to_owned()),
+				Arc::new("color".to_owned()),
 				BlkType::Color {
 					r: 1,
 					g: 2,
@@ -82,22 +83,22 @@ mod test {
 			))
 			.unwrap();
 
-		let mut gamma = BlkField::new_struct(Rc::new("gamma".to_owned()));
+		let mut gamma = BlkField::new_struct(Arc::new("gamma".to_owned()));
 		gamma
 			.insert_field(BlkField::Value(
-				Rc::new("vec2i".to_owned()),
+				Arc::new("vec2i".to_owned()),
 				BlkType::Int2([3, 4]),
 			))
 			.unwrap();
 		gamma
 			.insert_field(BlkField::Value(
-				Rc::new("vec2f".to_owned()),
+				Arc::new("vec2f".to_owned()),
 				BlkType::Float2([1.25, 2.5]),
 			))
 			.unwrap();
 		gamma
 			.insert_field(BlkField::Value(
-				Rc::new("transform".to_owned()),
+				Arc::new("transform".to_owned()),
 				BlkType::Float12(Box::new([
 					1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.25, 2.5, 5.0,
 				])),
@@ -106,19 +107,19 @@ mod test {
 		alpha.insert_field(gamma).unwrap();
 		root.insert_field(alpha).unwrap();
 
-		let mut beta = BlkField::new_struct(Rc::new("beta".to_owned()));
+		let mut beta = BlkField::new_struct(Arc::new("beta".to_owned()));
 		beta.insert_field(BlkField::Value(
-			Rc::new("float".to_owned()),
+			Arc::new("float".to_owned()),
 			BlkType::Float(1.25),
 		))
 		.unwrap();
 		beta.insert_field(BlkField::Value(
-			Rc::new("vec2i".to_owned()),
+			Arc::new("vec2i".to_owned()),
 			BlkType::Int2([1, 2]),
 		))
 		.unwrap();
 		beta.insert_field(BlkField::Value(
-			Rc::new("vec3f".to_owned()),
+			Arc::new("vec3f".to_owned()),
 			BlkType::Float3([1.25, 2.5, 5.0]),
 		))
 		.unwrap();

@@ -4,6 +4,8 @@ use std::{
 	path::{Path, PathBuf},
 	sync::Arc,
 };
+use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator};
+use rayon::iter::ParallelIterator;
 
 use zstd::dict::DecoderDictionary;
 
@@ -73,7 +75,7 @@ impl VromfUnpacker<'_> {
 		unpack_blk_into: Option<BlkOutputFormat>,
 	) -> Result<Vec<File>, VromfError> {
 		self.files
-			.into_iter()
+			.into_par_iter()
 			.map(|mut file| {
 				match () {
 					_ if maybe_blk(&file) => {

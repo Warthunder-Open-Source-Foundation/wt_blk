@@ -13,7 +13,7 @@ use crate::blk::{
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset},
 };
 
-pub type BlkString = Rc<String>;
+pub type BlkString = Arc<String>;
 
 pub mod blk_type_id {
 	pub const STRING: u8 = 0x01;
@@ -32,7 +32,7 @@ pub mod blk_type_id {
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
 pub enum BlkType {
-	Str(Rc<String>),
+	Str(Arc<String>),
 	Int(u32),
 	Int2([u32; 2]),
 	Int3([u32; 3]),
@@ -54,7 +54,7 @@ impl BlkType {
 		type_id: u8,
 		field: &[u8],
 		data_region: &[u8],
-		name_map: Rc<Vec<BlkString>>,
+		name_map: Arc<Vec<BlkString>>,
 	) -> Option<Self> {
 		// Make sure the field is properly sized
 		if field.len() != 4 {
@@ -81,7 +81,7 @@ impl BlkType {
 						}
 						buff.push(*byte)
 					}
-					Rc::new(String::from_utf8_lossy(&buff).to_string())
+					Arc::new(String::from_utf8_lossy(&buff).to_string())
 				};
 
 				Some(Self::Str(res))
@@ -325,12 +325,13 @@ impl Display for BlkType {
 #[cfg(test)]
 mod test {
 	use std::rc::Rc;
+	use std::sync::Arc;
 
 	use crate::blk::blk_type::BlkType;
 
 	#[test]
 	fn test_string() {
-		let t = BlkType::Str(Rc::new("yeet".to_owned()));
+		let t = BlkType::Str(Arc::new("yeet".to_owned()));
 		assert_eq!(t.to_string(), "t = \"yeet\"")
 	}
 }

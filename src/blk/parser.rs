@@ -58,7 +58,7 @@ pub fn parse_blk(
 		if names_count != names.len() {
 			error!("Name count mismatch, expected {names_count}, but found a len of {}. This might mean something is wrong.", names.len());
 		}
-		Rc::new(names)
+		Arc::new(names)
 	};
 
 	let blocks_count = next_uleb(&mut ptr)?;
@@ -117,7 +117,7 @@ pub fn parse_blk(
 	{
 		let block_id_to_name = |id| {
 			if id == 0 {
-				Rc::new("root".to_owned())
+				Arc::new("root".to_owned())
 			} else {
 				(&names)[(id - 1) as usize].clone()
 			}
