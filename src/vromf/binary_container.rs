@@ -73,8 +73,11 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 #[cfg(test)]
 mod test {
 	use std::fs;
+	use std::path::PathBuf;
+	use std::str::FromStr;
 
 	use crate::vromf::binary_container::decode_bin_vromf;
+	use crate::vromf::unpacker::VromfUnpacker;
 
 	#[test]
 	fn decode_simple() {
@@ -87,4 +90,12 @@ mod test {
 		let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
 		decode_bin_vromf(&f).unwrap();
 	}
+
+	// #[test]
+	// fn test_regional() {
+	// 	let f = fs::read("./samples/regional.vromfs.bin").unwrap();
+	// 	// decode_bin_vromf(&f).unwrap();
+	// 	let unpacker = VromfUnpacker::from_file((PathBuf::from_str("asas").unwrap(), f)).unwrap();
+	// 	unpacker.unpack_all(None).unwrap();
+	// }
 }
