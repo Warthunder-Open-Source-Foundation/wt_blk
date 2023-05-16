@@ -1,6 +1,4 @@
-use std::mem::size_of;
-use std::path::PathBuf;
-use std::str::FromStr;
+use std::{mem::size_of, path::PathBuf, str::FromStr};
 
 use crate::vromf::{
 	error::{
@@ -79,9 +77,7 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, VromfE
 				}
 			}
 			match String::from_utf8(buff) {
-				Ok(res) => Ok(
-					PathBuf::from_str(&res).expect("Infallible")
-				),
+				Ok(res) => Ok(PathBuf::from_str(&res).expect("Infallible")),
 				Err(e) => Err(VromfError::Utf8 {
 					utf8e: e.utf8_error(),
 					buff:  e.into_bytes(),

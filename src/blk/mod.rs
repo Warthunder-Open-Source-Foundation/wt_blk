@@ -5,18 +5,18 @@ use std::{
 		atomic::{AtomicUsize, Ordering},
 		Arc,
 	},
+	time::Instant,
 };
-use std::time::Instant;
 
 pub use ::zstd::dict::DecoderDictionary;
 
 use crate::blk::{
 	file::FileType,
 	nm_file::NameMap,
+	output_formatting_conf::FormattingConfiguration,
 	parser::parse_blk,
 	zstd::{decode_zstd, BlkDecoder},
 };
-use crate::blk::output_formatting_conf::FormattingConfiguration;
 
 mod blk_block_hierarchy;
 pub mod blk_structure;
@@ -69,12 +69,11 @@ pub fn parse_file(
 
 	Some(
 		serde_json::to_string(
-			&parse_blk(&file[offset..], file_type.is_slim(),  shared_name_map).ok()?,
+			&parse_blk(&file[offset..], file_type.is_slim(), shared_name_map).ok()?,
 		)
 		.unwrap(),
 	)
 }
-
 
 #[derive(Copy, Clone)]
 pub enum BlkOutputFormat {

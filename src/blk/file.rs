@@ -21,9 +21,7 @@ impl FileType {
 			0x03 => Ok(Self::SLIM),
 			0x04 => Ok(Self::SLIM_ZSTD),
 			0x05 => Ok(Self::SLIM_ZST_DICT),
-			_ => Err(ParseError::UnrecognizedBlkHeader {
-				header: input,
-			}),
+			_ => Err(ParseError::UnrecognizedBlkHeader { header: input }),
 		}
 	}
 

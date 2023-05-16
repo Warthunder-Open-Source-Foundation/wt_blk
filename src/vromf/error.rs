@@ -1,4 +1,5 @@
 use std::str::Utf8Error;
+
 use crate::blk::error::ParseError;
 
 #[derive(Debug, thiserror::Error)]
@@ -41,26 +42,22 @@ pub enum VromfError {
 	#[error("{}", fmt_utf8_error(buff, utf8e))]
 	Utf8 { buff: Vec<u8>, utf8e: Utf8Error },
 
-	#[error("Name map parsing. IF THIS OCCURS: OPEN AN ISSUE OR MESSAGE \"FlareFlo🦆#2800\" on discord")] // If this gets thrown, i should consider properly catching errors in the NM functions
+	#[error(
+		"Name map parsing. IF THIS OCCURS: OPEN AN ISSUE OR MESSAGE \"FlareFlo🦆#2800\" on discord"
+	)] // If this gets thrown, i should consider properly catching errors in the NM functions
 	InvalidNm,
 
 	#[error("Failed because {file_name} requires a name-map, but the Vromf did not contain one")]
-	MissingNm {
-		file_name: String,
-	},
+	MissingNm { file_name: String },
 
 	#[error("Failed because {file_name} requires a dictionary, but the Vromf did not contain one")]
-	MissingDict {
-		file_name: String,
-	},
+	MissingDict { file_name: String },
 
 	#[error(transparent)]
 	BlkParseError(#[from] ParseError),
 
 	#[error("Failed to cherry pick file {path_name}, it is probably missing?")]
-	FileNotInVromf {
-		path_name: String,
-	},
+	FileNotInVromf { path_name: String },
 
 	#[error(transparent)]
 	Fmt(#[from] std::fmt::Error),

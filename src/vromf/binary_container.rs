@@ -17,8 +17,8 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 			Ok(buff)
 		} else {
 			return Err(IndexingFileOutOfBounds {
-				current_ptr: *ptr,
-				file_size: file.len(),
+				current_ptr:   *ptr,
+				file_size:     file.len(),
 				requested_len: offset,
 			});
 		}
@@ -55,7 +55,7 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 		idx_file_offset(&mut ptr, len)?
 	};
 
-// Directly return when data is not obfuscated
+	// Directly return when data is not obfuscated
 	if !pack_type.is_obfuscated() {
 		return Ok(inner_data.to_vec());
 	}
@@ -74,7 +74,7 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 mod test {
 	use std::fs;
 
-	use crate::vromf::binary_container::{decode_bin_vromf};
+	use crate::vromf::binary_container::decode_bin_vromf;
 
 	#[test]
 	fn decode_simple() {

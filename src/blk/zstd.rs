@@ -1,16 +1,18 @@
-use std::{io::Read, sync::Arc, thread::sleep, time::Duration};
-use std::ops::Range;
+use std::{io::Read, ops::Range, sync::Arc, thread::sleep, time::Duration};
 
 use zstd::{dict::DecoderDictionary, Decoder};
-use crate::blk::error::ParseError;
 
-use crate::blk::file::FileType;
+use crate::blk::{error::ParseError, file::FileType};
 
 pub type BlkDecoder<'a> = DecoderDictionary<'a>;
 
 pub fn decode_zstd(file: &[u8], frame_decoder: Option<&BlkDecoder>) -> Result<Vec<u8>, ParseError> {
 	// validate magic byte
-	let file_type = FileType::from_byte(*file.get(0).ok_or(ParseError::DataRegionBoundsExceeded(0..1))?)?;
+	let file_type = FileType::from_byte(
+		*file
+			.get(0)
+			.ok_or(ParseError::DataRegionBoundsExceeded(0..1))?,
+	)?;
 
 	let (len, to_decode) = if !file_type.is_slim() {
 		let len_raw = &file[1..4];
@@ -25,12 +27,16 @@ pub fn decode_zstd(file: &[u8], frame_decoder: Option<&BlkDecoder>) -> Result<Ve
 		let frame_decoder = frame_decoder.ok_or(ParseError::MissingDict {})?;
 		let mut out = Vec::with_capacity(len);
 		let mut decoder = Decoder::with_prepared_dictionary(&file[1..], frame_decoder).unwrap();
-		let _ = decoder.read_to_end(&mut out).map_err(|_| ParseError::InvalidDict {})?;
+		let _ = decoder
+			.read_to_end(&mut out)
+			.map_err(|_| ParseError::InvalidDict {})?;
 		out
 	} else {
 		let mut out = Vec::with_capacity(len);
 		let mut decoder = Decoder::new(to_decode).unwrap();
-		let _ = decoder.read_to_end(&mut out).map_err(|_| ParseError::InvalidDict {})?;
+		let _ = decoder
+			.read_to_end(&mut out)
+			.map_err(|_| ParseError::InvalidDict {})?;
 		out
 	};
 	Ok(decoded)
@@ -73,21 +79,15 @@ mod test {
 
 	#[test]
 	fn fat_zstd() {
-		let decoded = decode_zstd(
-			include_bytes!("../../samples/section_fat_zst.blk"),
-			None,
-		)
-			.unwrap();
+		let decoded =
+			decode_zstd(include_bytes!("../../samples/section_fat_zst.blk"), None).unwrap();
 		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_fat.blk"));
 	}
 
 	#[test]
 	fn slim_zstd() {
-		let decoded = decode_zstd(
-			include_bytes!("../../samples/section_slim_zst.blk"),
-			None,
-		)
-			.unwrap();
+		let decoded =
+			decode_zstd(include_bytes!("../../samples/section_slim_zst.blk"), None).unwrap();
 		pretty_assertions::assert_eq!(
 			&decoded,
 			&include_bytes!("../../samples/section_slim.blk")[1..]
@@ -100,7 +100,7 @@ mod test {
 		let dict = fs::read(
 			"./samples/bfb732560ad45234690acad246d7b14c2f25ad418a146e5e7ef68ba3386a315c.dict",
 		)
-			.unwrap();
+		.unwrap();
 		let frame_decoder = DecoderDictionary::copy(&dict);
 
 		let mut decoder = Decoder::with_prepared_dictionary(&file[1..], &frame_decoder).unwrap();

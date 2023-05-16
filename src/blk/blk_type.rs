@@ -1,17 +1,17 @@
 use std::{
-	fmt::{Display, Formatter},
+	fmt::{Display, Formatter, Write},
 	rc::Rc,
+	sync::Arc,
 };
-use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
 use crate::blk::{
 	blk_type::blk_type_id::*,
+	nm_file::NameMap,
 	output_formatting_conf::FormattingConfiguration,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset},
 };
-use crate::blk::nm_file::NameMap;
 
 pub type BlkString = Rc<String>;
 
@@ -43,12 +43,7 @@ pub enum BlkType {
 	Float4([f32; 4]),
 	Float12(Box<[f32; 12]>),
 	Bool(bool),
-	Color {
-		r: u8,
-		g: u8,
-		b: u8,
-		a: u8,
-	},
+	Color { r: u8, g: u8, b: u8, a: u8 },
 }
 
 impl BlkType {
@@ -187,7 +182,7 @@ impl BlkType {
 			BlkType::Float4(_) => FLOAT4,
 			BlkType::Float12(_) => FLOAT12,
 			BlkType::Bool(_) => BOOL,
-			BlkType::Color{..} => COLOR,
+			BlkType::Color { .. } => COLOR,
 		}
 	}
 
@@ -204,7 +199,7 @@ impl BlkType {
 			BlkType::Float4(_) => false,
 			BlkType::Float12(_) => false,
 			BlkType::Bool(_) => true,
-			BlkType::Color{..} => true,
+			BlkType::Color { .. } => true,
 		}
 	}
 
@@ -221,7 +216,7 @@ impl BlkType {
 			BlkType::Float4(_) => 16,
 			BlkType::Float12(_) => 48,
 			BlkType::Bool(_) => 4,
-			BlkType::Color{..} => 4,
+			BlkType::Color { .. } => 4,
 		}
 	}
 
@@ -238,46 +233,52 @@ impl BlkType {
 			BlkType::Float4(_) => "p4",
 			BlkType::Float12(_) => "m",
 			BlkType::Bool(_) => "b",
-			BlkType::Color{..} => "c",
+			BlkType::Color { .. } => "c",
 		}
 	}
 
-	pub fn as_ref_json(&self, fmt: FormattingConfiguration, indent_level: usize) -> String {
+	pub fn as_ref_json(
+		&self,
+		f: &mut String,
+		fmt: FormattingConfiguration,
+		indent_level: usize,
+	) -> Result<(), std::fmt::Error> {
 		let indent_once = fmt.indent(indent_level);
 		let indent_once_less = fmt.indent(indent_level.saturating_sub(1));
 		match self {
 			BlkType::Str(v) => {
-				format!("\"{v}\"")
+				write!(f, "\"{v}\"")
 			},
-			BlkType::Int(v) => v.to_string(),
+			BlkType::Int(v) => write!(f, "{v}"),
 			BlkType::Int2(v) => {
-				format!("[\n{indent_once}{},\n{indent_once}{}\n]", v[0], v[1])
+				write!(f, "[\n{indent_once}{},\n{indent_once}{}\n]", v[0], v[1])
 			},
 			BlkType::Int3(v) => {
-				format!("{v:#?}")
+				write!(f, "{v:#?}")
 			},
-			BlkType::Long(v) => v.to_string(),
+			BlkType::Long(v) => write!(f, "{v}"),
 			BlkType::Float(v) => {
-				format!("{v:.?}")
+				write!(f, "{v:.?}")
 			},
 			BlkType::Float2(v) => {
-				format!(
+				write!(
+					f,
 					"[\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]",
 					v[0], v[1]
 				)
 			},
 			BlkType::Float3(v) => {
-				format!("[\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]", v[0], v[1], v[2])
+				write!(f,"[\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]", v[0], v[1], v[2])
 			},
 			BlkType::Float4(v) => {
-				format!("[\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]", v[0], v[1], v[2], v[2])
+				write!(f,"[\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]", v[0], v[1], v[2], v[2])
 			},
 			BlkType::Float12(v) => {
-				format!("{v:#?}")
+				write!(f, "{v:#?}")
 			},
-			BlkType::Bool(v) => v.to_string(),
-			BlkType::Color{ r, g, b, a, } => {
-				format!("[{r}, {g}, {b}, {a}]")
+			BlkType::Bool(v) => write!(f, "{v}"),
+			BlkType::Color { r, g, b, a } => {
+				write!(f, "[{r}, {g}, {b}, {a}]")
 			},
 		}
 	}
@@ -312,7 +313,7 @@ impl Display for BlkType {
 			},
 			BlkType::Bool(v) => v.to_string(),
 			// BGRA
-			BlkType::Color{ r, g, b, a} => {
+			BlkType::Color { r, g, b, a } => {
 				format!("{b}, {g}, {r}, {a}")
 			},
 		};
@@ -324,11 +325,12 @@ impl Display for BlkType {
 #[cfg(test)]
 mod test {
 	use std::rc::Rc;
+
 	use crate::blk::blk_type::BlkType;
 
 	#[test]
 	fn test_string() {
 		let t = BlkType::Str(Rc::new("yeet".to_owned()));
-		assert_eq!( t.to_string(),"t = \"yeet\"")
+		assert_eq!(t.to_string(), "t = \"yeet\"")
 	}
 }

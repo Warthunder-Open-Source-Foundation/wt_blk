@@ -1,5 +1,4 @@
-use std::io;
-use std::ops::Range;
+use std::{io, ops::Range};
 
 use thiserror::Error;
 
@@ -26,16 +25,11 @@ pub enum ParseError {
 	SlimBlkWithoutNm,
 
 	#[error("Invalid BLK header: {header:X}")]
-	UnrecognizedBlkHeader {
-		header: u8,
-	},
+	UnrecognizedBlkHeader { header: u8 },
 
 	#[error("Dictionary was invalid")]
-	InvalidDict {
-
-	},
+	InvalidDict {},
 
 	#[error("Missing dictionary")]
-	MissingDict {
-	},
+	MissingDict {},
 }

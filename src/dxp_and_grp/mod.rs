@@ -52,22 +52,23 @@ mod test {
 		let _out = parse_buffered(
 			&File::open("./samples/dxp/hq_tex_water_garbage_piles.dxp.bin").unwrap(),
 		)
-			.unwrap();
+		.unwrap();
 	}
 
 	#[test]
 	fn grp_buffered() {
-		let out = parse_buffered(
-			&File::open("./samples/dxp/bf_109a_1.grp").unwrap(),
+		let out = parse_buffered(&File::open("./samples/dxp/bf_109a_1.grp").unwrap()).unwrap();
+		assert_eq!(
+			[
+				"bf_109a_1_cockpit_char",
+				"bf_109a_1_cockpit_animtree",
+				"bf_109a_1_cockpit_skeleton",
+				"bf_109a_1_cockpit",
+				"bf_109a_1_cockpit_anim",
+				"bf_109a_1_anim",
+			]
+			.to_vec(),
+			out.iter().map(|e| e.as_str()).collect::<Vec<_>>()
 		)
-			.unwrap();
-		assert_eq!([
-					   "bf_109a_1_cockpit_char",
-					   "bf_109a_1_cockpit_animtree",
-					   "bf_109a_1_cockpit_skeleton",
-					   "bf_109a_1_cockpit",
-					   "bf_109a_1_cockpit_anim",
-					   "bf_109a_1_anim",
-				   ].to_vec(), out.iter().map(|e|e.as_str()).collect::<Vec<_>>())
 	}
 }

@@ -1,5 +1,4 @@
-use std::{rc::Rc, sync::Arc};
-use std::time::Instant;
+use std::{rc::Rc, sync::Arc, time::Instant};
 
 use tracing::error;
 
@@ -47,7 +46,11 @@ pub fn parse_blk(
 
 	let names = if is_slim {
 		// TODO Figure out if names_count dictates the existence of a name map or if it may be 0 without requiring a name map
-		shared_name_map.clone().ok_or(ParseError::SlimBlkWithoutNm)?.parsed.clone()
+		shared_name_map
+			.clone()
+			.ok_or(ParseError::SlimBlkWithoutNm)?
+			.parsed
+			.clone()
 	} else {
 		let names_data_size = next_uleb(&mut ptr)?;
 
@@ -89,8 +92,16 @@ pub fn parse_blk(
 			BlkType::from_raw_param_info(
 				type_id,
 				data,
-				shared_name_map.clone().ok_or(ParseError::SlimBlkWithoutNm)?.binary.as_slice(),
-				shared_name_map.clone().ok_or(ParseError::SlimBlkWithoutNm)?.parsed.clone(),
+				shared_name_map
+					.clone()
+					.ok_or(ParseError::SlimBlkWithoutNm)?
+					.binary
+					.as_slice(),
+				shared_name_map
+					.clone()
+					.ok_or(ParseError::SlimBlkWithoutNm)?
+					.parsed
+					.clone(),
 			)
 			.ok_or(BadBlkValue)?
 		} else {

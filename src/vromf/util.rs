@@ -1,5 +1,4 @@
-use std::mem::size_of;
-use std::path::PathBuf;
+use std::{mem::size_of, path::PathBuf};
 
 use crate::vromf::{
 	enums::Packing,
@@ -48,5 +47,8 @@ pub fn bytes_to_usize(input: &[u8]) -> Result<usize, VromfError> {
 }
 
 pub(crate) fn path_stringify(buf: &PathBuf) -> Result<String, VromfError> {
-	Ok(buf.to_str().unwrap_or("Failed to parse path, this should be infallible.").to_owned())
+	Ok(buf
+		.to_str()
+		.unwrap_or("Failed to parse path, this should be infallible.")
+		.to_owned())
 }

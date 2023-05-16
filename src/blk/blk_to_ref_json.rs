@@ -1,6 +1,9 @@
-use crate::blk::{blk_structure::BlkField, output_formatting_conf::FormattingConfiguration};
-use crate::vromf::VromfError;
 use std::fmt::Write;
+
+use crate::{
+	blk::{blk_structure::BlkField, output_formatting_conf::FormattingConfiguration},
+	vromf::VromfError,
+};
 
 /// Reference JSON is an output format dedicated to mirroring the behaviour of existing formatters
 
@@ -28,11 +31,10 @@ impl BlkField {
 		let trail_comma = if is_last_elem { "" } else { "," };
 		match self {
 			BlkField::Value(name, value) => {
-				write!(f,
-					   "\"{name}\": {}{trail_comma}",
-					   value.as_ref_json(fmt, *indent_level)
-				)?;
-			}
+				write!(f, "\"{name}\": ")?;
+				value.as_ref_json(f, fmt, *indent_level);
+				write!(f, "{trail_comma}")?;
+			},
 			BlkField::Struct(name, fields) => {
 				let mut indent = fmt.indent(*indent_level);
 				let indent_closing = fmt.indent(indent_level.saturating_sub(1));
@@ -74,7 +76,7 @@ impl BlkField {
 					*indent_level -= 1;
 					write!(f, "{block_delimiter}{indent_closing}}}{trail_comma}")?;
 				}
-			}
+			},
 		}
 		Ok(())
 	}
@@ -82,40 +84,77 @@ impl BlkField {
 
 #[cfg(test)]
 mod test {
-	use std::fs;
-	use std::path::{Path, PathBuf};
-	use std::str::FromStr;
-	use std::time::Instant;
-	use crate::blk::BlkOutputFormat;
-	use crate::blk::output_formatting_conf::FormattingConfiguration;
-	use crate::vromf::unpacker::VromfUnpacker;
+	use std::{
+		fs,
+		path::{Path, PathBuf},
+		str::FromStr,
+		time::Instant,
+	};
+
+	use crate::{
+		blk::{output_formatting_conf::FormattingConfiguration, BlkOutputFormat},
+		vromf::unpacker::VromfUnpacker,
+	};
 
 	// #[test]
 	fn test_newline_parity() {
 		let referece = fs::read_to_string("./samples/login_bkg_1_63_nolayers_jp.blk").unwrap();
 		let aces = fs::read("./samples/aces.vromfs.bin").unwrap();
-		let parsed = VromfUnpacker::from_file((PathBuf::from_str("./samples/aces.vromfs.bin").unwrap(), aces)).unwrap().unpack_all(Some(BlkOutputFormat::Json(FormattingConfiguration::GSZABI_REPO))).unwrap();
-		let needed = parsed.iter().filter(|e| e.0.ends_with("login_bkg_1_63_nolayers_jp.blk")).next().unwrap().to_owned();
+		let parsed = VromfUnpacker::from_file((
+			PathBuf::from_str("./samples/aces.vromfs.bin").unwrap(),
+			aces,
+		))
+		.unwrap()
+		.unpack_all(Some(BlkOutputFormat::Json(
+			FormattingConfiguration::GSZABI_REPO,
+		)))
+		.unwrap();
+		let needed = parsed
+			.iter()
+			.filter(|e| e.0.ends_with("login_bkg_1_63_nolayers_jp.blk"))
+			.next()
+			.unwrap()
+			.to_owned();
 		assert_eq!(String::from_utf8(needed.1).unwrap(), referece);
 	}
 
 	// 3.2 seconds
 	#[test]
 	fn perf_all() {
-		let unpacker = VromfUnpacker::from_file((PathBuf::from_str("aces.vromfs.bin").unwrap(), include_bytes!("../../samples/aces.vromfs.bin").to_vec())).unwrap();
+		let unpacker = VromfUnpacker::from_file((
+			PathBuf::from_str("aces.vromfs.bin").unwrap(),
+			include_bytes!("../../samples/aces.vromfs.bin").to_vec(),
+		))
+		.unwrap();
 		let start = Instant::now();
-		unpacker.unpack_all(Some(BlkOutputFormat::Json(FormattingConfiguration::GSZABI_REPO))).unwrap();
+		unpacker
+			.unpack_all(Some(BlkOutputFormat::Json(
+				FormattingConfiguration::GSZABI_REPO,
+			)))
+			.unwrap();
 		println!("{:?}", start.elapsed());
 	}
 
 	#[test]
 	fn parity_once() {
-		let unpacker = VromfUnpacker::from_file((PathBuf::from_str("aces.vromfs.bin").unwrap(), include_bytes!("../../samples/aces.vromfs.bin").to_vec())).unwrap();
+		let unpacker = VromfUnpacker::from_file((
+			PathBuf::from_str("aces.vromfs.bin").unwrap(),
+			include_bytes!("../../samples/aces.vromfs.bin").to_vec(),
+		))
+		.unwrap();
 		let start = Instant::now();
-		let unpacked = unpacker.unpack_one(Path::new("gamedata/weapons/rocketguns/fr_r_550_magic_2.blk"), Some(BlkOutputFormat::Json(FormattingConfiguration::GSZABI_REPO))).unwrap();
+		let unpacked = unpacker
+			.unpack_one(
+				Path::new("gamedata/weapons/rocketguns/fr_r_550_magic_2.blk"),
+				Some(BlkOutputFormat::Json(FormattingConfiguration::GSZABI_REPO)),
+			)
+			.unwrap();
 		println!("{:?}", start.elapsed());
 
 		let reference = fs::read("./samples/magic_2_json_baseline.json").unwrap();
-		assert_eq!(String::from_utf8(unpacked).unwrap(), String::from_utf8(reference).unwrap());
+		assert_eq!(
+			String::from_utf8(unpacked).unwrap(),
+			String::from_utf8(reference).unwrap()
+		);
 	}
 }
