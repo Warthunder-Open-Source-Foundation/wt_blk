@@ -64,6 +64,8 @@ impl BlkField {
 
 					// An object might be formatted as such: `object: {}` or as `object {}`
 					let name_delimiter = if fmt.object_colon { ":" } else { "" };
+
+					//                                     v Opening bracket
 					write!(f, "\"{name}\"{name_delimiter} {{{block_delimiter}")?;
 					*indent_level += 1;
 					for (i, field) in fields.iter().enumerate() {
@@ -74,6 +76,7 @@ impl BlkField {
 						}
 					}
 					*indent_level -= 1;
+					//                                          v Closing bracket
 					write!(f, "{block_delimiter}{indent_closing}}}{trail_comma}")?;
 				}
 			},
