@@ -4,6 +4,7 @@ use crate::{
 	blk::{blk_structure::BlkField, output_formatting_conf::FormattingConfiguration},
 	vromf::VromfError,
 };
+use crate::blk::util::indent;
 
 /// Reference JSON is an output format dedicated to mirroring the behaviour of existing formatters
 
@@ -36,8 +37,8 @@ impl BlkField {
 				write!(f, "{trail_comma}")?;
 			},
 			BlkField::Struct(name, fields) => {
-				let mut indent = fmt.indent(*indent_level);
-				let indent_closing = fmt.indent(indent_level.saturating_sub(1));
+				let indent_count = *indent_level;
+				let indent_closing_count = indent_level.saturating_sub(1);
 				if is_root {
 					// Prepend global brackets
 					if fmt.global_curly_bracket {
@@ -46,7 +47,7 @@ impl BlkField {
 
 					*indent_level += 1;
 					for (i, field) in fields.iter().enumerate() {
-						write!(f, "{indent}")?; // Indent for next children
+						indent(f, indent_count, fmt.indent_char)?; // Indent for next children
 						field._as_ref_json(f, indent_level, false, fmt, i == fields.len() - 1)?;
 						if fields.len() - 1 != i {
 							write!(f, "\n")?; // Trailing newline, unless last
@@ -69,15 +70,17 @@ impl BlkField {
 					write!(f, "\"{name}\"{name_delimiter} {{{block_delimiter}")?;
 					*indent_level += 1;
 					for (i, field) in fields.iter().enumerate() {
-						write!(f, "{indent}")?; // Indent for next children
+						indent(f, indent_count, fmt.indent_char)?; // Indent for next children
 						field._as_ref_json(f, indent_level, false, fmt, i == fields.len() - 1)?;
 						if fields.len() - 1 != i {
 							write!(f, "\n")?; // Trailing newline, unless last
 						}
 					}
 					*indent_level -= 1;
-					//                                          v Closing bracket
-					write!(f, "{block_delimiter}{indent_closing}}}{trail_comma}")?;
+					write!(f, "{block_delimiter}")?;
+					indent(f, indent_closing_count, fmt.indent_char)?;
+					//         v Closing bracket
+					write!(f, "}}{trail_comma}")?;
 				}
 			},
 		}

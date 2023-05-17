@@ -30,11 +30,4 @@ impl FormattingConfiguration {
 		global_curly_bracket:     true,
 		object_colon:             true,
 	};
-
-	pub fn indent(self, level: usize) -> String {
-		self.indent_char
-			.0
-			.to_string()
-			.repeat(level * self.indent_char.1)
-	}
 }

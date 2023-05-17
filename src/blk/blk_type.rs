@@ -12,6 +12,7 @@ use crate::blk::{
 	output_formatting_conf::FormattingConfiguration,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset},
 };
+use crate::blk::util::indent;
 
 pub type BlkString = Arc<String>;
 
@@ -243,8 +244,11 @@ impl BlkType {
 		fmt: FormattingConfiguration,
 		indent_level: usize,
 	) -> Result<(), std::fmt::Error> {
-		let indent_once = fmt.indent(indent_level);
-		let indent_once_less = fmt.indent(indent_level.saturating_sub(1));
+		// TODO: Fix this not to use a string formatter
+		let mut indent_once = String::new();
+		indent(&mut indent_once, indent_level, fmt.indent_char)?;
+		let mut indent_once_less = String::new();
+		indent(&mut indent_once_less, indent_level.saturating_sub(1), fmt.indent_char)?;
 		match self {
 			BlkType::Str(v) => {
 				write!(f, "\"{v}\"")
