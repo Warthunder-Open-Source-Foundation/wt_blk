@@ -11,7 +11,7 @@ use crate::blk::util::indent;
 impl BlkField {
 	// Public facing formatting fn
 	pub fn as_ref_json(&self, fmt: FormattingConfiguration) -> Result<String, VromfError> {
-		let mut writer = String::with_capacity(1024); // Prealloc 1kb
+		let mut writer = String::with_capacity(self.estimate_size() * 2); // Prealloc a rough guesstimate of this structs size
 		let mut initial_indentation = if fmt.global_curly_bracket { 1 } else { 0 };
 		self._as_ref_json(&mut writer, &mut initial_indentation, true, fmt, true)?;
 		Ok(writer)
