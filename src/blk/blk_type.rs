@@ -244,11 +244,16 @@ impl BlkType {
 		fmt: FormattingConfiguration,
 		indent_level: usize,
 	) -> Result<(), std::fmt::Error> {
-		// TODO: Fix this not to use a string formatter
-		let mut indent_once = String::new();
-		indent(&mut indent_once, indent_level, fmt.indent_char)?;
-		let mut indent_once_less = String::new();
-		indent(&mut indent_once_less, indent_level.saturating_sub(1), fmt.indent_char)?;
+		let indent_once = Indenter {
+			depth: indent_level,
+			with: fmt.indent_char.0,
+			times: fmt.indent_char.1,
+		};
+		let indent_once_less = Indenter {
+			depth: indent_level.saturating_sub(1),
+			with: fmt.indent_char.0,
+			times: fmt.indent_char.1,
+		};
 		match self {
 			BlkType::Str(v) => {
 				write!(f, "\"{v}\"")
@@ -323,6 +328,21 @@ impl Display for BlkType {
 		};
 
 		write!(f, "{} = {}", self.blk_type_name(), value)
+	}
+}
+
+struct Indenter {
+	depth: usize,
+	with: char,
+	times: usize,
+}
+
+impl Display for Indenter {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		for _ in 0..(self.depth * self.times) {
+			f.write_char(self.with)?;
+		}
+		Ok(())
 	}
 }
 
