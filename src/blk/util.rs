@@ -1,6 +1,7 @@
 use std::fmt;
 use std::fmt::Write;
 
+#[inline(always)]
 pub(crate)  fn bytes_to_offset(input: &[u8]) -> Option<usize> {
 	if input.len() != 4 {
 		return None;
@@ -9,6 +10,7 @@ pub(crate)  fn bytes_to_offset(input: &[u8]) -> Option<usize> {
 	Some(u32::from_le_bytes([input[0], input[1], input[2], input[3]]) as usize)
 }
 
+#[inline(always)]
 pub(crate)  fn bytes_to_float(input: &[u8]) -> Option<f32> {
 	if input.len() != 4 {
 		return None;
@@ -17,6 +19,7 @@ pub(crate)  fn bytes_to_float(input: &[u8]) -> Option<f32> {
 	Some(f32::from_le_bytes([input[0], input[1], input[2], input[3]]))
 }
 
+#[inline(always)]
 pub(crate)  fn bytes_to_int(input: &[u8]) -> Option<u32> {
 	if input.len() != 4 {
 		return None;
@@ -25,6 +28,7 @@ pub(crate)  fn bytes_to_int(input: &[u8]) -> Option<u32> {
 	Some(u32::from_le_bytes([input[0], input[1], input[2], input[3]]))
 }
 
+#[inline(always)]
 pub(crate)  fn bytes_to_long(input: &[u8]) -> Option<u64> {
 	if input.len() != 8 {
 		return None;
@@ -35,6 +39,7 @@ pub(crate)  fn bytes_to_long(input: &[u8]) -> Option<u64> {
 	]))
 }
 
+#[inline(always)]
 //													('\t', 1) or (' ', 4) are typical
 pub(crate) fn indent(f: &mut String, depth: usize, (with, amount): (char, usize)) -> Result<(), fmt::Error> {
 	for _ in 0..(depth * amount) {
