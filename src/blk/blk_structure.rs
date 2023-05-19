@@ -57,6 +57,27 @@ impl BlkField {
 		let _current_search = pointers.get(*at);
 		unimplemented!();
 	}
+
+	pub fn estimate_size(&self) -> usize {
+		let mut total = 0;
+		self._estimate_size(&mut total);
+		total
+	}
+
+	fn _estimate_size(&self, total: &mut usize) {
+		match self {
+			BlkField::Value(key, value) => {
+				*total += key.len();
+				*total += value.size_bytes();
+			}
+			BlkField::Struct(key, fields) => {
+				*total += key.len();
+				for field in fields {
+					field._estimate_size(total);
+				}
+			}
+		}
+	}
 }
 
 pub enum BlkFieldError {
