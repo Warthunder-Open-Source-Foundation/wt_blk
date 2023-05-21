@@ -21,6 +21,10 @@ pub struct FormattingConfiguration {
 
 	/// Beginning of objects may be prefixed with a colon before opening the brackets
 	pub object_colon: bool,
+
+	/// Some objects have fields with the same key, this option will merge them into a single array type
+	/// This is non-reversible meaning the text-file cannot be returned to its binary BLK counterpart exactly
+	pub merge_duplicate_fields: bool,
 }
 
 impl FormattingConfiguration {
@@ -29,5 +33,6 @@ impl FormattingConfiguration {
 		natural_float_truncate_0: true,
 		global_curly_bracket:     true,
 		object_colon:             true,
+		merge_duplicate_fields: true,
 	};
 }

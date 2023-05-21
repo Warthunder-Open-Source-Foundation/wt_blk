@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::Write;
 
 use crate::{
@@ -45,15 +46,7 @@ impl BlkField {
 						write!(f, "{{\n")?;
 					}
 
-					*indent_level += 1;
-					for (i, field) in fields.iter().enumerate() {
-						indent(f, indent_count, fmt.indent_char)?; // Indent for next children
-						field._as_ref_json(f, indent_level, false, fmt, i == fields.len() - 1)?;
-						if fields.len() - 1 != i {
-							write!(f, "\n")?; // Trailing newline, unless last
-						}
-					}
-					*indent_level -= 1;
+					render_fields(fields, f, indent_level,  indent_count,fmt)?;
 
 					// Append global brackets
 					if fmt.global_curly_bracket {
@@ -68,15 +61,7 @@ impl BlkField {
 
 					//                                     v Opening bracket
 					write!(f, "\"{name}\"{name_delimiter} {{{block_delimiter}")?;
-					*indent_level += 1;
-					for (i, field) in fields.iter().enumerate() {
-						indent(f, indent_count, fmt.indent_char)?; // Indent for next children
-						field._as_ref_json(f, indent_level, false, fmt, i == fields.len() - 1)?;
-						if fields.len() - 1 != i {
-							write!(f, "\n")?; // Trailing newline, unless last
-						}
-					}
-					*indent_level -= 1;
+					render_fields(fields, f, indent_level, indent_count, fmt)?;
 					write!(f, "{block_delimiter}")?;
 					indent(f, indent_closing_count, fmt.indent_char)?;
 					//         v Closing bracket
@@ -86,6 +71,19 @@ impl BlkField {
 		}
 		Ok(())
 	}
+}
+
+fn render_fields(fields: &Vec<BlkField>, f: &mut String, indent_level: &mut usize, base_indentation: usize, fmt: FormattingConfiguration) -> Result<(), VromfError> {
+	*indent_level += 1;
+	for (i, field) in fields.iter().enumerate() {
+		indent(f, base_indentation, fmt.indent_char)?; // Indent for next children
+		field._as_ref_json(f, indent_level, false, fmt, i == fields.len() - 1)?;
+		if fields.len() - 1 != i {
+			write!(f, "\n")?; // Trailing newline, unless last
+		}
+	}
+	*indent_level -= 1;
+	Ok(())
 }
 
 #[cfg(test)]
@@ -102,7 +100,7 @@ mod test {
 		vromf::unpacker::VromfUnpacker,
 	};
 
-	// #[test]
+	#[test]
 	fn test_newline_parity() {
 		let referece = fs::read_to_string("./samples/login_bkg_1_63_nolayers_jp.blk").unwrap();
 		let aces = fs::read("./samples/aces.vromfs.bin").unwrap();
