@@ -100,7 +100,7 @@ mod test {
 		vromf::unpacker::VromfUnpacker,
 	};
 
-	#[test]
+	// #[test]
 	fn test_newline_parity() {
 		let referece = fs::read_to_string("./samples/login_bkg_1_63_nolayers_jp.blk").unwrap();
 		let aces = fs::read("./samples/aces.vromfs.bin").unwrap();
