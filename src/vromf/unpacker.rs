@@ -4,6 +4,8 @@ use std::{
 	path::{Path, PathBuf},
 	sync::Arc,
 };
+use color_eyre::eyre::ContextCompat;
+use color_eyre::{Help, Report};
 use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator};
 use rayon::iter::ParallelIterator;
 
@@ -21,10 +23,8 @@ use crate::{
 	},
 	vromf::{
 		binary_container::decode_bin_vromf,
-		error::VromfError,
 		inner_container::decode_inner_vromf,
 		util::path_stringify,
-		VromfError::MissingDict,
 	},
 };
 
@@ -47,14 +47,14 @@ pub struct VromfUnpacker<'a> {
 }
 
 impl VromfUnpacker<'_> {
-	pub fn from_file(file: File) -> Result<Self, VromfError> {
+	pub fn from_file(file: File) -> Result<Self, Report> {
 		let decoded = decode_bin_vromf(&file.1)?;
 		let inner = decode_inner_vromf(&decoded)?;
 
 		let nm = inner
 			.iter()
 			.find(|elem| elem.0.file_name() == Some(OsStr::new("nm")))
-			.map(|elem| NameMap::from_encoded_file(&elem.1).ok_or(VromfError::InvalidNm))
+			.map(|elem| NameMap::from_encoded_file(&elem.1))
 			.transpose()?
 			.map(|elem| Arc::new(elem));
 
@@ -73,7 +73,7 @@ impl VromfUnpacker<'_> {
 	pub fn unpack_all(
 		self,
 		unpack_blk_into: Option<BlkOutputFormat>,
-	) -> Result<Vec<File>, VromfError> {
+	) -> Result<Vec<File>, Report> {
 		self.files
 			.into_par_iter()
 			.map(|mut file| {
@@ -84,7 +84,7 @@ impl VromfUnpacker<'_> {
 							let file_type = FileType::from_byte(file.1[0])?;
 							if file_type.is_zstd() {
 								file.1 =
-									decode_zstd(&file.1, self.dict.as_ref().map(|e| &e.0)).unwrap();
+									decode_zstd(&file.1, self.dict.as_ref().map(|e| &e.0))?;
 							} else {
 								// uncompressed Slim and Fat files retain their initial magic bytes
 								offset = 1;
@@ -108,24 +108,20 @@ impl VromfUnpacker<'_> {
 					_ => Ok(file),
 				}
 			})
-			.collect::<Result<Vec<File>, VromfError>>()
+			.collect::<Result<Vec<File>, Report>>()
 	}
 
 	pub fn unpack_one(
 		&self,
 		path_name: &Path,
 		unpack_blk_into: Option<BlkOutputFormat>,
-	) -> Result<Vec<u8>, VromfError> {
+	) -> Result<Vec<u8>, Report> {
 		let mut file = self
 			.files
 			.iter()
 			.find(|e| e.0 == path_name)
-			.ok_or(VromfError::FileNotInVromf {
-				path_name: path_name
-					.to_str()
-					.unwrap_or("PATH PARSE FAILED, REPORT THIS ERROR")
-					.to_string(),
-			})?
+			.context("File {path_name} was not found in VROMF")
+			.suggestion("Validate file-name and ensure it was typed correctly")?
 			.to_owned();
 		match () {
 			_ if maybe_blk(&file) => {
@@ -133,7 +129,7 @@ impl VromfUnpacker<'_> {
 					let mut offset = 0;
 					let file_type = FileType::from_byte(file.1[0])?;
 					if file_type.is_zstd() {
-						file.1 = decode_zstd(&file.1, self.dict.as_ref().map(|e| &e.0)).unwrap();
+						file.1 = decode_zstd(&file.1, self.dict.as_ref().map(|e| &e.0))?;
 					} else {
 						// uncompressed Slim and Fat files retain their initial magic bytes
 						offset = 1;

@@ -13,4 +13,3 @@ mod inner_container;
 mod test;
 pub mod unpacker;
 
-pub use crate::vromf::error::VromfError;

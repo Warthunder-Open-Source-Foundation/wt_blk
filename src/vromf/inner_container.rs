@@ -1,25 +1,20 @@
 use std::{mem::size_of, path::PathBuf, str::FromStr};
 
+use color_eyre::eyre::{bail, Context};
+use color_eyre::Report;
+
 use crate::vromf::{
-	error::{
-		VromfError,
-		VromfError::{DigestHeader, IndexingFileOutOfBounds, UnalignedChunks},
-	},
 	util::{bytes_to_int, bytes_to_usize},
 };
 
-pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, VromfError> {
+pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, Report> {
 	// Returns slice offset from file, incrementing the ptr by offset
 	let idx_file_offset = |ptr: &mut usize, offset: usize| {
 		if let Some(res) = file.get(*ptr..(*ptr + offset)) {
 			*ptr += offset;
 			Ok(res)
 		} else {
-			Err(IndexingFileOutOfBounds {
-				current_ptr:   *ptr,
-				file_size:     file.len(),
-				requested_len: offset,
-			})
+			Err(Report::msg(format!("Indexing buffer of size {} with index {} and length {}", file.len(), *ptr, offset)))
 		}
 	};
 	let mut ptr = 0;
@@ -30,10 +25,8 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, VromfE
 		0x20 => false,
 		0x30 => true,
 		_ => {
-			return Err(DigestHeader {
-				found: names_header[0],
-			});
-		},
+			bail!("Unknown digest header {:X}", names_header[0])
+		}
 	};
 
 	let names_offset = bytes_to_int(names_header)? as usize;
@@ -57,7 +50,7 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, VromfE
 	let parsed_names_offsets: Vec<usize> = names_info_chunks
 		.into_iter()
 		.map(|x| bytes_to_usize(x))
-		.collect::<Result<_, VromfError>>()?;
+		.collect::<Result<_, Report>>()?;
 	let file_names: Vec<_> = parsed_names_offsets
 		.into_iter()
 		.map(|start| {
@@ -76,15 +69,9 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, VromfE
 					buff = b"nm".to_vec();
 				}
 			}
-			match String::from_utf8(buff) {
-				Ok(res) => Ok(PathBuf::from_str(&res).expect("Infallible")),
-				Err(e) => Err(VromfError::Utf8 {
-					utf8e: e.utf8_error(),
-					buff:  e.into_bytes(),
-				}),
-			}
+			String::from_utf8(buff).map(|res|	PathBuf::from(res)).context(format!("Invalid UTF-8 sequence"))
 		})
-		.collect::<Result<_, VromfError>>()?;
+		.collect::<Result<_, Report>>()?;
 
 	// FYI:
 	// Each data-info-block consists of 4x u32
@@ -93,11 +80,7 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, VromfE
 	let data_info = &file[data_info_offset..(data_info_offset + data_info_len)];
 	let data_info_split = data_info.array_chunks::<{ size_of::<u32>() }>(); // Data-info consists of u32 pairs, so we will split them once
 	if data_info_split.remainder().len() != 0 {
-		return Err(UnalignedChunks {
-			len:   data_info.len(),
-			align: size_of::<u32>(),
-			rem:   data_info_split.remainder().len(),
-		});
+		bail!("Unaligned chunks: the data-set of size {} was supposed to align/chunk into {}, but {} remained", data_info.len(), size_of::<u32>(), data_info_split.remainder().len());
 	}
 
 	// This has to align to 4, because of previous chunk checks

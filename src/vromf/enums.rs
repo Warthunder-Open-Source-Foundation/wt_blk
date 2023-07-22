@@ -1,9 +1,7 @@
 use std::fmt::{Display, Formatter};
+use color_eyre::eyre::bail;
+use color_eyre::Report;
 
-use crate::vromf::error::{
-	VromfError,
-	VromfError::{InvalidHeaderType, InvalidPackingConfiguration, InvalidPlatformType},
-};
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[allow(non_camel_case_types)]
@@ -39,13 +37,13 @@ impl Display for HeaderType {
 }
 
 impl TryFrom<u32> for HeaderType {
-	type Error = VromfError;
+	type Error = Report;
 
 	fn try_from(value: u32) -> Result<Self, Self::Error> {
 		return match value {
 			0x73465256 => Ok(Self::VRFS),
 			0x78465256 => Ok(Self::VRFX),
-			_ => Err(InvalidHeaderType { found: value }),
+			_ => bail!("Unknown header type: {value:X}"),
 		};
 	}
 }
@@ -83,14 +81,14 @@ impl Display for PlatformType {
 }
 
 impl TryFrom<u32> for PlatformType {
-	type Error = VromfError;
+	type Error = Report;
 
 	fn try_from(value: u32) -> Result<Self, Self::Error> {
 		return match value {
 			0x43500000 => Ok(Self::Pc),
 			0x534F6900 => Ok(Self::Ios),
 			0x646E6100 => Ok(Self::Android),
-			_ => Err(InvalidPlatformType { found: value }),
+			_ => bail!("Unknown platform {value:X}"),
 		};
 	}
 }
@@ -127,14 +125,14 @@ impl Packing {
 }
 
 impl TryFrom<u8> for Packing {
-	type Error = VromfError;
+	type Error = Report;
 
 	fn try_from(value: u8) -> Result<Self, Self::Error> {
 		return match value {
 			0x10 => Ok(Self::ZSTD_OBFS_NOCHECK),
 			0x20 => Ok(Self::PLAIN),
 			0x30 => Ok(Self::ZSTD_OBFS),
-			_ => Err(InvalidPackingConfiguration { found: value }),
+			_ => bail!("Unknown packing type: {value:X}"),
 		};
 	}
 }

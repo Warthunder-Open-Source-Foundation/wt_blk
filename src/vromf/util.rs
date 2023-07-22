@@ -1,9 +1,8 @@
 use std::{mem::size_of, path::PathBuf};
+use color_eyre::eyre::{bail, Context, ContextCompat};
+use color_eyre::Report;
+use crate::vromf::enums::Packing;
 
-use crate::vromf::{
-	enums::Packing,
-	error::{VromfError, VromfError::InvalidIntegerBuffer},
-};
 
 pub fn pack_type_from_aligned(input: u32) -> Option<(Packing, u32)> {
 	const SIZE_MASK: u32 = 0b0000001111111111111111111111111;
@@ -17,23 +16,17 @@ pub fn pack_type_from_aligned(input: u32) -> Option<(Packing, u32)> {
 	Some((pack_type, pack_size))
 }
 
-pub fn bytes_to_int(input: &[u8]) -> Result<u32, VromfError> {
+pub fn bytes_to_int(input: &[u8]) -> Result<u32, Report> {
 	if input.len() != 4 {
-		return Err(InvalidIntegerBuffer {
-			expected_size: 4,
-			found_buff:    input.len(),
-		});
+		bail!("Expected buffer of length {}, found {}", size_of::<u32>(), input.len());
 	}
 
 	Ok(u32::from_le_bytes([input[0], input[1], input[2], input[3]]))
 }
 
-pub fn bytes_to_long(input: &[u8]) -> Result<u64, VromfError> {
+pub fn bytes_to_long(input: &[u8]) -> Result<u64, Report> {
 	if input.len() != size_of::<u64>() {
-		return Err(InvalidIntegerBuffer {
-			expected_size: size_of::<u64>(),
-			found_buff:    input.len(),
-		});
+		bail!("Expected buffer of length {}, found {}", size_of::<u64>(), input.len());
 	}
 
 	Ok(u64::from_le_bytes([
@@ -41,14 +34,11 @@ pub fn bytes_to_long(input: &[u8]) -> Result<u64, VromfError> {
 	]))
 }
 
-pub fn bytes_to_usize(input: &[u8]) -> Result<usize, VromfError> {
+pub fn bytes_to_usize(input: &[u8]) -> Result<usize, Report> {
 	let long = bytes_to_long(input)?;
-	usize::try_from(long).map_err(|_| VromfError::UsizeFromU64 { from: long })
+	usize::try_from(long).context("64 bit integer did not fit into usize")
 }
 
-pub(crate) fn path_stringify(buf: &PathBuf) -> Result<String, VromfError> {
-	Ok(buf
-		.to_str()
-		.unwrap_or("Failed to parse path, this should be infallible.")
-		.to_owned())
+pub(crate) fn path_stringify(buf: &PathBuf) -> Result<String, Report> {
+	buf.to_str().context("Failed to cast path {buf:?} into string").map(|e|e.to_string())
 }

@@ -1,4 +1,6 @@
 use std::{io::Read, rc::Rc, sync::Arc};
+use color_eyre::eyre::ContextCompat;
+use color_eyre::Report;
 
 use zstd::Decoder;
 
@@ -15,25 +17,25 @@ impl NameMap {
 		self.parsed.get(idx)
 	}
 
-	pub fn from_encoded_file(file: &[u8]) -> Option<Self> {
+	pub fn from_encoded_file(file: &[u8]) -> Result<Self, Report> {
 		let decoded = Self::decode_nm_file(file)?;
 
 		let names = Self::parse_slim_nm(&decoded);
 
-		Some(Self {
+		Ok(Self {
 			parsed: Arc::new(names),
 			binary: decoded,
 		})
 	}
 
-	pub fn decode_nm_file(file: &[u8]) -> Option<Vec<u8>> {
-		let _names_digest = &file.get(0..8)?;
+	pub fn decode_nm_file(file: &[u8]) -> Result<Vec<u8>, Report> {
+		let _names_digest = &file.get(0..8).context(format!("File out of bounds for range 0..8, found len: {}", file.len()))?;
 		let _dict_digest = &file[8..40];
 		let mut zstd_stream = &file[40..];
-		let mut decoder = Decoder::new(&mut zstd_stream).ok()?;
+		let mut decoder = Decoder::new(&mut zstd_stream)?;
 		let mut out = Vec::with_capacity(file.len());
-		let _ = decoder.read_to_end(&mut out).ok()?;
-		Some(out)
+		let _ = decoder.read_to_end(&mut out)?;
+		Ok(out)
 	}
 
 	pub fn parse_name_section(file: &[u8]) -> Vec<BlkString> {

@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use std::fmt::Write;
+use color_eyre::Report;
 
 use crate::{
 	blk::{blk_structure::BlkField, output_formatting_conf::FormattingConfiguration},
-	vromf::VromfError,
 };
 use crate::blk::util::indent;
 
@@ -11,7 +11,7 @@ use crate::blk::util::indent;
 
 impl BlkField {
 	// Public facing formatting fn
-	pub fn as_ref_json(&self, fmt: FormattingConfiguration) -> Result<String, VromfError> {
+	pub fn as_ref_json(&self, fmt: FormattingConfiguration) -> Result<String, Report> {
 		let mut writer = String::with_capacity(self.estimate_size() * 3); // Prealloc a rough guesstimate of this structs size
 		let mut initial_indentation = if fmt.global_curly_bracket { 1 } else { 0 };
 		self._as_ref_json(&mut writer, &mut initial_indentation, true, fmt, true)?;
@@ -29,7 +29,7 @@ impl BlkField {
 		is_root: bool,
 		fmt: FormattingConfiguration,
 		is_last_elem: bool,
-	) -> Result<(), VromfError> {
+	) -> Result<(), Report> {
 		let trail_comma = if is_last_elem { "" } else { "," };
 		match self {
 			BlkField::Value(name, value) => {
@@ -73,7 +73,7 @@ impl BlkField {
 	}
 }
 
-fn render_fields(fields: &Vec<BlkField>, f: &mut String, indent_level: &mut usize, base_indentation: usize, fmt: FormattingConfiguration) -> Result<(), VromfError> {
+fn render_fields(fields: &Vec<BlkField>, f: &mut String, indent_level: &mut usize, base_indentation: usize, fmt: FormattingConfiguration) -> Result<(), Report> {
 	*indent_level += 1;
 	for (i, field) in fields.iter().enumerate() {
 		indent(f, base_indentation, fmt.indent_char)?; // Indent for next children

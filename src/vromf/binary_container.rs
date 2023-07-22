@@ -1,13 +1,13 @@
 use std::mem::size_of;
+use color_eyre::Report;
 
 use crate::vromf::{
 	de_obfuscation::deobfuscate,
 	enums::{HeaderType, PlatformType},
-	error::{VromfError, VromfError::IndexingFileOutOfBounds},
 	util::{bytes_to_int, pack_type_from_aligned},
 };
 
-pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
+pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, Report> {
 	let mut ptr = 0_usize;
 
 	// Returns slice offset from file, incrementing the ptr by offset
@@ -16,11 +16,7 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 			*ptr += offset;
 			Ok(buff)
 		} else {
-			return Err(IndexingFileOutOfBounds {
-				current_ptr:   *ptr,
-				file_size:     file.len(),
-				requested_len: offset,
-			});
+			Err(Report::msg(format!("Indexing buffer of size {} with index {} and length {}", file.len(), *ptr, offset)))
 		}
 	};
 
@@ -33,7 +29,7 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 	let size = bytes_to_int(idx_file_offset(&mut ptr, 4)?)?;
 
 	let header_packed: u32 = bytes_to_int(idx_file_offset(&mut ptr, 4)?)?;
-	let (pack_type, extended_header_size) = pack_type_from_aligned(header_packed).unwrap();
+	let (pack_type, extended_header_size) = pack_type_from_aligned(header_packed)?;
 
 	let inner_data = if header_type.is_extended() {
 		let extended_header = idx_file_offset(
@@ -64,7 +60,7 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, VromfError> {
 	deobfuscate(&mut output);
 
 	if pack_type.is_compressed() {
-		output = zstd::decode_all(output.as_slice()).unwrap();
+		output = zstd::decode_all(output.as_slice())?;
 	}
 
 	Ok(output)
