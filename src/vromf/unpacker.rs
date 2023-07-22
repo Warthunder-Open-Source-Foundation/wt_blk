@@ -24,7 +24,6 @@ use crate::{
 	vromf::{
 		binary_container::decode_bin_vromf,
 		inner_container::decode_inner_vromf,
-		util::path_stringify,
 	},
 };
 

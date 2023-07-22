@@ -4,16 +4,16 @@ use color_eyre::Report;
 use crate::vromf::enums::Packing;
 
 
-pub fn pack_type_from_aligned(input: u32) -> Option<(Packing, u32)> {
+pub fn pack_type_from_aligned(input: u32) -> Result<(Packing, u32), Report> {
 	const SIZE_MASK: u32 = 0b0000001111111111111111111111111;
 
 	// Yields the first 6 bytes
 	let pack_type_raw_aligned = (input.to_be_bytes()[0]) >> 2;
-	let pack_type = Packing::try_from(pack_type_raw_aligned).ok()?;
+	let pack_type = Packing::try_from(pack_type_raw_aligned)?;
 
 	// yields the last 26 bytes
 	let pack_size = input & SIZE_MASK;
-	Some((pack_type, pack_size))
+	Ok((pack_type, pack_size))
 }
 
 pub fn bytes_to_int(input: &[u8]) -> Result<u32, Report> {
@@ -37,8 +37,4 @@ pub fn bytes_to_long(input: &[u8]) -> Result<u64, Report> {
 pub fn bytes_to_usize(input: &[u8]) -> Result<usize, Report> {
 	let long = bytes_to_long(input)?;
 	usize::try_from(long).context("64 bit integer did not fit into usize")
-}
-
-pub(crate) fn path_stringify(buf: &PathBuf) -> Result<String, Report> {
-	buf.to_str().context("Failed to cast path {buf:?} into string").map(|e|e.to_string())
 }

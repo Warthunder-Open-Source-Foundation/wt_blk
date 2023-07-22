@@ -7,7 +7,6 @@ mod util;
 mod binary_container;
 
 // This module unpacks the inner parts of the binary image
-pub mod error;
 mod inner_container;
 #[cfg(test)]
 mod test;
