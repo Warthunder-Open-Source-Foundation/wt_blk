@@ -1,5 +1,7 @@
 use std::mem::size_of;
-use color_eyre::Report;
+use color_eyre::eyre::Context;
+use color_eyre::{Report, Section};
+use crate::util::{debug_hex, format_hex};
 
 use crate::vromf::{
 	de_obfuscation::deobfuscate,
@@ -46,9 +48,7 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, Report> {
 
 		idx_file_offset(&mut ptr, extended_header_size as usize)?
 	} else {
-		// We make the assumption that after the header only data follows
-		let len = file.len() - ptr;
-		idx_file_offset(&mut ptr, len)?
+		idx_file_offset(&mut ptr, extended_header_size as usize)?
 	};
 
 	// Directly return when data is not obfuscated
@@ -60,7 +60,7 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, Report> {
 	deobfuscate(&mut output);
 
 	if pack_type.is_compressed() {
-		output = zstd::decode_all(output.as_slice())?;
+		output = zstd::decode_all(output.as_slice()).note("This most likely occurred because of improper computation of the frame-size")?;
 	}
 
 	Ok(output)
