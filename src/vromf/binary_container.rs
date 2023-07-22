@@ -28,9 +28,12 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, Report> {
 	let platform_raw = bytes_to_int(idx_file_offset(&mut ptr, 4)?)?;
 	let _platform = PlatformType::try_from(platform_raw)?;
 
+	// Size of the file before compression
 	let size = bytes_to_int(idx_file_offset(&mut ptr, 4)?)?;
 
 	let header_packed: u32 = bytes_to_int(idx_file_offset(&mut ptr, 4)?)?;
+
+	// Type of compression/packing, and size before compression
 	let (pack_type, extended_header_size) = pack_type_from_aligned(header_packed)?;
 
 	let inner_data = if header_type.is_extended() {
@@ -48,7 +51,11 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, Report> {
 
 		idx_file_offset(&mut ptr, extended_header_size as usize)?
 	} else {
-		idx_file_offset(&mut ptr, extended_header_size as usize)?
+		if pack_type.is_compressed() {
+			idx_file_offset(&mut ptr, extended_header_size as usize)?
+		} else {
+			idx_file_offset(&mut ptr, size as usize)?
+		}
 	};
 
 	// Directly return when data is not obfuscated
