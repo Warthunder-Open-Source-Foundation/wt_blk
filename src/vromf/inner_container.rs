@@ -1,6 +1,6 @@
 use std::{mem::size_of, path::PathBuf, str::FromStr};
 
-use color_eyre::eyre::{bail, Context};
+use color_eyre::eyre::{bail, Context, eyre};
 use color_eyre::Report;
 
 use crate::vromf::{
@@ -14,7 +14,7 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, Report
 			*ptr += offset;
 			Ok(res)
 		} else {
-			Err(Report::msg(format!("Indexing buffer of size {} with index {} and length {}", file.len(), *ptr, offset)))
+			Err(eyre!("Indexing buffer of size {} with index {} and length {}", file.len(), *ptr, offset))
 		}
 	};
 	let mut ptr = 0;

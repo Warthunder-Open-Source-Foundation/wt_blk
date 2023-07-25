@@ -1,4 +1,5 @@
 use color_eyre::{eyre, Report};
+use color_eyre::eyre::eyre;
 
 #[repr(u8)]
 #[allow(non_camel_case_types)]
@@ -21,7 +22,7 @@ impl FileType {
 			0x03 => Ok(Self::SLIM),
 			0x04 => Ok(Self::SLIM_ZSTD),
 			0x05 => Ok(Self::SLIM_ZST_DICT),
-			_ => Err(Report::msg(format!("Invalid or Unknown BLK header: {input:X}"))),
+			_ => Err(eyre!("Invalid or Unknown BLK header: {input:X}")),
 		}
 	}
 

@@ -28,7 +28,7 @@ pub fn decode_zstd(file: &[u8], frame_decoder: Option<&BlkDecoder>) -> Result<Ve
 	};
 
 	let decoded = if file_type.needs_dict() {
-		let frame_decoder = frame_decoder.ok_or(Report::msg(format!("{file_type:?} is marked as needing a dict, but none was passed")))?;
+		let frame_decoder = frame_decoder.ok_or(eyre!("{file_type:?} is marked as needing a dict, but none was passed"))?;
 		let mut out = Vec::with_capacity(len);
 		let mut decoder = Decoder::with_prepared_dictionary(&file[1..], frame_decoder)?;
 		let _ = decoder.read_to_end(&mut out)?;

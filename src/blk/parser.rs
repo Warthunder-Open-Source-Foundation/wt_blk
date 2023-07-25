@@ -36,7 +36,7 @@ pub fn parse_blk(
 	let idx_file_offset = |ptr: &mut usize, offset: usize| {
 		let res = file
 			.get(*ptr..(*ptr + offset))
-			.ok_or(Report::msg(format!("Failed to index blk buffer of length {} with ptr {} + offset {}", file.len(), ptr, offset)));
+			.ok_or(eyre!("Failed to index blk buffer of length {} with ptr {} + offset {}", file.len(), ptr, offset));
 		*ptr += offset;
 		res
 	};
@@ -47,7 +47,7 @@ pub fn parse_blk(
 		// TODO Figure out if names_count dictates the existence of a name map or if it may be 0 without requiring a name map
 		shared_name_map
 			.clone()
-			.ok_or(Report::msg("Blk was marked as slim, but no name-map was passed"))?
+			.ok_or(eyre!("Blk was marked as slim, but no name-map was passed"))?
 			.parsed
 			.clone()
 	} else {
@@ -70,7 +70,7 @@ pub fn parse_blk(
 
 	let params_info = idx_file_offset(&mut ptr, params_count * 8)?;
 
-	let block_info = &file.get(ptr..).ok_or(Report::msg(format!("Failed to collect remaining block-info on file size {} with ptr {}", file.len(), ptr)))?;
+	let block_info = &file.get(ptr..).ok_or(eyre!("Failed to collect remaining block-info on file size {} with ptr {}", file.len(), ptr))?;
 
 	let _ptr = (); // Shadowing ptr causes it to become unusable, especially on accident
 
