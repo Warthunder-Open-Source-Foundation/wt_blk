@@ -3,6 +3,8 @@ use std::{
 	rc::Rc,
 	sync::Arc,
 };
+use color_eyre::eyre::{bail, ensure, eyre};
+use color_eyre::Report;
 
 use serde::{Deserialize, Serialize};
 
@@ -56,11 +58,9 @@ impl BlkType {
 		field: &[u8],
 		data_region: &[u8],
 		name_map: Arc<Vec<BlkString>>,
-	) -> Option<Self> {
+	) -> Result<Self, Report> {
 		// Make sure the field is properly sized
-		if field.len() != 4 {
-			return None;
-		}
+		ensure!(field.len() == 4, "expect field to be exactly 4 bytes, found {}", field.len());
 
 		return match type_id {
 			STRING => {
@@ -85,14 +85,14 @@ impl BlkType {
 					Arc::new(String::from_utf8_lossy(&buff).to_string())
 				};
 
-				Some(Self::Str(res))
+				Ok(Self::Str(res))
 			},
-			INT => Some(Self::Int(bytes_to_int(field)?)),
-			FLOAT => Some(Self::Float(bytes_to_float(field)?)),
+			INT => Ok(Self::Int(bytes_to_int(field)?)),
+			FLOAT => Ok(Self::Float(bytes_to_float(field)?)),
 			FLOAT2 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
-				Some(Self::Float2([
+				Ok(Self::Float2([
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 				]))
@@ -100,7 +100,7 @@ impl BlkType {
 			FLOAT3 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 12)];
-				Some(Self::Float3([
+				Ok(Self::Float3([
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 					bytes_to_float(&data_region[8..12])?,
@@ -109,7 +109,7 @@ impl BlkType {
 			FLOAT4 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 16)];
-				Some(Self::Float4([
+				Ok(Self::Float4([
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 					bytes_to_float(&data_region[8..12])?,
@@ -119,7 +119,7 @@ impl BlkType {
 			INT2 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
-				Some(Self::Int2([
+				Ok(Self::Int2([
 					bytes_to_int(&data_region[0..4])?,
 					bytes_to_int(&data_region[4..8])?,
 				]))
@@ -127,16 +127,16 @@ impl BlkType {
 			INT3 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 12)];
-				Some(Self::Int3([
+				Ok(Self::Int3([
 					bytes_to_int(&data_region[0..4])?,
 					bytes_to_int(&data_region[4..8])?,
 					bytes_to_int(&data_region[8..12])?,
 				]))
 			},
-			BOOL => Some(Self::Bool(field[0] != 0)),
+			BOOL => Ok(Self::Bool(field[0] != 0)),
 			COLOR => {
 				// Game stores them in BGRA order
-				Some(Self::Color {
+				Ok(Self::Color {
 					r: field[0],
 					g: field[1],
 					b: field[2],
@@ -146,7 +146,7 @@ impl BlkType {
 			FLOAT12 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 48)];
-				Some(Self::Float12(Box::new([
+				Ok(Self::Float12(Box::new([
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 					bytes_to_float(&data_region[8..12])?,
@@ -164,9 +164,9 @@ impl BlkType {
 			LONG => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
-				Some(Self::Long(bytes_to_long(data_region)?))
+				Ok(Self::Long(bytes_to_long(data_region)?))
 			},
-			_ => None,
+			_ => Err(eyre!("Unknown BLK-type-id: {type_id}")),
 		};
 	}
 

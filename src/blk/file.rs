@@ -1,4 +1,4 @@
-use crate::blk::error::ParseError;
+use color_eyre::{eyre, Report};
 
 #[repr(u8)]
 #[allow(non_camel_case_types)]
@@ -13,7 +13,7 @@ pub enum FileType {
 }
 
 impl FileType {
-	pub fn from_byte(input: u8) -> Result<Self, ParseError> {
+	pub fn from_byte(input: u8) -> Result<Self, eyre::Report> {
 		match input {
 			0x00 => Ok(Self::BBF),
 			0x01 => Ok(Self::FAT),
@@ -21,7 +21,7 @@ impl FileType {
 			0x03 => Ok(Self::SLIM),
 			0x04 => Ok(Self::SLIM_ZSTD),
 			0x05 => Ok(Self::SLIM_ZST_DICT),
-			_ => Err(ParseError::UnrecognizedBlkHeader { header: input }),
+			_ => Err(Report::msg(format!("Invalid or Unknown BLK header: {input:X}"))),
 		}
 	}
 
