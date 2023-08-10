@@ -4,9 +4,11 @@ use std::{
 	path::{Path, PathBuf},
 	sync::Arc,
 };
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::Ordering::Relaxed;
 use color_eyre::eyre::ContextCompat;
 use color_eyre::{Help, Report};
-use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator};
+use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelBridge};
 use rayon::iter::ParallelIterator;
 
 use zstd::dict::DecoderDictionary;
@@ -68,15 +70,20 @@ impl VromfUnpacker<'_> {
 			nm,
 		})
 	}
-
-	pub fn unpack_all(
+	pub fn unpack_all_with_progress(
 		self,
 		unpack_blk_into: Option<BlkOutputFormat>,
+		// Left remainder, right total
+		remaining_total: Arc<(AtomicUsize, AtomicUsize)>,
 	) -> Result<Vec<File>, Report> {
+		remaining_total.1.store(self.files.len(), Relaxed);
+		remaining_total.0.store(self.files.len(), Relaxed);
 		self.files
-			.into_par_iter()
-			.map(|mut file| {
-				match () {
+			.into_iter()
+			.enumerate()
+			.par_bridge()
+			.map(|(i, mut file)| {
+				let res = match () {
 					_ if maybe_blk(&file) => {
 						if let Some(format) = unpack_blk_into {
 							let mut offset = 0;
@@ -105,9 +112,18 @@ impl VromfUnpacker<'_> {
 
 					// Default to the raw file
 					_ => Ok(file),
-				}
+				};
+				remaining_total.0.fetch_sub(1, Ordering::AcqRel);
+				res
 			})
 			.collect::<Result<Vec<File>, Report>>()
+	}
+
+	pub fn unpack_all(
+		self,
+		unpack_blk_into: Option<BlkOutputFormat>,
+	) -> Result<Vec<File>, Report> {
+		self.unpack_all_with_progress(unpack_blk_into, Arc::new((AtomicUsize::new(0), AtomicUsize::new(0))))
 	}
 
 	pub fn unpack_one(
