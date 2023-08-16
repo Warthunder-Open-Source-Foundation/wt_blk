@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::atomic::Ordering::Relaxed;
 use color_eyre::eyre::ContextCompat;
 use color_eyre::{Help, Report};
-use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelBridge};
+use rayon::iter::{IndexedParallelIterator, IntoParallelIterator};
 use rayon::iter::ParallelIterator;
 
 use zstd::dict::DecoderDictionary;
@@ -79,9 +79,8 @@ impl VromfUnpacker<'_> {
 		remaining_total.1.store(self.files.len(), Relaxed);
 		remaining_total.0.store(self.files.len(), Relaxed);
 		self.files
-			.into_iter()
+			.into_par_iter()
 			.enumerate()
-			.par_bridge()
 			.map(|(i, mut file)| {
 				let res = match () {
 					_ if maybe_blk(&file) => {
