@@ -8,17 +8,15 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::atomic::Ordering::Relaxed;
 use color_eyre::eyre::ContextCompat;
 use color_eyre::{Help, Report};
-use rayon::iter::{IndexedParallelIterator, IntoParallelIterator};
+use rayon::iter::{IntoParallelIterator};
 use rayon::iter::ParallelIterator;
 
 use zstd::dict::DecoderDictionary;
 
 use crate::{
 	blk::{
-		blk_structure::BlkField,
 		file::FileType,
 		nm_file::NameMap,
-		output_formatting_conf::FormattingConfiguration,
 		parser::parse_blk,
 		zstd::decode_zstd,
 		BlkOutputFormat,
@@ -80,8 +78,7 @@ impl VromfUnpacker<'_> {
 		remaining_total.0.store(self.files.len(), Relaxed);
 		self.files
 			.into_par_iter()
-			.enumerate()
-			.map(|(i, mut file)| {
+			.map(|mut file| {
 				let res = match () {
 					_ if maybe_blk(&file) => {
 						if let Some(format) = unpack_blk_into {
