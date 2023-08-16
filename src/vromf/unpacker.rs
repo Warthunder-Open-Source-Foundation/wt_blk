@@ -109,7 +109,7 @@ impl VromfUnpacker<'_> {
 					// Default to the raw file
 					_ => Ok(file),
 				};
-				remaining_total.0.fetch_sub(1, Ordering::AcqRel);
+				remaining_total.0.fetch_sub(1, Relaxed);
 				res
 			})
 			.collect::<Result<Vec<File>, Report>>()
