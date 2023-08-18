@@ -1,9 +1,15 @@
-use crate::blk::error::ParseError;
+use color_eyre::eyre::bail;
+use color_eyre::Report;
+use crate::blk::error::BlkTypeError;
 
 // Yields length in buffer and value
 // ULEB variable length integer format: `https://en.wikipedia.org/wiki/LEB128`
 #[inline]
-pub fn uleb128(bytes: &[u8]) -> Result<(usize, usize), ParseError> {
+pub fn uleb128(bytes: &[u8]) -> Result<(usize, usize), BlkTypeError> {
+	if bytes.len() == 0 {
+		return Err(BlkTypeError::EmptyBuffer);
+	}
+
 	let mut result = 0_usize;
 	const MASK: u8 = 1 << 7;
 
@@ -25,9 +31,5 @@ pub fn uleb128(bytes: &[u8]) -> Result<(usize, usize), ParseError> {
 
 	// After the loop has finished, without yielding to the caller, it means something broke
 	// In most cases this is due to the caller passing an invalid buffer that either ended too early, or was simply empty
-	if bytes.len() == 0 {
-		Err(ParseError::ZeroSizedUleb)
-	} else {
-		Err(ParseError::UnexpectedEndOfBufferUleb)
-	}
+	Err(BlkTypeError::ReturnedDuringContinueBit)
 }

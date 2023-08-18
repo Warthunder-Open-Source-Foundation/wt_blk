@@ -1,4 +1,6 @@
 use std::{rc::Rc, sync::Arc, time::Instant};
+use color_eyre::eyre::{bail, eyre};
+use color_eyre::Report;
 
 use tracing::error;
 
@@ -6,10 +8,7 @@ use crate::blk::{
 	blk_block_hierarchy::FlatBlock,
 	blk_structure::BlkField,
 	blk_type::{blk_type_id::STRING, BlkType},
-	error::{
-		ParseError,
-		ParseError::{BadBlkValue, ResidualBlockBuffer},
-	},
+
 	leb128::uleb128,
 	nm_file::NameMap,
 };
@@ -18,7 +17,7 @@ pub fn parse_blk(
 	file: &[u8],
 	is_slim: bool,
 	shared_name_map: Option<Arc<NameMap>>,
-) -> Result<BlkField, ParseError> {
+) -> Result<BlkField, Report> {
 	let mut ptr = 0;
 
 	// Globally increments ptr and returns next uleb integer from file
@@ -37,7 +36,7 @@ pub fn parse_blk(
 	let idx_file_offset = |ptr: &mut usize, offset: usize| {
 		let res = file
 			.get(*ptr..(*ptr + offset))
-			.ok_or(ParseError::DataRegionBoundsExceeded(*ptr..(*ptr + offset)));
+			.ok_or(eyre!("Failed to index blk buffer of length {} with ptr {} + offset {}", file.len(), ptr, offset));
 		*ptr += offset;
 		res
 	};
@@ -48,7 +47,7 @@ pub fn parse_blk(
 		// TODO Figure out if names_count dictates the existence of a name map or if it may be 0 without requiring a name map
 		shared_name_map
 			.clone()
-			.ok_or(ParseError::SlimBlkWithoutNm)?
+			.ok_or(eyre!("Blk was marked as slim, but no name-map was passed"))?
 			.parsed
 			.clone()
 	} else {
@@ -56,7 +55,7 @@ pub fn parse_blk(
 
 		let names = NameMap::parse_name_section(idx_file_offset(&mut ptr, names_data_size)?);
 		if names_count != names.len() {
-			error!("Name count mismatch, expected {names_count}, but found a len of {}. This might mean something is wrong.", names.len());
+			bail!("Name count mismatch, expected {names_count}, but found a len of {}. This might mean something is wrong.", names.len());
 		}
 		Arc::new(names)
 	};
@@ -71,7 +70,7 @@ pub fn parse_blk(
 
 	let params_info = idx_file_offset(&mut ptr, params_count * 8)?;
 
-	let block_info = &file.get(ptr..).ok_or(ResidualBlockBuffer)?;
+	let block_info = &file.get(ptr..).ok_or(eyre!("Failed to collect remaining block-info on file size {} with ptr {}", file.len(), ptr))?;
 
 	let _ptr = (); // Shadowing ptr causes it to become unusable, especially on accident
 
@@ -94,19 +93,17 @@ pub fn parse_blk(
 				data,
 				shared_name_map
 					.clone()
-					.ok_or(ParseError::SlimBlkWithoutNm)?
+					.ok_or(eyre!("Expected name-map, found none"))?
 					.binary
 					.as_slice(),
 				shared_name_map
 					.clone()
-					.ok_or(ParseError::SlimBlkWithoutNm)?
+					.ok_or(eyre!("Expected name-map, found none"))?
 					.parsed
 					.clone(),
-			)
-			.ok_or(BadBlkValue)?
+			)?
 		} else {
-			BlkType::from_raw_param_info(type_id, data, params_data, names.clone())
-				.ok_or(BadBlkValue)?
+			BlkType::from_raw_param_info(type_id, data, params_data, names.clone())?
 		};
 
 		let field = BlkField::Value(name, parsed);
