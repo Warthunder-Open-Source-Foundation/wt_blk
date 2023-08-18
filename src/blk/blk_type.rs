@@ -3,8 +3,6 @@ use std::{
 	rc::Rc,
 	sync::Arc,
 };
-use color_eyre::eyre::{bail, ensure, eyre};
-use color_eyre::Report;
 
 use serde::{Deserialize, Serialize};
 
@@ -14,6 +12,7 @@ use crate::blk::{
 	output_formatting_conf::FormattingConfiguration,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset},
 };
+use crate::blk::blk_type::BlkTypeError::TypeFieldSizeMissmatch;
 use crate::blk::util::indent;
 
 pub type BlkString = Arc<String>;
@@ -49,6 +48,21 @@ pub enum BlkType {
 	Color { r: u8, g: u8, b: u8, a: u8 },
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum BlkTypeError {
+	#[error("Attempted to parse {expected} from buffer len {found}")]
+	NumberSizeMissmatch {
+		found: usize,
+		expected: &'static str,
+	},
+	#[error("BLK field should be 4 bytes, found {found}")]
+	TypeFieldSizeMissmatch {
+		found: usize,
+	},
+	#[error("Unknown BLK type code")]
+	UnknownTypeId(u8),
+}
+
 impl BlkType {
 	/// Type ID as corresponding to its type_code
 	/// Field is a 4 byte long region that either contains the final value or offset for the data region
@@ -58,9 +72,11 @@ impl BlkType {
 		field: &[u8],
 		data_region: &[u8],
 		name_map: Arc<Vec<BlkString>>,
-	) -> Result<Self, Report> {
+	) -> Result<Self, BlkTypeError> {
 		// Make sure the field is properly sized
-		ensure!(field.len() == 4, "expect field to be exactly 4 bytes, found {}", field.len());
+		if field.len() != 4 {
+			return Err(TypeFieldSizeMissmatch { found: field.len() });
+		}
 
 		return match type_id {
 			STRING => {
@@ -166,7 +182,7 @@ impl BlkType {
 				let data_region = &data_region[offset..(offset + 8)];
 				Ok(Self::Long(bytes_to_long(data_region)?))
 			},
-			_ => Err(eyre!("Unknown BLK-type-id: {type_id}")),
+			_ => Err(BlkTypeError::UnknownTypeId(type_id)),
 		};
 	}
 
