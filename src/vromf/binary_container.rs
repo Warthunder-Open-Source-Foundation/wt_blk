@@ -1,5 +1,5 @@
 use std::mem::size_of;
-use color_eyre::eyre::{Context, eyre};
+use color_eyre::eyre::Context;
 use color_eyre::{Report, Section};
 use crate::util::{debug_hex, format_hex};
 
@@ -18,7 +18,7 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, Report> {
 			*ptr += offset;
 			Ok(buff)
 		} else {
-			Err(eyre!("Indexing buffer of size {} with index {} and length {}", file.len(), *ptr, offset))
+			Err(Report::msg(format!("Indexing buffer of size {} with index {} and length {}", file.len(), *ptr, offset)))
 		}
 	};
 

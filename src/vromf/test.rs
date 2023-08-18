@@ -7,6 +7,7 @@ use crate::{
 
 #[test]
 fn grp_vromf() {
+	let start = Instant::now();
 	let p = PathBuf::from_str("./samples/grp_hdr.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
@@ -20,6 +21,7 @@ fn grp_vromf() {
 
 #[test]
 fn regular_vromf() {
+	let start = Instant::now();
 	let p = PathBuf::from_str("./samples/aces.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
@@ -33,6 +35,7 @@ fn regular_vromf() {
 
 #[test]
 fn no_nm_vromf() {
+	let start = Instant::now();
 	let p = PathBuf::from_str("./samples/atlases.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();

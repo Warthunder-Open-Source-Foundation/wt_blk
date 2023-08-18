@@ -1,5 +1,6 @@
 use std::{
 	fmt::{Display, Formatter, Write},
+	rc::Rc,
 	sync::Arc,
 };
 
@@ -7,11 +8,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::blk::{
 	blk_type::blk_type_id::*,
+	nm_file::NameMap,
 	output_formatting_conf::FormattingConfiguration,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset},
 };
-use crate::blk::error::BlkTypeError;
-use crate::blk::error::BlkTypeError::TypeFieldSizeMissmatch;
+use crate::blk::util::indent;
 
 pub type BlkString = Arc<String>;
 
@@ -55,10 +56,10 @@ impl BlkType {
 		field: &[u8],
 		data_region: &[u8],
 		name_map: Arc<Vec<BlkString>>,
-	) -> Result<Self, BlkTypeError> {
+	) -> Option<Self> {
 		// Make sure the field is properly sized
 		if field.len() != 4 {
-			return Err(TypeFieldSizeMissmatch { found: field.len() });
+			return None;
 		}
 
 		return match type_id {
@@ -84,14 +85,14 @@ impl BlkType {
 					Arc::new(String::from_utf8_lossy(&buff).to_string())
 				};
 
-				Ok(Self::Str(res))
+				Some(Self::Str(res))
 			},
-			INT => Ok(Self::Int(bytes_to_int(field)?)),
-			FLOAT => Ok(Self::Float(bytes_to_float(field)?)),
+			INT => Some(Self::Int(bytes_to_int(field)?)),
+			FLOAT => Some(Self::Float(bytes_to_float(field)?)),
 			FLOAT2 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
-				Ok(Self::Float2([
+				Some(Self::Float2([
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 				]))
@@ -99,7 +100,7 @@ impl BlkType {
 			FLOAT3 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 12)];
-				Ok(Self::Float3([
+				Some(Self::Float3([
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 					bytes_to_float(&data_region[8..12])?,
@@ -108,7 +109,7 @@ impl BlkType {
 			FLOAT4 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 16)];
-				Ok(Self::Float4([
+				Some(Self::Float4([
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 					bytes_to_float(&data_region[8..12])?,
@@ -118,7 +119,7 @@ impl BlkType {
 			INT2 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
-				Ok(Self::Int2([
+				Some(Self::Int2([
 					bytes_to_int(&data_region[0..4])?,
 					bytes_to_int(&data_region[4..8])?,
 				]))
@@ -126,16 +127,16 @@ impl BlkType {
 			INT3 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 12)];
-				Ok(Self::Int3([
+				Some(Self::Int3([
 					bytes_to_int(&data_region[0..4])?,
 					bytes_to_int(&data_region[4..8])?,
 					bytes_to_int(&data_region[8..12])?,
 				]))
 			},
-			BOOL => Ok(Self::Bool(field[0] != 0)),
+			BOOL => Some(Self::Bool(field[0] != 0)),
 			COLOR => {
 				// Game stores them in BGRA order
-				Ok(Self::Color {
+				Some(Self::Color {
 					r: field[0],
 					g: field[1],
 					b: field[2],
@@ -145,7 +146,7 @@ impl BlkType {
 			FLOAT12 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 48)];
-				Ok(Self::Float12(Box::new([
+				Some(Self::Float12(Box::new([
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 					bytes_to_float(&data_region[8..12])?,
@@ -163,9 +164,9 @@ impl BlkType {
 			LONG => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
-				Ok(Self::Long(bytes_to_long(data_region)?))
+				Some(Self::Long(bytes_to_long(data_region)?))
 			},
-			_ => Err(BlkTypeError::UnknownTypeId(type_id)),
+			_ => None,
 		};
 	}
 
@@ -347,6 +348,7 @@ impl Display for Indenter {
 
 #[cfg(test)]
 mod test {
+	use std::rc::Rc;
 	use std::sync::Arc;
 
 	use crate::blk::blk_type::BlkType;

@@ -1,21 +1,17 @@
 use std::{io::Read, ops::Range, sync::Arc, thread::sleep, time::Duration};
-use color_eyre::eyre::{ensure, eyre};
-use color_eyre::Report;
 
 use zstd::{dict::DecoderDictionary, Decoder};
 
-use crate::blk::{file::FileType};
+use crate::blk::{error::ParseError, file::FileType};
 
 pub type BlkDecoder<'a> = DecoderDictionary<'a>;
 
-pub fn decode_zstd(file: &[u8], frame_decoder: Option<&BlkDecoder>) -> Result<Vec<u8>, Report> {
-	ensure!(file.len() >= 1, "Found empty file");
-
+pub fn decode_zstd(file: &[u8], frame_decoder: Option<&BlkDecoder>) -> Result<Vec<u8>, ParseError> {
 	// validate magic byte
 	let file_type = FileType::from_byte(
 		*file
 			.get(0)
-			.ok_or(eyre!("Infallible"))?,
+			.ok_or(ParseError::DataRegionBoundsExceeded(0..1))?,
 	)?;
 
 	let (len, to_decode) = if !file_type.is_slim() {
@@ -28,15 +24,19 @@ pub fn decode_zstd(file: &[u8], frame_decoder: Option<&BlkDecoder>) -> Result<Ve
 	};
 
 	let decoded = if file_type.needs_dict() {
-		let frame_decoder = frame_decoder.ok_or(eyre!("{file_type:?} is marked as needing a dict, but none was passed"))?;
+		let frame_decoder = frame_decoder.ok_or(ParseError::MissingDict {})?;
 		let mut out = Vec::with_capacity(len);
-		let mut decoder = Decoder::with_prepared_dictionary(&file[1..], frame_decoder)?;
-		let _ = decoder.read_to_end(&mut out)?;
+		let mut decoder = Decoder::with_prepared_dictionary(&file[1..], frame_decoder).unwrap();
+		let _ = decoder
+			.read_to_end(&mut out)
+			.map_err(|_| ParseError::InvalidDict {})?;
 		out
 	} else {
 		let mut out = Vec::with_capacity(len);
 		let mut decoder = Decoder::new(to_decode).unwrap();
-		let _ = decoder.read_to_end(&mut out)?;
+		let _ = decoder
+			.read_to_end(&mut out)
+			.map_err(|_| ParseError::InvalidDict {})?;
 		out
 	};
 	Ok(decoded)
@@ -73,6 +73,9 @@ mod test {
 	use zstd::{dict::DecoderDictionary, Decoder};
 
 	use crate::blk::zstd::decode_zstd;
+
+	pub(crate) static DUMMY_DICT: fn() -> DecoderDictionary<'static> =
+		|| DecoderDictionary::copy(&[]);
 
 	#[test]
 	fn fat_zstd() {
