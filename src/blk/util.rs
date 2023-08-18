@@ -4,7 +4,7 @@ use std::fmt::Write;
 use std::mem::{align_of, size_of};
 use color_eyre::eyre::ensure;
 use color_eyre::Report;
-use crate::blk::blk_type::BlkTypeError;
+use crate::blk::error::BlkTypeError;
 
 #[inline(always)]
 pub(crate)  fn bytes_to_offset(input: &[u8]) -> Result<usize, BlkTypeError> {

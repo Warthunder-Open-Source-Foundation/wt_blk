@@ -74,9 +74,6 @@ mod test {
 
 	use crate::blk::zstd::decode_zstd;
 
-	pub(crate) static DUMMY_DICT: fn() -> DecoderDictionary<'static> =
-		|| DecoderDictionary::copy(&[]);
-
 	#[test]
 	fn fat_zstd() {
 		let decoded =

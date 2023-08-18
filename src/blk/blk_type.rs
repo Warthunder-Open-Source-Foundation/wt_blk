@@ -1,6 +1,5 @@
 use std::{
 	fmt::{Display, Formatter, Write},
-	rc::Rc,
 	sync::Arc,
 };
 
@@ -8,12 +7,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::blk::{
 	blk_type::blk_type_id::*,
-	nm_file::NameMap,
 	output_formatting_conf::FormattingConfiguration,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset},
 };
-use crate::blk::blk_type::BlkTypeError::TypeFieldSizeMissmatch;
-use crate::blk::util::indent;
+use crate::blk::error::BlkTypeError;
+use crate::blk::error::BlkTypeError::TypeFieldSizeMissmatch;
 
 pub type BlkString = Arc<String>;
 
@@ -46,21 +44,6 @@ pub enum BlkType {
 	Float12(Box<[f32; 12]>),
 	Bool(bool),
 	Color { r: u8, g: u8, b: u8, a: u8 },
-}
-
-#[derive(thiserror::Error, Debug)]
-pub enum BlkTypeError {
-	#[error("Attempted to parse {expected} from buffer len {found}")]
-	NumberSizeMissmatch {
-		found: usize,
-		expected: &'static str,
-	},
-	#[error("BLK field should be 4 bytes, found {found}")]
-	TypeFieldSizeMissmatch {
-		found: usize,
-	},
-	#[error("Unknown BLK type code")]
-	UnknownTypeId(u8),
 }
 
 impl BlkType {
@@ -364,7 +347,6 @@ impl Display for Indenter {
 
 #[cfg(test)]
 mod test {
-	use std::rc::Rc;
 	use std::sync::Arc;
 
 	use crate::blk::blk_type::BlkType;
