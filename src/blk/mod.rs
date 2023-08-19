@@ -79,5 +79,6 @@ pub fn parse_file(
 #[derive(Copy, Clone)]
 pub enum BlkOutputFormat {
 	Json(FormattingConfiguration),
+	JsonMerged,
 	BlkText,
 }

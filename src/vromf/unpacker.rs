@@ -97,6 +97,9 @@ impl VromfUnpacker<'_> {
 								BlkOutputFormat::BlkText => {
 									file.1 = parsed.as_blk_text().into_bytes();
 								}
+								BlkOutputFormat::JsonMerged => {
+									file.1 = serde_json::to_string_pretty(&parsed.as_serde_obj())?.into_bytes();
+								}
 							}
 						}
 						Ok(file)
@@ -141,6 +144,9 @@ impl VromfUnpacker<'_> {
 						}
 						BlkOutputFormat::BlkText => {
 							file.1 = parsed.as_blk_text().into_bytes();
+						}
+						BlkOutputFormat::JsonMerged => {
+							file.1 = serde_json::to_string_pretty(&parsed.as_serde_obj())?.into_bytes();
 						}
 					}
 				}
