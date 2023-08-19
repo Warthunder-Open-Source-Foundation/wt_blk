@@ -1,5 +1,7 @@
 use std::fmt;
 use std::fmt::Write;
+use std::sync::Arc;
+use crate::blk::blk_type::BlkString;
 
 #[inline(always)]
 pub(crate)  fn bytes_to_offset(input: &[u8]) -> Option<usize> {
@@ -47,6 +49,10 @@ pub(crate) fn indent(f: &mut String, depth: usize, (with, amount): (char, usize)
 	}
 
 	Ok(())
+}
+
+pub fn blk_str(s: &str) -> BlkString {
+	Arc::new(s.to_owned())
 }
 
 #[macro_export]

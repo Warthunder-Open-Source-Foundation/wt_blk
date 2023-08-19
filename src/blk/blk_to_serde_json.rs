@@ -45,17 +45,16 @@ impl BlkField {
 			BlkField::Struct(k, v) => {
 				let grouped_fields = v.iter().fold(Map::new(), |mut acc, field| {
 					let (key, value) = field.as_serde_json();
-					acc.entry(key.clone())
+					acc.entry(&key)
+						// Merge when key exists
 						.and_modify(|existing| {
 							if let Value::Array(arr) = existing {
 								arr.push(value.clone());
 							} else {
-								let mut arr = Vec::new();
-								arr.push(existing.clone());
-								arr.push(value.clone());
-								*existing = Value::Array(arr);
+								*existing = Value::Array(vec![existing.clone(), value.clone()]);
 							}
 						})
+						// Insert kv pair if it doesnt
 						.or_insert(value);
 					acc
 				});
@@ -68,33 +67,17 @@ impl BlkField {
 
 #[cfg(test)]
 mod test {
-	use std::fs;
-	use std::path::{Path, PathBuf};
-	use std::str::FromStr;
+	use crate::blk::blk_structure::BlkField;
+	use crate::blk::blk_type::BlkType;
+	use crate::blk::util::blk_str;
 
-	use crate::vromf::unpacker::VromfUnpacker;
-
-	// #[test]
-	fn parity_once() {
-		let unpacker = VromfUnpacker::from_file((
-			PathBuf::from_str("aces.vromfs.bin").unwrap(),
-			include_bytes!("../../samples/aces.vromfs.bin").to_vec(),
-		))
-			.unwrap();
-		let unpacked = unpacker
-			.unpack_one_to_field(
-				Path::new("gamedata/weapons/rocketguns/fr_r_550_magic_2.blk"),
-			)
-			.unwrap();
-
-		let str_unpacked = serde_json::to_string_pretty(&unpacked.as_serde_obj()).unwrap();
-
-
-		let reference = fs::read("./samples/magic_2_json_baseline.json").unwrap();
-		let reference = String::from_utf8(reference).unwrap();
-		assert_eq!(
-			str_unpacked,
-			reference
-		);
+	#[test]
+	fn dedup_arr() {
+		let blk = BlkField::Struct(blk_str("root"),
+								   vec![
+									   BlkField::Value(blk_str("mass"), BlkType::Float2([69.0, 42.0])),
+									   BlkField::Value(blk_str("mass"), BlkType::Float2([420.0, 360.0])),
+								   ]);
+		println!("{}", serde_json::to_string_pretty(&blk.as_serde_obj()).unwrap());
 	}
 }
