@@ -46,6 +46,9 @@ impl BlkField {
 						// Merge when key exists
 						.and_modify(|existing| {
 							if let Value::Array(arr) = existing {
+								if arr.iter().all(|e|!matches!(e, Value::Array(_))) {
+									*arr = vec![Value::Array(arr.clone())];
+								}
 								arr.push(value.clone());
 							} else {
 								*existing = Value::Array(vec![existing.clone(), value.clone()]);
@@ -75,16 +78,16 @@ mod test {
 								   vec![
 									   BlkField::Value(blk_str("mass"), BlkType::Float2([69.0, 42.0])),
 									   BlkField::Value(blk_str("mass"), BlkType::Float2([420.0, 360.0])),
-								   ]);
+								   ]).as_serde_obj();
 		let expected = Value::Object(serde_json::Map::from_iter(vec![
 			("mass".into(), Value::Array(vec![
 				Value::Array(vec![Value::Number(Number::from_f64(69.0).unwrap()), Value::Number(Number::from_f64(42.0).unwrap())]),
 				Value::Array(vec![Value::Number(Number::from_f64(420.0).unwrap()), Value::Number(Number::from_f64(360.0).unwrap())]),
 			]))
 		]));
-		// println!("Found: {:#?}", blk.as_serde_obj());
-		// println!("Expected: {:#?}", expected);
-		assert_eq!(blk.as_serde_obj(), expected);
+		println!("Found: {:#?}", blk);
+		println!("Expected: {:#?}", expected);
+		assert_eq!(blk, expected);
 	}
 	#[test]
 	fn dedup_float() {
