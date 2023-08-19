@@ -34,10 +34,10 @@ pub mod blk_type_id {
 #[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
 pub enum BlkType {
 	Str(Arc<String>),
-	Int(u32),
-	Int2([u32; 2]),
-	Int3([u32; 3]),
-	Long(u64),
+	Int(i32),
+	Int2([i32; 2]),
+	Int3([i32; 3]),
+	Long(i64),
 	Float(f32),
 	Float2([f32; 2]),
 	Float3([f32; 3]),
