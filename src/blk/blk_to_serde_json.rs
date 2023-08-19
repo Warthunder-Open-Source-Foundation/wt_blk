@@ -28,12 +28,8 @@ impl BlkField {
 					 BlkType::Int2(s) => { json!(s) }
 					 BlkType::Int3(s) => { json!(s) }
 					 BlkType::Long(s) => { json!(s) }
-					 BlkType::Float(s) => {
-						 std_num(s)
-					 }
-					 BlkType::Float2(s) => {
-						 Value::Array(vec![std_num(s[0]), std_num(s[1])])
-					 }
+					 BlkType::Float(s) => { std_num(s) }
+					 BlkType::Float2(s) => { Value::Array(s.iter().map(|e| std_num(e)).collect()) }
 					 BlkType::Float3(s) => { Value::Array(s.iter().map(|e| std_num(e)).collect()) }
 					 BlkType::Float4(s) => { Value::Array(s.iter().map(|e| std_num(e)).collect()) }
 					 BlkType::Float12(s) => { Value::Array(s.iter().map(|e| std_num(e)).collect()) }
