@@ -4,22 +4,21 @@ use std::{
 	path::{Path, PathBuf},
 	sync::Arc,
 };
-use color_eyre::eyre::ContextCompat;
-use color_eyre::{Help, Report};
-use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator};
-use rayon::iter::ParallelIterator;
 
+use color_eyre::{Help, Report};
+use color_eyre::eyre::ContextCompat;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
 use zstd::dict::DecoderDictionary;
 
 use crate::{
 	blk::{
 		blk_structure::BlkField,
+		BlkOutputFormat,
 		file::FileType,
 		nm_file::NameMap,
-		output_formatting_conf::FormattingConfiguration,
 		parser::parse_blk,
 		zstd::decode_zstd,
-		BlkOutputFormat,
 	},
 	vromf::{
 		binary_container::decode_bin_vromf,
@@ -41,8 +40,8 @@ impl Debug for DictWrapper<'_> {
 #[derive(Debug)]
 pub struct VromfUnpacker<'a> {
 	files: Vec<File>,
-	dict:  Option<Arc<DictWrapper<'a>>>,
-	nm:    Option<Arc<NameMap>>,
+	dict: Option<Arc<DictWrapper<'a>>>,
+	nm: Option<Arc<NameMap>>,
 }
 
 impl VromfUnpacker<'_> {
@@ -94,14 +93,14 @@ impl VromfUnpacker<'_> {
 							match format {
 								BlkOutputFormat::Json(config) => {
 									file.1 = parsed.as_ref_json(config)?.into_bytes();
-								},
+								}
 								BlkOutputFormat::BlkText => {
 									file.1 = parsed.as_blk_text().into_bytes();
-								},
+								}
 							}
 						}
 						Ok(file)
-					},
+					}
 
 					// Default to the raw file
 					_ => Ok(file),
@@ -139,17 +138,42 @@ impl VromfUnpacker<'_> {
 					match format {
 						BlkOutputFormat::Json(config) => {
 							file.1 = parsed.as_ref_json(config)?.into_bytes();
-						},
+						}
 						BlkOutputFormat::BlkText => {
 							file.1 = parsed.as_blk_text().into_bytes();
-						},
+						}
 					}
 				}
 				Ok(file.1)
-			},
+			}
 
 			// Default to the raw file
 			_ => Ok(file.1),
+		}
+	}
+	// For debugging purposes
+	pub fn unpack_one_to_field(&self, path_name: &Path) -> Result<BlkField, Report> {
+		let mut file = self
+			.files
+			.iter()
+			.find(|e| e.0 == path_name)
+			.context("File {path_name} was not found in VROMF")
+			.suggestion("Validate file-name and ensure it was typed correctly")?
+			.to_owned();
+		match () {
+			_ if maybe_blk(&file) => {
+				let mut offset = 0;
+				let file_type = FileType::from_byte(file.1[0])?;
+				if file_type.is_zstd() {
+					file.1 = decode_zstd(&file.1, self.dict.as_ref().map(|e| &e.0))?;
+				} else {
+					// uncompressed Slim and Fat files retain their initial magic bytes
+					offset = 1;
+				};
+
+				Ok(parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone())?)
+			}
+			_ => panic!("Not a blk")
 		}
 	}
 }
