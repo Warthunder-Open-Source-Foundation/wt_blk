@@ -40,7 +40,7 @@ mod test {
 	fn fat_blk() {
 		let file = fs::read("./samples/section_fat.blk").unwrap();
 		let output = parse_blk(&file[1..], false, None);
-		println!("{}", output.unwrap().as_blk_text());
+		println!("{}", output.unwrap().as_blk_text().unwrap());
 	}
 
 	#[test]

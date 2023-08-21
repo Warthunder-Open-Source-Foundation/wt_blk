@@ -61,6 +61,9 @@ impl BlkField {
 
 				(k.to_string(), Value::Object(grouped_fields))
 			}
+			BlkField::Merged(k,v) => {
+				(k.to_string(), Value::Array(v.iter().map(|e|e.as_serde_obj()).collect()))
+			}
 		}
 	}
 }

@@ -12,9 +12,7 @@ fn grp_vromf() {
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
 	let unpacked = out
-		.unpack_all(Some(BlkOutputFormat::Json(
-			FormattingConfiguration::GSZABI_REPO,
-		)))
+		.unpack_all(Some(BlkOutputFormat::Json))
 		.unwrap();
 	assert_eq!(2322, unpacked.len())
 }
@@ -26,9 +24,7 @@ fn regular_vromf() {
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
 	let unpacked = out
-		.unpack_all(Some(BlkOutputFormat::Json(
-			FormattingConfiguration::GSZABI_REPO,
-		)))
+		.unpack_all(Some(BlkOutputFormat::Json))
 		.unwrap();
 	assert_eq!(15632, unpacked.len())
 }
@@ -40,9 +36,7 @@ fn no_nm_vromf() {
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
 	let unpacked = out
-		.unpack_all(Some(BlkOutputFormat::Json(
-			FormattingConfiguration::GSZABI_REPO,
-		)))
+		.unpack_all(Some(BlkOutputFormat::Json))
 		.unwrap();
 	assert_eq!(8924, unpacked.len())
 }

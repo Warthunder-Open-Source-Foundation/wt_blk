@@ -20,7 +20,6 @@ use crate::blk::{
 
 mod blk_block_hierarchy;
 pub mod blk_structure;
-mod blk_to_ref_json;
 mod blk_to_text;
 pub mod blk_type;
 pub mod error;
@@ -78,7 +77,6 @@ pub fn parse_file(
 
 #[derive(Copy, Clone)]
 pub enum BlkOutputFormat {
-	Json(FormattingConfiguration),
-	JsonMerged,
+	Json,
 	BlkText,
 }
