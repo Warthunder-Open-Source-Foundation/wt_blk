@@ -101,11 +101,13 @@ mod test {
 
 	#[test]
 	fn dedup_arr() {
-		let blk = BlkField::Struct(blk_str("root"),
-								   vec![
+		let mut blk = BlkField::Struct(blk_str("root"),
+									   vec![
 									   BlkField::Value(blk_str("mass"), BlkType::Float2([69.0, 42.0])),
 									   BlkField::Value(blk_str("mass"), BlkType::Float2([420.0, 360.0])),
-								   ]).as_serde_obj();
+								   ]);
+		blk.merge_fields();
+		let blk = blk.as_serde_obj();
 		let expected = Value::Object(serde_json::Map::from_iter(vec![
 			("mass".into(), Value::Array(vec![
 				Value::Array(vec![Value::Number(Number::from_f64(69.0).unwrap()), Value::Number(Number::from_f64(42.0).unwrap())]),
@@ -119,7 +121,7 @@ mod test {
 
 	#[test]
 	fn dedup_float() {
-		let blk = BlkField::Struct(blk_str("root"),
+		let mut blk = BlkField::Struct(blk_str("root"),
 								   vec![
 									   BlkField::Value(blk_str("mass"), BlkType::Float(42.0)),
 									   BlkField::Value(blk_str("mass"), BlkType::Float(69.0)),
@@ -130,12 +132,13 @@ mod test {
 				Value::Number(Number::from_f64(69.0).unwrap()),
 			]))
 		]));
+		blk.merge_fields();
 		assert_eq!(blk.as_serde_obj(), expected);
 	}
 
 	#[test]
 	fn not_everything_array() {
-		let blk = BlkField::Struct(blk_str("root"),
+		let mut blk = BlkField::Struct(blk_str("root"),
 								   vec![
 									   BlkField::Value(blk_str("cheese"), BlkType::Float(42.0)),
 									   BlkField::Value(blk_str("salad"), BlkType::Float(69.0)),
@@ -144,6 +147,7 @@ mod test {
 			("cheese".into(), Value::Number(Number::from_f64(42.0).unwrap())),
 			("salad".into(), Value::Number(Number::from_f64(69.0).unwrap())),
 		]));
+		blk.merge_fields();
 		// println!("Found: {:#?}", blk.as_serde_obj());
 		// println!("Expected: {:#?}", expected);
 		assert_eq!(blk.as_serde_obj(), expected);

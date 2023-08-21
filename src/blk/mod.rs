@@ -5,7 +5,6 @@ use std::{
 		atomic::{AtomicUsize, Ordering},
 		Arc,
 	},
-	time::Instant,
 };
 
 pub use ::zstd::dict::DecoderDictionary;
@@ -13,7 +12,6 @@ pub use ::zstd::dict::DecoderDictionary;
 use crate::blk::{
 	file::FileType,
 	nm_file::NameMap,
-	output_formatting_conf::FormattingConfiguration,
 	parser::parse_blk,
 	zstd::{decode_zstd, BlkDecoder},
 };

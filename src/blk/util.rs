@@ -1,5 +1,3 @@
-use std::fmt;
-use std::fmt::Write;
 use std::sync::Arc;
 use crate::blk::blk_type::BlkString;
 
@@ -41,16 +39,6 @@ pub(crate)  fn bytes_to_long(input: &[u8]) -> Option<i64> {
 	]))
 }
 
-#[inline(always)]
-//													('\t', 1) or (' ', 4) are typical
-pub(crate) fn indent(f: &mut String, depth: usize, (with, amount): (char, usize)) -> Result<(), fmt::Error> {
-	for _ in 0..(depth * amount) {
-		f.write_char(with)?;
-	}
-
-	Ok(())
-}
-
 pub fn blk_str(s: &str) -> BlkString {
 	Arc::new(s.to_owned())
 }
@@ -85,7 +73,6 @@ macro_rules! make_thing {
 #[cfg(test)]
 mod test {
 	use std::fmt;
-	use crate::blk::util::indent;
 	use std::fmt::Write;
 
 	#[test]

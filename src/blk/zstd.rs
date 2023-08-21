@@ -1,4 +1,4 @@
-use std::{io::Read, ops::Range, sync::Arc, thread::sleep, time::Duration};
+use std::{io::Read, thread::sleep, time::Duration};
 
 use zstd::{dict::DecoderDictionary, Decoder};
 
@@ -68,14 +68,11 @@ pub fn eep() -> u8 {
 
 #[cfg(test)]
 mod test {
-	use std::{fs, io::Read, sync::Arc};
+	use std::{fs, io::Read};
 
 	use zstd::{dict::DecoderDictionary, Decoder};
 
 	use crate::blk::zstd::decode_zstd;
-
-	pub(crate) static DUMMY_DICT: fn() -> DecoderDictionary<'static> =
-		|| DecoderDictionary::copy(&[]);
 
 	#[test]
 	fn fat_zstd() {

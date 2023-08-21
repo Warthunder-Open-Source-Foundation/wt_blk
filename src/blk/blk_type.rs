@@ -1,6 +1,5 @@
 use std::{
 	fmt::{Display, Formatter, Write},
-	rc::Rc,
 	sync::Arc,
 };
 
@@ -8,11 +7,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::blk::{
 	blk_type::blk_type_id::*,
-	nm_file::NameMap,
 	output_formatting_conf::FormattingConfiguration,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset},
 };
-use crate::blk::util::indent;
 
 pub type BlkString = Arc<String>;
 
@@ -348,7 +345,6 @@ impl Display for Indenter {
 
 #[cfg(test)]
 mod test {
-	use std::rc::Rc;
 	use std::sync::Arc;
 
 	use crate::blk::blk_type::BlkType;

@@ -41,7 +41,6 @@ impl BlkField {
 
 #[cfg(test)]
 mod test {
-	use std::rc::Rc;
 	use std::sync::Arc;
 
 	use crate::blk::{blk_structure::BlkField, blk_type::BlkType};

@@ -1,4 +1,4 @@
-use std::{io, ops::Range};
+use std::{ops::Range};
 
 use thiserror::Error;
 

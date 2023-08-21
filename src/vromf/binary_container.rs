@@ -1,7 +1,5 @@
 use std::mem::size_of;
-use color_eyre::eyre::Context;
 use color_eyre::{Report, Section};
-use crate::util::{debug_hex, format_hex};
 
 use crate::vromf::{
 	de_obfuscation::deobfuscate,
@@ -76,11 +74,8 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, Report> {
 #[cfg(test)]
 mod test {
 	use std::fs;
-	use std::path::PathBuf;
-	use std::str::FromStr;
 
 	use crate::vromf::binary_container::decode_bin_vromf;
-	use crate::vromf::unpacker::VromfUnpacker;
 
 	#[test]
 	fn decode_simple() {

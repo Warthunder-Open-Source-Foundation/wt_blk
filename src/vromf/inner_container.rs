@@ -1,4 +1,4 @@
-use std::{mem::size_of, path::PathBuf, str::FromStr};
+use std::{mem::size_of, path::PathBuf};
 
 use color_eyre::eyre::{bail, Context};
 use color_eyre::Report;

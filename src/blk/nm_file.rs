@@ -1,4 +1,4 @@
-use std::{io::Read, rc::Rc, sync::Arc};
+use std::{io::Read, sync::Arc};
 use color_eyre::eyre::ContextCompat;
 use color_eyre::Report;
 

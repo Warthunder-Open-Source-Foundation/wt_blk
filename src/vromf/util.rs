@@ -1,5 +1,5 @@
-use std::{mem::size_of, path::PathBuf};
-use color_eyre::eyre::{bail, Context, ContextCompat};
+use std::{mem::size_of};
+use color_eyre::eyre::{bail, Context};
 use color_eyre::Report;
 use crate::vromf::enums::Packing;
 
