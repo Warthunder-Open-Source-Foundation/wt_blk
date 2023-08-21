@@ -1,15 +1,26 @@
 use std::fmt::Debug;
 use std::str::FromStr;
+use std::sync::Arc;
 
-use serde_json::{json, Map, Number, Value};
-use serde_json::map::Entry;
+use serde_json::{json, Number, Value};
 
 use crate::blk::blk_structure::BlkField;
-use crate::blk::blk_type::BlkType;
+use crate::blk::blk_type::{BlkString, BlkType};
 
 impl BlkField {
 	pub fn as_serde_obj(&self) -> Value {
-		self.as_serde_json().1
+		let mut merged = self.clone();
+		merged.merge_fields();
+		merged.as_serde_json().1
+	}
+
+	/// Merges duplicate keys in struct fields into the Merged array variant
+	pub fn merge_fields(&mut self) {
+		match self {
+			BlkField::Struct(name, fields) => {
+			}
+			_ => (),
+		}
 	}
 	pub fn as_serde_json(&self) -> (String, Value) {
 		fn std_num<T>(num: T) -> Value
@@ -40,29 +51,10 @@ impl BlkField {
 				 })
 			}
 			BlkField::Struct(k, v) => {
-				let grouped_fields = v.iter().fold(Map::new(), |mut acc, field| {
-					let (key, value) = field.as_serde_json();
-					acc.entry(&key)
-						// Merge when key exists
-						.and_modify(|existing| {
-							if let Value::Array(arr) = existing {
-								if arr.iter().all(|e|!matches!(e, Value::Array(_))) {
-									*arr = vec![Value::Array(arr.clone())];
-								}
-								arr.push(value.clone());
-							} else {
-								*existing = Value::Array(vec![existing.clone(), value.clone()]);
-							}
-						})
-						// Insert kv pair if it doesnt
-						.or_insert(value);
-					acc
-				});
-
-				(k.to_string(), Value::Object(grouped_fields))
+				(k.to_string(), Value::Object(serde_json::Map::from_iter(v.iter().map(|e| e.as_serde_json()))))
 			}
-			BlkField::Merged(k,v) => {
-				(k.to_string(), Value::Array(v.iter().map(|e|e.as_serde_obj()).collect()))
+			BlkField::Merged(k, v) => {
+				(k.to_string(), Value::Array(v.iter().map(|e| e.as_serde_obj()).collect()))
 			}
 		}
 	}
@@ -71,6 +63,7 @@ impl BlkField {
 #[cfg(test)]
 mod test {
 	use serde_json::{Number, Value};
+
 	use crate::blk::blk_structure::BlkField;
 	use crate::blk::blk_type::BlkType;
 	use crate::blk::util::blk_str;
@@ -92,6 +85,7 @@ mod test {
 		println!("Expected: {:#?}", expected);
 		assert_eq!(blk, expected);
 	}
+
 	#[test]
 	fn dedup_float() {
 		let blk = BlkField::Struct(blk_str("root"),
