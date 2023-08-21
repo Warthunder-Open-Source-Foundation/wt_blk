@@ -1,11 +1,13 @@
+use std::collections::HashMap;
 use std::fmt::Debug;
+use std::mem;
 use std::str::FromStr;
 use std::sync::Arc;
 
 use serde_json::{json, Number, Value};
 
 use crate::blk::blk_structure::BlkField;
-use crate::blk::blk_type::{BlkString, BlkType};
+use crate::blk::blk_type::BlkType;
 
 impl BlkField {
 	pub fn as_serde_obj(&self) -> Value {
@@ -16,10 +18,39 @@ impl BlkField {
 
 	/// Merges duplicate keys in struct fields into the Merged array variant
 	pub fn merge_fields(&mut self) {
-		match self {
-			BlkField::Struct(name, fields) => {
+		if let BlkField::Struct(_, fields) = self {
+			// Recurse first
+			for field in fields.iter_mut() {
+				field.merge_fields();
 			}
-			_ => (),
+
+			let mut old = mem::take(fields)
+				.into_iter()
+				.map(|field| Some(field))
+				.collect::<Vec<_>>(); // Yoink the old vector to merge its fields
+
+			// Key: Field-name, Value: Indexes of duplicates found
+			let mut maybe_merge: HashMap<String, Vec<usize>> = HashMap::new();
+
+			for (i, elem) in old.iter().enumerate() {
+				let name = elem.as_ref().expect("Infallible").get_name();
+				if let Some(dupes) = maybe_merge.get_mut(&name) {
+					dupes.push(i);
+				} else {
+					maybe_merge.insert(name, Vec::new());
+				}
+			}
+
+			maybe_merge.into_iter()
+				.filter(|e| !e.1.is_empty())
+				.for_each(|(key, indexes)| {
+					let to_merge = indexes.iter()
+						.map(|e| {
+							old[*e].take().expect("Infallible")
+						});
+					old[indexes[0]] = Some(BlkField::Merged(Arc::new(key), to_merge.collect()));
+				});
+			*fields = old.into_iter().filter_map(|e|e).collect();
 		}
 	}
 	pub fn as_serde_json(&self) -> (String, Value) {
