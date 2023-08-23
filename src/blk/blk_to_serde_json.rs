@@ -101,7 +101,7 @@ mod test {
 
 	#[test]
 	fn dedup_arr() {
-		let mut blk = BlkField::Struct(blk_str("root"),
+		let blk = BlkField::Struct(blk_str("root"),
 									   vec![
 									   BlkField::Value(blk_str("mass"), BlkType::Float2([69.0, 42.0])),
 									   BlkField::Value(blk_str("mass"), BlkType::Float2([420.0, 360.0])),
@@ -120,7 +120,7 @@ mod test {
 
 	#[test]
 	fn dedup_many() {
-		let mut blk = BlkField::Struct(blk_str("root"),
+		let blk = BlkField::Struct(blk_str("root"),
 									   vec![
 										   BlkField::Value(blk_str("mass"), BlkType::Float(1.0)),
 										   BlkField::Value(blk_str("mass"), BlkType::Float(2.0)),
@@ -148,7 +148,7 @@ mod test {
 
 	#[test]
 	fn dedup_float() {
-		let mut blk = BlkField::Struct(blk_str("root"),
+		let blk = BlkField::Struct(blk_str("root"),
 								   vec![
 									   BlkField::Value(blk_str("mass"), BlkType::Float(42.0)),
 									   BlkField::Value(blk_str("mass"), BlkType::Float(69.0)),
@@ -164,7 +164,7 @@ mod test {
 
 	#[test]
 	fn not_everything_array() {
-		let mut blk = BlkField::Struct(blk_str("root"),
+		let blk = BlkField::Struct(blk_str("root"),
 								   vec![
 									   BlkField::Value(blk_str("cheese"), BlkType::Float(42.0)),
 									   BlkField::Value(blk_str("salad"), BlkType::Float(69.0)),
