@@ -141,8 +141,8 @@ mod test {
 				Value::Number(Number::from_f64(6.0).unwrap()),
 			]))
 		]));
-		println!("Found: {:#?}", blk);
-		println!("Expected: {:#?}", expected);
+		// println!("Found: {:#?}", blk);
+		// println!("Expected: {:#?}", expected);
 		assert_eq!(blk, expected);
 	}
 
