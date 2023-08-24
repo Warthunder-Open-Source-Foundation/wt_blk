@@ -30,7 +30,7 @@ impl BlkField {
 				.collect::<Vec<_>>(); // Yoink the old vector to merge its fields
 
 			// Key: Field-name, Value: Indexes of duplicates found
-			let mut maybe_merge: HashMap<String, Vec<usize>> = HashMap::new();
+			let mut maybe_merge: HashMap<String, Vec<usize>> = HashMap::with_capacity(old.len());
 
 			for (i, elem) in old.iter().enumerate() {
 				let name = elem.as_ref().expect("Infallible").get_name();
@@ -44,11 +44,12 @@ impl BlkField {
 			maybe_merge.into_iter()
 				.filter(|e| e.1.len() > 1)
 				.for_each(|(key, indexes)| {
-					let to_merge = indexes.iter()
+					let first_element = indexes[0];
+					let to_merge = indexes.into_iter()
 						.map(|e| {
-							old[*e].take().expect("Infallible")
-						});
-					old[indexes[0]] = Some(BlkField::Merged(Arc::new(key), to_merge.collect()));
+							old[e].take().expect("Infallible")
+						}).collect();
+					old[first_element] = Some(BlkField::Merged(Arc::new(key), to_merge));
 				});
 			*fields = old.into_iter().filter_map(|e|e).collect();
 		}
