@@ -39,6 +39,7 @@ pub enum BlkType {
 	Float2([f32; 2]),
 	Float3([f32; 3]),
 	Float4([f32; 4]),
+	/// 4x3 Transformation matrix (last row omitted)
 	Float12(Box<[f32; 12]>),
 	Bool(bool),
 	Color { r: u8, g: u8, b: u8, a: u8 },

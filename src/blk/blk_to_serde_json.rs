@@ -75,7 +75,7 @@ impl BlkField {
 					 BlkType::Float2(s) => { Value::Array(s.iter().map(|e| std_num(e)).collect()) }
 					 BlkType::Float3(s) => { Value::Array(s.iter().map(|e| std_num(e)).collect()) }
 					 BlkType::Float4(s) => { Value::Array(s.iter().map(|e| std_num(e)).collect()) }
-					 BlkType::Float12(s) => { Value::Array(s.iter().map(|e| std_num(e)).collect()) }
+					 BlkType::Float12(s) => { Value::Array(s.array_chunks::<3>().map(|e| e.iter().map(|e| std_num(e)).collect()).collect()) }
 					 BlkType::Bool(s) => { json!(s) }
 					 BlkType::Color { r, g, b, a } => {
 						 json!([r,g,b,a])
