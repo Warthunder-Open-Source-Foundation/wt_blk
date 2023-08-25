@@ -20,6 +20,7 @@ use crate::{
 	vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf},
 };
 
+/// Simple type alias for (Path, Data) pair
 pub type File = (PathBuf, Vec<u8>);
 
 #[derive()]
@@ -31,6 +32,8 @@ impl Debug for DictWrapper<'_> {
 	}
 }
 
+
+/// Unpacks vromf image into all internal files, optionally formatting binary BLK files
 #[derive(Debug)]
 pub struct VromfUnpacker<'a> {
 	files: Vec<File>,
