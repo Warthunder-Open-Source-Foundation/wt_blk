@@ -1,17 +1,21 @@
-use std::{io::Read, thread::sleep, time::Duration};
+use std::{io::Read};
+use std::io::BufReader;
+use color_eyre::eyre::ContextCompat;
+use color_eyre::Report;
 
 use zstd::{dict::DecoderDictionary, Decoder};
 
-use crate::blk::{error::ParseError, file::FileType};
+use crate::blk::{file::FileType};
 
 pub type BlkDecoder<'a> = DecoderDictionary<'a>;
 
-pub fn decode_zstd(file: &[u8], frame_decoder: Option<&BlkDecoder>) -> Result<Vec<u8>, ParseError> {
+/// Decodes zstd compressed file using shared dictionary if available
+pub fn decode_zstd(file: &[u8], frame_decoder: Option<&BlkDecoder>) -> Result<Vec<u8>, Report> {
 	// validate magic byte
 	let file_type = FileType::from_byte(
 		*file
 			.get(0)
-			.ok_or(ParseError::DataRegionBoundsExceeded(0..1))?,
+			.context("Empty BLK file passed to decoder")?,
 	)?;
 
 	let (len, to_decode) = if !file_type.is_slim() {
@@ -22,48 +26,18 @@ pub fn decode_zstd(file: &[u8], frame_decoder: Option<&BlkDecoder>) -> Result<Ve
 	} else {
 		(file.len() - 1, &file[1..])
 	};
+	let mut out = Vec::with_capacity(len);
 
-	let decoded = if file_type.needs_dict() {
-		let frame_decoder = frame_decoder.ok_or(ParseError::MissingDict {})?;
-		let mut out = Vec::with_capacity(len);
-		let mut decoder = Decoder::with_prepared_dictionary(&file[1..], frame_decoder).unwrap();
-		let _ = decoder
-			.read_to_end(&mut out)
-			.map_err(|_| ParseError::InvalidDict {})?;
-		out
+	let mut decoder = if file_type.needs_dict() {
+		Decoder::with_prepared_dictionary(
+			BufReader::new(&file[1..]),
+			frame_decoder.context(format!("File type: {file_type} marked as having dictionary, but none was passed"))?,
+		)?
 	} else {
-		let mut out = Vec::with_capacity(len);
-		let mut decoder = Decoder::new(to_decode).unwrap();
-		let _ = decoder
-			.read_to_end(&mut out)
-			.map_err(|_| ParseError::InvalidDict {})?;
-		out
+		Decoder::new(to_decode)?
 	};
-	Ok(decoded)
-}
-
-// UNUSED ATM
-// pub fn decode_raw_zstd(file: &[u8], dict: Option<&[u8]> ) -> Option<Vec<u8>> {
-// 	let len = file.len();
-// 	Some(if let Some(dict) = dict {
-// 		let mut frame_decoder = FrameDecoder::new();
-// 		frame_decoder.add_dict(dict).expect("Dict should be available for dict file");
-// 		let mut decoder = StreamingDecoder::new_with_decoder(&file[1..], frame_decoder).unwrap();
-// 		let mut out = Vec::with_capacity(len);
-// 		let _ = decoder.read_to_end(&mut out).ok()?;
-// 		out
-// 	} else {
-// 		let mut file = file;
-// 		let mut decoder =  StreamingDecoder::new(&mut file).ok()?;
-// 		let mut out = Vec::with_capacity(len);
-// 		let _ = decoder.read_to_end(&mut out).ok()?;
-// 		out
-// 	})
-// }
-
-pub fn eep() -> u8 {
-	sleep(Duration::from_millis(1));
-	42
+	let _ = decoder.read_to_end(&mut out)?;
+	Ok(out)
 }
 
 #[cfg(test)]
@@ -97,7 +71,7 @@ mod test {
 		let dict = fs::read(
 			"./samples/bfb732560ad45234690acad246d7b14c2f25ad418a146e5e7ef68ba3386a315c.dict",
 		)
-		.unwrap();
+			.unwrap();
 		let frame_decoder = DecoderDictionary::copy(&dict);
 
 		let mut decoder = Decoder::with_prepared_dictionary(&file[1..], &frame_decoder).unwrap();
