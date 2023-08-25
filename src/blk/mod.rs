@@ -16,19 +16,46 @@ use crate::blk::{
 	zstd::{decode_zstd, BlkDecoder},
 };
 
+/// Decodes flat map of fields into the corresponding nested datastructure
 mod blk_block_hierarchy;
+
+/// Defines the recursive/nested structure that BLK files are represented with internally
 pub mod blk_structure;
+
+/// Formats BLK to Json
 pub mod blk_to_serde_json;
+
+/// Formats to the plaintext representation according to the BLK specification
+/// <https://wiki.warthunder.com/Block_file_(.BLK)>
 mod blk_to_text;
+
+/// Defines the primitive types that BLK stores
 pub mod blk_type;
+
+/// Shared error that is returned from hot functions,
+/// otherwise, [`color_eyre::Report`] is used
 pub mod error;
+
+/// One-byte file header that each blk file begins with
 pub mod file;
+
+/// Utility function to decode ULEB128 encoded files
+/// <https://en.wikipedia.org/wiki/LEB128>
 pub mod leb128;
+
+/// Struct storing a shared map of strings that multiple BLK files reference
 pub mod nm_file;
-pub mod output_formatting_conf;
+
+/// Exports core function for unpacking BLK file
 pub mod parser;
+
+/// Unit tests
 pub mod test;
+
+/// Collection of macros and functions used in all BLK modules
 pub mod util;
+
+/// Zstandard unpacking functionality
 pub mod zstd;
 
 fn test_parse_dir(

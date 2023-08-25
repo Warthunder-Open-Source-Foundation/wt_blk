@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::blk::{
 	blk_type::blk_type_id::*,
-	output_formatting_conf::FormattingConfiguration,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset},
 };
 
@@ -238,60 +237,6 @@ impl BlkType {
 			BlkType::Float12(_) => "m",
 			BlkType::Bool(_) => "b",
 			BlkType::Color { .. } => "c",
-		}
-	}
-
-	pub fn as_ref_json(
-		&self,
-		f: &mut String,
-		fmt: FormattingConfiguration,
-		indent_level: usize,
-	) -> Result<(), std::fmt::Error> {
-		let indent_once = Indenter {
-			depth: indent_level,
-			with:  fmt.indent_char.0,
-			times: fmt.indent_char.1,
-		};
-		let indent_once_less = Indenter {
-			depth: indent_level.saturating_sub(1),
-			with:  fmt.indent_char.0,
-			times: fmt.indent_char.1,
-		};
-		match self {
-			BlkType::Str(v) => {
-				write!(f, "\"{v}\"")
-			},
-			BlkType::Int(v) => write!(f, "{v}"),
-			BlkType::Int2(v) => {
-				write!(f, "[\n{indent_once}{},\n{indent_once}{}\n]", v[0], v[1])
-			},
-			BlkType::Int3(v) => {
-				write!(f, "{v:#?}")
-			},
-			BlkType::Long(v) => write!(f, "{v}"),
-			BlkType::Float(v) => {
-				write!(f, "{v:.?}")
-			},
-			BlkType::Float2(v) => {
-				write!(
-					f,
-					"[\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]",
-					v[0], v[1]
-				)
-			},
-			BlkType::Float3(v) => {
-				write!(f,"[\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]", v[0], v[1], v[2])
-			},
-			BlkType::Float4(v) => {
-				write!(f,"[\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?},\n{indent_once}{:?}\n{indent_once_less}]", v[0], v[1], v[2], v[2])
-			},
-			BlkType::Float12(v) => {
-				write!(f, "{v:#?}")
-			},
-			BlkType::Bool(v) => write!(f, "{v}"),
-			BlkType::Color { r, g, b, a } => {
-				write!(f, "[{r}, {g}, {b}, {a}]")
-			},
 		}
 	}
 }
