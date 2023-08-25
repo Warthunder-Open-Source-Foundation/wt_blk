@@ -39,46 +39,7 @@ pub(crate)  fn bytes_to_long(input: &[u8]) -> Option<i64> {
 	]))
 }
 
+/// Wrapper for quickly creating Arced string
 pub fn blk_str(s: &str) -> BlkString {
 	Arc::new(s.to_owned())
-}
-
-#[macro_export]
-macro_rules! make_thing {
-    // entry point
-    ($writer:expr, $($things:expr),+) => {
-        writeln!($writer, "wcall start")?;
-        make_thing!(@recourse, $writer, $($things),+)
-    };
-    // recursive exit
-    (@recourse, $writer:expr, $thing:expr) => {
-        make_thing!(@item, $writer, $thing);
-        make_thing!(@end, $writer);
-    };
-    // recursing
-    (@recourse, $writer:expr, $thing:expr, $($other:expr),+) => {
-        make_thing!(@item, $writer, $thing);
-        make_thing!(@recourse, $writer, $($other),*);
-    };
-    // item write
-    (@item, $writer:expr, $thing:expr) => {
-      writeln!($writer, "thing = {}", $thing)?;
-    };
-    // terminal
-    (@end, $writer:expr) => {
-        writeln!($writer, "wcall end")?;
-    };
-}
-
-#[cfg(test)]
-mod test {
-	use std::fmt;
-	use std::fmt::Write;
-
-	#[test]
-	fn interlace_writer_string() -> Result<(), fmt::Error>{
-		let mut f = String::new();
-		make_thing!(&mut f, "yeet", "yeet 2 electric bogaloo");
-		Ok(())
-	}
 }
