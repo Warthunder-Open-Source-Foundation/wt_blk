@@ -14,6 +14,7 @@ use crate::blk::{
 	nm_file::NameMap,
 };
 
+/// Lowest-level function which unpacks BLK to [`crate::blk::blk_structure::BlkField`]
 pub fn parse_blk(
 	file: &[u8],
 	is_slim: bool,

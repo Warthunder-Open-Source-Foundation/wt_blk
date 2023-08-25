@@ -1,8 +1,8 @@
 use std::{path::PathBuf, str::FromStr};
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use wt_blk::{
-	blk::{output_formatting_conf::FormattingConfiguration, BlkOutputFormat},
+	blk::output_formatting_conf::FormattingConfiguration,
 	vromf::unpacker::VromfUnpacker,
 };
 

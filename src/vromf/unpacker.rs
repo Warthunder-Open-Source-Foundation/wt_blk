@@ -16,7 +16,6 @@ use crate::{
 		nm_file::NameMap,
 		parser::parse_blk,
 		zstd::decode_zstd,
-		BlkOutputFormat,
 	},
 	vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf},
 };
@@ -38,6 +37,14 @@ pub struct VromfUnpacker<'a> {
 	dict:  Option<Arc<DictWrapper<'a>>>,
 	nm:    Option<Arc<NameMap>>,
 }
+
+/// Defines plaintext format should be exported to
+#[derive(Copy, Clone)]
+pub enum BlkOutputFormat {
+	Json,
+	BlkText,
+}
+
 
 impl VromfUnpacker<'_> {
 	pub fn from_file(file: File) -> Result<Self, Report> {

@@ -2,8 +2,8 @@ use std::{
 	fs,
 	fs::ReadDir,
 	sync::{
-		atomic::{AtomicUsize, Ordering},
 		Arc,
+		atomic::{AtomicUsize, Ordering},
 	},
 };
 
@@ -13,7 +13,7 @@ use crate::blk::{
 	file::FileType,
 	nm_file::NameMap,
 	parser::parse_blk,
-	zstd::{decode_zstd, BlkDecoder},
+	zstd::{BlkDecoder, decode_zstd},
 };
 
 /// Decodes flat map of fields into the corresponding nested datastructure
@@ -78,6 +78,7 @@ fn test_parse_dir(
 	}
 }
 
+/// Highest-level function for unpacking one BLK explicitly, for direct low level control call [`parser::parse_blk`]
 pub fn parse_file(
 	mut file: Vec<u8>,
 	fd: Arc<BlkDecoder>,
@@ -98,10 +99,4 @@ pub fn parse_file(
 		)
 		.unwrap(),
 	)
-}
-
-#[derive(Copy, Clone)]
-pub enum BlkOutputFormat {
-	Json,
-	BlkText,
 }

@@ -1,6 +1,7 @@
 use std::{fs, path::PathBuf, str::FromStr};
 
-use crate::{blk::BlkOutputFormat, vromf::unpacker::VromfUnpacker};
+use crate::vromf::unpacker::VromfUnpacker;
+use crate::vromf::unpacker::BlkOutputFormat;
 
 #[test]
 fn grp_vromf() {
