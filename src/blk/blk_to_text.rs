@@ -1,5 +1,5 @@
-use color_eyre::eyre::bail;
-use color_eyre::Report;
+use color_eyre::{eyre::bail, Report};
+
 use crate::blk::blk_structure::BlkField;
 
 impl BlkField {
@@ -12,15 +12,18 @@ impl BlkField {
 	// Internal fn that actually formats
 	fn inner_as_blk_text(&self, indent_level: &mut usize, is_root: bool) -> Result<String, Report> {
 		match self {
-			BlkField::Value(name, value) => {
-				Ok(format!("\"{name}\":{value}"))
-			},
+			BlkField::Value(name, value) => Ok(format!("\"{name}\":{value}")),
 			BlkField::Struct(name, fields) => {
 				let indent = "\t".repeat(*indent_level);
 				*indent_level += 1;
 				let children = fields
 					.iter()
-					.map(|x|Ok( format!("{indent}{}", x.inner_as_blk_text(indent_level, false)?)))
+					.map(|x| {
+						Ok(format!(
+							"{indent}{}",
+							x.inner_as_blk_text(indent_level, false)?
+						))
+					})
 					.collect::<Result<Vec<_>, Report>>()?
 					.join("\n");
 				*indent_level -= 1;
@@ -34,7 +37,7 @@ impl BlkField {
 			},
 			BlkField::Merged(..) => {
 				bail!("Attempted to parse merged array in blk-text function (array type is not available in the BLK format)")
-			}
+			},
 		}
 	}
 }
@@ -54,8 +57,11 @@ mod test {
 			BlkType::Float4([1.25, 2.5, 5.0, 10.0]),
 		))
 		.unwrap();
-		root.insert_field(BlkField::Value(Arc::new("int".to_owned()), BlkType::Int(42)))
-			.unwrap();
+		root.insert_field(BlkField::Value(
+			Arc::new("int".to_owned()),
+			BlkType::Int(42),
+		))
+		.unwrap();
 		root.insert_field(BlkField::Value(
 			Arc::new("long".to_owned()),
 			BlkType::Long(42),

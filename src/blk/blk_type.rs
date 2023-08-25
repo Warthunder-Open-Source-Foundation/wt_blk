@@ -42,7 +42,12 @@ pub enum BlkType {
 	/// 4x3 Transformation matrix (last row omitted)
 	Float12(Box<[f32; 12]>),
 	Bool(bool),
-	Color { r: u8, g: u8, b: u8, a: u8 },
+	Color {
+		r: u8,
+		g: u8,
+		b: u8,
+		a: u8,
+	},
 }
 
 impl BlkType {
@@ -244,12 +249,12 @@ impl BlkType {
 	) -> Result<(), std::fmt::Error> {
 		let indent_once = Indenter {
 			depth: indent_level,
-			with: fmt.indent_char.0,
+			with:  fmt.indent_char.0,
 			times: fmt.indent_char.1,
 		};
 		let indent_once_less = Indenter {
 			depth: indent_level.saturating_sub(1),
-			with: fmt.indent_char.0,
+			with:  fmt.indent_char.0,
 			times: fmt.indent_char.1,
 		};
 		match self {
@@ -331,7 +336,7 @@ impl Display for BlkType {
 
 struct Indenter {
 	depth: usize,
-	with: char,
+	with:  char,
 	times: usize,
 }
 

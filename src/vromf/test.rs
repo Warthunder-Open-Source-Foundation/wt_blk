@@ -1,18 +1,13 @@
 use std::{fs, path::PathBuf, str::FromStr};
 
-use crate::{
-	blk::{BlkOutputFormat},
-	vromf::unpacker::VromfUnpacker,
-};
+use crate::{blk::BlkOutputFormat, vromf::unpacker::VromfUnpacker};
 
 #[test]
 fn grp_vromf() {
 	let p = PathBuf::from_str("./samples/grp_hdr.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
-	let unpacked = out
-		.unpack_all(Some(BlkOutputFormat::Json))
-		.unwrap();
+	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json)).unwrap();
 	assert_eq!(2322, unpacked.len())
 }
 
@@ -21,9 +16,7 @@ fn regular_vromf() {
 	let p = PathBuf::from_str("./samples/aces.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
-	let unpacked = out
-		.unpack_all(Some(BlkOutputFormat::Json))
-		.unwrap();
+	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json)).unwrap();
 	assert_eq!(15632, unpacked.len())
 }
 
@@ -32,9 +25,7 @@ fn no_nm_vromf() {
 	let p = PathBuf::from_str("./samples/atlases.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
-	let unpacked = out
-		.unpack_all(Some(BlkOutputFormat::Json))
-		.unwrap();
+	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json)).unwrap();
 	assert_eq!(8924, unpacked.len())
 }
 

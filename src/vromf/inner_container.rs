@@ -1,11 +1,11 @@
 use std::{mem::size_of, path::PathBuf};
 
-use color_eyre::eyre::{bail, Context};
-use color_eyre::Report;
-
-use crate::vromf::{
-	util::{bytes_to_int, bytes_to_usize},
+use color_eyre::{
+	eyre::{bail, Context},
+	Report,
 };
+
+use crate::vromf::util::{bytes_to_int, bytes_to_usize};
 
 pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, Report> {
 	// Returns slice offset from file, incrementing the ptr by offset
@@ -14,7 +14,12 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, Report
 			*ptr += offset;
 			Ok(res)
 		} else {
-			Err(Report::msg(format!("Indexing buffer of size {} with index {} and length {}", file.len(), *ptr, offset)))
+			Err(Report::msg(format!(
+				"Indexing buffer of size {} with index {} and length {}",
+				file.len(),
+				*ptr,
+				offset
+			)))
 		}
 	};
 	let mut ptr = 0;
@@ -26,7 +31,7 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, Report
 		0x30 => true,
 		_ => {
 			bail!("Unknown digest header {:X}", names_header[0])
-		}
+		},
 	};
 
 	let names_offset = bytes_to_int(names_header)? as usize;
@@ -69,7 +74,9 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, Report
 					buff = b"nm".to_vec();
 				}
 			}
-			String::from_utf8(buff).map(|res|	PathBuf::from(res)).context(format!("Invalid UTF-8 sequence"))
+			String::from_utf8(buff)
+				.map(|res| PathBuf::from(res))
+				.context(format!("Invalid UTF-8 sequence"))
 		})
 		.collect::<Result<_, Report>>()?;
 

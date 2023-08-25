@@ -1,22 +1,16 @@
-use std::{io::Read};
-use std::io::BufReader;
-use color_eyre::eyre::ContextCompat;
-use color_eyre::Report;
+use std::io::{BufReader, Read};
 
+use color_eyre::{eyre::ContextCompat, Report};
 use zstd::{dict::DecoderDictionary, Decoder};
 
-use crate::blk::{file::FileType};
+use crate::blk::file::FileType;
 
 pub type BlkDecoder<'a> = DecoderDictionary<'a>;
 
 /// Decodes zstd compressed file using shared dictionary if available
 pub fn decode_zstd(file: &[u8], frame_decoder: Option<&BlkDecoder>) -> Result<Vec<u8>, Report> {
 	// validate magic byte
-	let file_type = FileType::from_byte(
-		*file
-			.get(0)
-			.context("Empty BLK file passed to decoder")?,
-	)?;
+	let file_type = FileType::from_byte(*file.get(0).context("Empty BLK file passed to decoder")?)?;
 
 	let (len, to_decode) = if !file_type.is_slim() {
 		let len_raw = &file[1..4];
@@ -31,7 +25,9 @@ pub fn decode_zstd(file: &[u8], frame_decoder: Option<&BlkDecoder>) -> Result<Ve
 	let mut decoder = if file_type.needs_dict() {
 		Decoder::with_prepared_dictionary(
 			BufReader::new(&file[1..]),
-			frame_decoder.context(format!("File type: {file_type} marked as having dictionary, but none was passed"))?,
+			frame_decoder.context(format!(
+				"File type: {file_type} marked as having dictionary, but none was passed"
+			))?,
 		)?
 	} else {
 		Decoder::new(to_decode)?
@@ -71,7 +67,7 @@ mod test {
 		let dict = fs::read(
 			"./samples/bfb732560ad45234690acad246d7b14c2f25ad418a146e5e7ef68ba3386a315c.dict",
 		)
-			.unwrap();
+		.unwrap();
 		let frame_decoder = DecoderDictionary::copy(&dict);
 
 		let mut decoder = Decoder::with_prepared_dictionary(&file[1..], &frame_decoder).unwrap();

@@ -18,6 +18,7 @@ use crate::blk::{
 
 mod blk_block_hierarchy;
 pub mod blk_structure;
+pub mod blk_to_serde_json;
 mod blk_to_text;
 pub mod blk_type;
 pub mod error;
@@ -29,7 +30,6 @@ pub mod parser;
 pub mod test;
 pub mod util;
 pub mod zstd;
-pub mod blk_to_serde_json;
 
 fn test_parse_dir(
 	pile: &mut Vec<(String, Vec<u8>)>,

@@ -1,4 +1,5 @@
 use std::mem::size_of;
+
 use color_eyre::{Report, Section};
 
 use crate::vromf::{
@@ -16,7 +17,12 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, Report> {
 			*ptr += offset;
 			Ok(buff)
 		} else {
-			Err(Report::msg(format!("Indexing buffer of size {} with index {} and length {}", file.len(), *ptr, offset)))
+			Err(Report::msg(format!(
+				"Indexing buffer of size {} with index {} and length {}",
+				file.len(),
+				*ptr,
+				offset
+			)))
 		}
 	};
 
@@ -65,7 +71,8 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, Report> {
 	deobfuscate(&mut output);
 
 	if pack_type.is_compressed() {
-		output = zstd::decode_all(output.as_slice()).note("This most likely occurred because of improper computation of the frame-size")?;
+		output = zstd::decode_all(output.as_slice())
+			.note("This most likely occurred because of improper computation of the frame-size")?;
 	}
 
 	Ok(output)

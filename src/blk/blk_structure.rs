@@ -11,7 +11,7 @@ pub enum BlkField {
 	// Name and fields of substructs
 	Struct(BlkString, Vec<BlkField>),
 	// Array of merged fields that were duplicated in a Struct
-	Merged(BlkString, Vec<BlkField>)
+	Merged(BlkString, Vec<BlkField>),
 }
 
 impl BlkField {
@@ -30,7 +30,7 @@ impl BlkField {
 				fields.push(field);
 				Some(())
 			},
-			_ => {None}
+			_ => None,
 		}
 	}
 
@@ -38,7 +38,7 @@ impl BlkField {
 		match self {
 			BlkField::Value(name, _) => name.to_string(),
 			BlkField::Struct(name, _) => name.to_string(),
-			BlkField::Merged(name,_) => name.to_string(),
+			BlkField::Merged(name, _) => name.to_string(),
 		}
 	}
 
@@ -71,13 +71,13 @@ impl BlkField {
 			BlkField::Value(key, value) => {
 				*total += key.len();
 				*total += value.size_bytes();
-			}
+			},
 			BlkField::Struct(key, fields) | BlkField::Merged(key, fields) => {
 				*total += key.len();
 				for field in fields {
 					field._estimate_size(total);
 				}
-			}
+			},
 		}
 	}
 }

@@ -1,7 +1,6 @@
 use std::fmt::{Display, Formatter};
-use color_eyre::eyre::bail;
-use color_eyre::Report;
 
+use color_eyre::{eyre::bail, Report};
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
 #[allow(non_camel_case_types)]

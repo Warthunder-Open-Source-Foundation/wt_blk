@@ -33,6 +33,6 @@ impl FormattingConfiguration {
 		natural_float_truncate_0: true,
 		global_curly_bracket:     true,
 		object_colon:             true,
-		merge_duplicate_fields: true,
+		merge_duplicate_fields:   true,
 	};
 }

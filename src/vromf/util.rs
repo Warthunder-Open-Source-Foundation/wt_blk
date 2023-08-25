@@ -1,8 +1,11 @@
-use std::{mem::size_of};
-use color_eyre::eyre::{bail, Context};
-use color_eyre::Report;
-use crate::vromf::enums::Packing;
+use std::mem::size_of;
 
+use color_eyre::{
+	eyre::{bail, Context},
+	Report,
+};
+
+use crate::vromf::enums::Packing;
 
 pub fn pack_type_from_aligned(input: u32) -> Result<(Packing, u32), Report> {
 	const SIZE_MASK: u32 = 0b0000001111111111111111111111111;
@@ -18,7 +21,11 @@ pub fn pack_type_from_aligned(input: u32) -> Result<(Packing, u32), Report> {
 
 pub fn bytes_to_int(input: &[u8]) -> Result<u32, Report> {
 	if input.len() != 4 {
-		bail!("Expected buffer of length {}, found {}", size_of::<u32>(), input.len());
+		bail!(
+			"Expected buffer of length {}, found {}",
+			size_of::<u32>(),
+			input.len()
+		);
 	}
 
 	Ok(u32::from_le_bytes([input[0], input[1], input[2], input[3]]))
@@ -26,7 +33,11 @@ pub fn bytes_to_int(input: &[u8]) -> Result<u32, Report> {
 
 pub fn bytes_to_long(input: &[u8]) -> Result<u64, Report> {
 	if input.len() != size_of::<u64>() {
-		bail!("Expected buffer of length {}, found {}", size_of::<u64>(), input.len());
+		bail!(
+			"Expected buffer of length {}, found {}",
+			size_of::<u64>(),
+			input.len()
+		);
 	}
 
 	Ok(u64::from_le_bytes([

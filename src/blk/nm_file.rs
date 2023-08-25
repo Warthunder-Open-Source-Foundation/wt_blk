@@ -1,7 +1,6 @@
 use std::{io::Read, sync::Arc};
-use color_eyre::eyre::ContextCompat;
-use color_eyre::Report;
 
+use color_eyre::{eyre::ContextCompat, Report};
 use zstd::Decoder;
 
 use crate::blk::{blk_type::BlkString, leb128::uleb128};
@@ -29,7 +28,10 @@ impl NameMap {
 	}
 
 	pub fn decode_nm_file(file: &[u8]) -> Result<Vec<u8>, Report> {
-		let _names_digest = &file.get(0..8).context(format!("File out of bounds for range 0..8, found len: {}", file.len()))?;
+		let _names_digest = &file.get(0..8).context(format!(
+			"File out of bounds for range 0..8, found len: {}",
+			file.len()
+		))?;
 		let _dict_digest = &file[8..40];
 		let mut zstd_stream = &file[40..];
 		let mut decoder = Decoder::new(&mut zstd_stream)?;

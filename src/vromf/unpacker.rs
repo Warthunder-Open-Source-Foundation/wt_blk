@@ -5,25 +5,20 @@ use std::{
 	sync::Arc,
 };
 
-use color_eyre::{Help, Report};
-use color_eyre::eyre::ContextCompat;
-use rayon::iter::IntoParallelIterator;
-use rayon::iter::ParallelIterator;
+use color_eyre::{eyre::ContextCompat, Help, Report};
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use zstd::dict::DecoderDictionary;
 
 use crate::{
 	blk::{
 		blk_structure::BlkField,
-		BlkOutputFormat,
 		file::FileType,
 		nm_file::NameMap,
 		parser::parse_blk,
 		zstd::decode_zstd,
+		BlkOutputFormat,
 	},
-	vromf::{
-		binary_container::decode_bin_vromf,
-		inner_container::decode_inner_vromf,
-	},
+	vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf},
 };
 
 pub type File = (PathBuf, Vec<u8>);
@@ -40,8 +35,8 @@ impl Debug for DictWrapper<'_> {
 #[derive(Debug)]
 pub struct VromfUnpacker<'a> {
 	files: Vec<File>,
-	dict: Option<Arc<DictWrapper<'a>>>,
-	nm: Option<Arc<NameMap>>,
+	dict:  Option<Arc<DictWrapper<'a>>>,
+	nm:    Option<Arc<NameMap>>,
 }
 
 impl VromfUnpacker<'_> {
@@ -68,10 +63,7 @@ impl VromfUnpacker<'_> {
 		})
 	}
 
-	pub fn unpack_all(
-		self,
-		unpack_blk_into: Option<BlkOutputFormat>,
-	) -> Result<Vec<File>, Report> {
+	pub fn unpack_all(self, unpack_blk_into: Option<BlkOutputFormat>) -> Result<Vec<File>, Report> {
 		self.files
 			.into_par_iter()
 			.map(|mut file| {
@@ -81,8 +73,7 @@ impl VromfUnpacker<'_> {
 							let mut offset = 0;
 							let file_type = FileType::from_byte(file.1[0])?;
 							if file_type.is_zstd() {
-								file.1 =
-									decode_zstd(&file.1, self.dict.as_ref().map(|e| &e.0))?;
+								file.1 = decode_zstd(&file.1, self.dict.as_ref().map(|e| &e.0))?;
 							} else {
 								// uncompressed Slim and Fat files retain their initial magic bytes
 								offset = 1;
@@ -93,14 +84,15 @@ impl VromfUnpacker<'_> {
 							match format {
 								BlkOutputFormat::BlkText => {
 									file.1 = parsed.as_blk_text()?.into_bytes();
-								}
+								},
 								BlkOutputFormat::Json => {
-									file.1 = serde_json::to_string_pretty(&parsed.as_serde_obj())?.into_bytes();
-								}
+									file.1 = serde_json::to_string_pretty(&parsed.as_serde_obj())?
+										.into_bytes();
+								},
 							}
 						}
 						Ok(file)
-					}
+					},
 
 					// Default to the raw file
 					_ => Ok(file),
@@ -138,19 +130,21 @@ impl VromfUnpacker<'_> {
 					match format {
 						BlkOutputFormat::BlkText => {
 							file.1 = parsed.as_blk_text()?.into_bytes();
-						}
+						},
 						BlkOutputFormat::Json => {
-							file.1 = serde_json::to_string_pretty(&parsed.as_serde_obj())?.into_bytes();
-						}
+							file.1 =
+								serde_json::to_string_pretty(&parsed.as_serde_obj())?.into_bytes();
+						},
 					}
 				}
 				Ok(file.1)
-			}
+			},
 
 			// Default to the raw file
 			_ => Ok(file.1),
 		}
 	}
+
 	// For debugging purposes
 	pub fn unpack_one_to_field(&self, path_name: &Path) -> Result<BlkField, Report> {
 		let mut file = self
@@ -171,9 +165,13 @@ impl VromfUnpacker<'_> {
 					offset = 1;
 				};
 
-				Ok(parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone())?)
-			}
-			_ => panic!("Not a blk")
+				Ok(parse_blk(
+					&file.1[offset..],
+					file_type.is_slim(),
+					self.nm.clone(),
+				)?)
+			},
+			_ => panic!("Not a blk"),
 		}
 	}
 }

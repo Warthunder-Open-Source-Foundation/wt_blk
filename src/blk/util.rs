@@ -1,8 +1,9 @@
 use std::sync::Arc;
+
 use crate::blk::blk_type::BlkString;
 
 #[inline(always)]
-pub(crate)  fn bytes_to_offset(input: &[u8]) -> Option<usize> {
+pub(crate) fn bytes_to_offset(input: &[u8]) -> Option<usize> {
 	if input.len() != 4 {
 		return None;
 	}
@@ -11,7 +12,7 @@ pub(crate)  fn bytes_to_offset(input: &[u8]) -> Option<usize> {
 }
 
 #[inline(always)]
-pub(crate)  fn bytes_to_float(input: &[u8]) -> Option<f32> {
+pub(crate) fn bytes_to_float(input: &[u8]) -> Option<f32> {
 	if input.len() != 4 {
 		return None;
 	}
@@ -20,7 +21,7 @@ pub(crate)  fn bytes_to_float(input: &[u8]) -> Option<f32> {
 }
 
 #[inline(always)]
-pub(crate)  fn bytes_to_int(input: &[u8]) -> Option<i32> {
+pub(crate) fn bytes_to_int(input: &[u8]) -> Option<i32> {
 	if input.len() != 4 {
 		return None;
 	}
@@ -29,7 +30,7 @@ pub(crate)  fn bytes_to_int(input: &[u8]) -> Option<i32> {
 }
 
 #[inline(always)]
-pub(crate)  fn bytes_to_long(input: &[u8]) -> Option<i64> {
+pub(crate) fn bytes_to_long(input: &[u8]) -> Option<i64> {
 	if input.len() != 8 {
 		return None;
 	}

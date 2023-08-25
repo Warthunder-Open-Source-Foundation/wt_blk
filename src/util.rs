@@ -10,6 +10,7 @@ macro_rules! time {
 }
 
 use std::env;
+
 #[allow(unused)]
 pub(crate) use time;
 
@@ -20,10 +21,7 @@ pub(crate) fn format_hex(hex: &[u8]) -> Vec<String> {
 
 #[allow(unused)]
 pub(crate) fn debug_hex(hex: &[u8]) {
-	eprintln!(
-		"{:?}",
-		format_hex(hex)
-	);
+	eprintln!("{:?}", format_hex(hex));
 }
 
 #[allow(unused)]
@@ -31,5 +29,4 @@ pub(crate) fn debug_hex(hex: &[u8]) {
 pub(crate) fn load_eyre() {
 	env::set_var("RUST_BACKTRACE", "full");
 	color_eyre::install().unwrap();
-
 }
