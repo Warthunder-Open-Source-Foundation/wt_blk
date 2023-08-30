@@ -17,7 +17,7 @@ fn regular_vromf() {
 	let p = PathBuf::from_str("./samples/aces.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
-	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json)).unwrap();
+	let unpacked = out.unpack_all(None).unwrap();
 	assert_eq!(15632, unpacked.len())
 }
 

@@ -20,10 +20,9 @@ memmap2 = "0.5.10"
 color-eyre = "^0.6"
 strum = { version = "0.25.0", default-features = false, features = ["derive"] }
 
-#[profile.test]
-#opt-level = 3
-#lto = "fat"
-#debug = true
+[profile.test]
+opt-level = 3
+debug = true
 
 [profile.bench]
 opt-level = 3
