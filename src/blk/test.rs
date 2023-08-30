@@ -17,6 +17,9 @@ mod test {
 		test_parse_dir,
 		zstd::decode_zstd,
 	};
+	use crate::blk::blk_structure::BlkField;
+	use crate::blk::blk_type::BlkType;
+	use crate::blk::util::blk_str;
 
 	// #[test]
 	// fn json_parity() {
@@ -39,8 +42,28 @@ mod test {
 	#[test]
 	fn fat_blk() {
 		let file = fs::read("./samples/section_fat.blk").unwrap();
-		let output = parse_blk(&file[1..], false, None);
-		println!("{}", output.unwrap().as_blk_text().unwrap());
+		let output = parse_blk(&file[1..], false, None).unwrap();
+		let expected = BlkField::Struct(blk_str("root"), vec![
+			BlkField::Value(blk_str("vec4f"), BlkType::Float4([1.25, 2.5, 5.0, 10.0])),
+			BlkField::Value(blk_str("int"), BlkType::Int(42)),
+			BlkField::Value(blk_str("long"), BlkType::Long(64)),
+			BlkField::Struct(blk_str("alpha"), vec![
+				BlkField::Value(blk_str("str"), BlkType::Str(blk_str("hello"))),
+				BlkField::Value(blk_str("bool"), BlkType::Bool(true)),
+				BlkField::Value(blk_str("color"), BlkType::Color { r: 3, g: 2, b: 1, a: 4, }),
+				BlkField::Struct(blk_str("gamma"), vec![
+					BlkField::Value(blk_str("vec2i"), BlkType::Int2([3,4])),
+					BlkField::Value(blk_str("vec2f"), BlkType::Float2([1.25, 2.5])),
+					BlkField::Value(blk_str("transform"), BlkType::Float12(Box::new([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.25, 2.5, 5.0]))),
+				])
+			]),
+			BlkField::Struct(blk_str("beta"), vec![
+				BlkField::Value(blk_str("float"), BlkType::Float(1.25)),
+				BlkField::Value(blk_str("vec2i"), BlkType::Int2([1,2])),
+				BlkField::Value(blk_str("vec3f"), BlkType::Float3([1.25,2.5,5.0])),
+			]),
+		]);
+		assert_eq!(expected, output)
 	}
 
 	#[test]

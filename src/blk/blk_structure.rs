@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::blk::blk_type::{BlkString, BlkType};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum BlkField {
 	// Name and field value
 	Value(BlkString, BlkType),
