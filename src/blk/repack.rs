@@ -20,6 +20,6 @@ mod test {
 
 
 
-		let reference = fs::read("./samples/section_fat.blk").unwrap();
+		let _reference = fs::read("./samples/section_fat.blk").unwrap();
 	}
 }

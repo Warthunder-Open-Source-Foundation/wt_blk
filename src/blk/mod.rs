@@ -50,6 +50,7 @@ pub mod nm_file;
 pub mod parser;
 
 /// Unit tests
+#[cfg(test)]
 pub mod test;
 
 /// Collection of macros and functions used in all BLK modules
