@@ -1,1 +1,2 @@
-#output-path: /home/runner/coverage
+output-path: ./lcov.info
+output-type: lcov
