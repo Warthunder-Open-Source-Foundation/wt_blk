@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Debug, mem, str::FromStr, sync::Arc};
+use std::{collections::HashMap, mem, str::FromStr, sync::Arc};
 
 use serde_json::{json, Number, Value};
 
@@ -52,9 +52,8 @@ impl BlkField {
 	}
 
 	pub fn as_serde_json(&self) -> (String, Value) {
-		fn std_num<T>(num: T) -> Value
-		where
-			T: Debug, {
+		#[inline(always)]
+		fn std_num(num: f64) -> Value {
 			Value::Number(Number::from_str(&format!("{:?}", num)).expect("Infallible"))
 		}
 
@@ -66,24 +65,24 @@ impl BlkField {
 						json!(s)
 					},
 					BlkType::Int(s) => {
-						json!(s)
+						std_num(*s as f64)
 					},
 					BlkType::Int2(s) => {
-						json!(s)
+						Value::Array(s.iter().map(|e| std_num(*e as f64)).collect())
 					},
 					BlkType::Int3(s) => {
-						json!(s)
+						Value::Array(s.iter().map(|e| std_num(*e as f64)).collect())
 					},
 					BlkType::Long(s) => {
-						json!(s)
+						std_num(*s as f64)
 					},
-					BlkType::Float(s) => std_num(s),
-					BlkType::Float2(s) => Value::Array(s.iter().map(|e| std_num(e)).collect()),
-					BlkType::Float3(s) => Value::Array(s.iter().map(|e| std_num(e)).collect()),
-					BlkType::Float4(s) => Value::Array(s.iter().map(|e| std_num(e)).collect()),
+					BlkType::Float(s) => std_num(*s as f64),
+					BlkType::Float2(s) => Value::Array(s.iter().map(|e| std_num(*e as f64)).collect()),
+					BlkType::Float3(s) => Value::Array(s.iter().map(|e| std_num(*e as f64)).collect()),
+					BlkType::Float4(s) => Value::Array(s.iter().map(|e| std_num(*e as f64)).collect()),
 					BlkType::Float12(s) => Value::Array(
 						s.array_chunks::<3>()
-							.map(|e| e.iter().map(|e| std_num(e)).collect())
+							.map(|e| e.iter().map(|e| std_num(*e as f64)).collect())
 							.collect(),
 					),
 					BlkType::Bool(s) => {
@@ -155,7 +154,7 @@ mod test {
 				BlkField::Value(blk_str("mass"), BlkType::Float(6.0)),
 			],
 		)
-		.as_serde_obj();
+			.as_serde_obj();
 		let expected = Value::Object(serde_json::Map::from_iter(vec![(
 			"mass".into(),
 			Value::Array(vec![
@@ -208,6 +207,42 @@ mod test {
 			(
 				"salad".into(),
 				Value::Number(Number::from_f64(69.0).unwrap()),
+			),
+		]));
+		// println!("Found: {:#?}", blk.as_serde_obj());
+		// println!("Expected: {:#?}", expected);
+		assert_eq!(blk.as_serde_obj(), expected);
+	}
+	#[test]
+	fn int_with_dot() {
+		let blk = BlkField::Struct(
+			blk_str("root"),
+			vec![
+				BlkField::Value(blk_str("salad"), BlkType::Int(69)),
+			],
+		);
+		let expected = Value::Object(serde_json::Map::from_iter(vec![
+			(
+				"salad".into(),
+				Value::Number(Number::from_f64(69.0).unwrap()),
+			),
+		]));
+		// println!("Found: {:#?}", blk.as_serde_obj());
+		// println!("Expected: {:#?}", expected);
+		assert_eq!(blk.as_serde_obj(), expected);
+	}
+	#[test]
+	fn int_array_with_dot() {
+		let blk = BlkField::Struct(
+			blk_str("root"),
+			vec![
+				BlkField::Value(blk_str("salad"), BlkType::Int2([69,420])),
+			],
+		);
+		let expected = Value::Object(serde_json::Map::from_iter(vec![
+			(
+				"salad".into(),
+				Value::Array(vec![Value::Number(Number::from_f64(69.0).unwrap()),Value::Number(Number::from_f64(420.0).unwrap())]),
 			),
 		]));
 		// println!("Found: {:#?}", blk.as_serde_obj());
