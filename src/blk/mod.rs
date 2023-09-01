@@ -57,6 +57,7 @@ pub mod util;
 
 /// Zstandard unpacking functionality
 pub mod zstd;
+mod repack;
 
 fn test_parse_dir(
 	pile: &mut Vec<(String, Vec<u8>)>,
