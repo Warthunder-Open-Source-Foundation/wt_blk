@@ -23,7 +23,6 @@ jobs:
       - uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: true
-          outputType: lcov
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 #          directory: /home/runner/coverage
