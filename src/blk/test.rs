@@ -112,7 +112,9 @@ fn slim_blk() {
 	let _output = parse_blk(&file[1..], true, Some(Arc::new(shared_name_map))).unwrap();
 }
 
+/// Only run explicitly when required for testing, and do not run in CI because the test files it needs are not commited
 #[test]
+#[ignore]
 fn test_all() {
 	let start = Instant::now();
 	let nm = fs::read("./samples/vromfs/aces.vromfs.bin_u/nm").unwrap();
