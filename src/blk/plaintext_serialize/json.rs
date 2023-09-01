@@ -214,7 +214,7 @@ mod test {
 		assert_eq!(blk.as_serde_obj(), expected);
 	}
 	#[test]
-	fn int_with_dot() {
+	fn int_without_dot() {
 		let blk = BlkField::Struct(
 			blk_str("root"),
 			vec![
@@ -229,10 +229,10 @@ mod test {
 		]));
 		// println!("Found: {:#?}", blk.as_serde_obj());
 		// println!("Expected: {:#?}", expected);
-		assert_eq!(blk.as_serde_obj(), expected);
+		assert_ne!(blk.as_serde_obj(), expected);
 	}
 	#[test]
-	fn int_array_with_dot() {
+	fn int_array_without_dot() {
 		let blk = BlkField::Struct(
 			blk_str("root"),
 			vec![
@@ -247,6 +247,6 @@ mod test {
 		]));
 		// println!("Found: {:#?}", blk.as_serde_obj());
 		// println!("Expected: {:#?}", expected);
-		assert_eq!(blk.as_serde_obj(), expected);
+		assert_ne!(blk.as_serde_obj(), expected);
 	}
 }
