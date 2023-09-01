@@ -65,16 +65,16 @@ impl BlkField {
 						json!(s)
 					},
 					BlkType::Int(s) => {
-						std_num(*s as f32)
+						json!(s)
 					},
 					BlkType::Int2(s) => {
-						Value::Array(s.iter().map(|e| std_num(*e as f32)).collect())
+						json!(s)
 					},
 					BlkType::Int3(s) => {
-						Value::Array(s.iter().map(|e| std_num(*e as f32)).collect())
+						json!(s)
 					},
 					BlkType::Long(s) => {
-						std_num(*s as f32)
+						json!(s)
 					},
 					BlkType::Float(s) => std_num(*s as f32),
 					BlkType::Float2(s) => Value::Array(s.iter().map(|e| std_num(*e)).collect()),
