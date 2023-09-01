@@ -53,7 +53,7 @@ impl BlkField {
 
 	pub fn as_serde_json(&self) -> (String, Value) {
 		#[inline(always)]
-		fn std_num(num: f64) -> Value {
+		fn std_num(num: f32) -> Value {
 			Value::Number(Number::from_str(&format!("{:?}", num)).expect("Infallible"))
 		}
 
@@ -65,24 +65,24 @@ impl BlkField {
 						json!(s)
 					},
 					BlkType::Int(s) => {
-						std_num(*s as f64)
+						std_num(*s as f32)
 					},
 					BlkType::Int2(s) => {
-						Value::Array(s.iter().map(|e| std_num(*e as f64)).collect())
+						Value::Array(s.iter().map(|e| std_num(*e as f32)).collect())
 					},
 					BlkType::Int3(s) => {
-						Value::Array(s.iter().map(|e| std_num(*e as f64)).collect())
+						Value::Array(s.iter().map(|e| std_num(*e as f32)).collect())
 					},
 					BlkType::Long(s) => {
-						std_num(*s as f64)
+						std_num(*s as f32)
 					},
-					BlkType::Float(s) => std_num(*s as f64),
-					BlkType::Float2(s) => Value::Array(s.iter().map(|e| std_num(*e as f64)).collect()),
-					BlkType::Float3(s) => Value::Array(s.iter().map(|e| std_num(*e as f64)).collect()),
-					BlkType::Float4(s) => Value::Array(s.iter().map(|e| std_num(*e as f64)).collect()),
+					BlkType::Float(s) => std_num(*s as f32),
+					BlkType::Float2(s) => Value::Array(s.iter().map(|e| std_num(*e)).collect()),
+					BlkType::Float3(s) => Value::Array(s.iter().map(|e| std_num(*e)).collect()),
+					BlkType::Float4(s) => Value::Array(s.iter().map(|e| std_num(*e)).collect()),
 					BlkType::Float12(s) => Value::Array(
 						s.array_chunks::<3>()
-							.map(|e| e.iter().map(|e| std_num(*e as f64)).collect())
+							.map(|e| e.iter().map(|e| std_num(*e)).collect())
 							.collect(),
 					),
 					BlkType::Bool(s) => {
