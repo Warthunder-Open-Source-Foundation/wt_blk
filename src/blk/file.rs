@@ -5,11 +5,17 @@ use crate::blk::error::ParseError;
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Copy, Clone, strum::Display)]
 // BLK file type, always first byte of file
 pub enum FileType {
+	/// Unknown and unsupported
 	BBF           = 0x00,
+	/// BLK file with integrated name-map, no external map is required
 	FAT           = 0x01,
+	/// Same as FAT but with ZSTD compression
 	FAT_ZSTD      = 0x02,
+	/// Has name map externally stored
 	SLIM          = 0x03,
+	/// Same as SLIM but ZSTD compressed
 	SLIM_ZSTD     = 0x04,
+	/// Same as SLIM_ZSTD, but with a ZSTD dictionary
 	SLIM_ZST_DICT = 0x05,
 }
 
