@@ -1,4 +1,5 @@
 # wt_blk
+[![codecov](https://codecov.io/github/Warthunder-Open-Source-Foundation/wt_blk/graph/badge.svg?token=FWUP23Q2FH)](https://codecov.io/github/Warthunder-Open-Source-Foundation/wt_blk)
 
 > **War Thunder block-file and auxiliary binary formats parsing library**
 
