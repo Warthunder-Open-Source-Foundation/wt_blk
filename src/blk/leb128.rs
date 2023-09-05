@@ -31,3 +31,30 @@ pub fn uleb128(bytes: &[u8]) -> Result<(usize, usize), ParseError> {
 		Err(ParseError::UnexpectedEndOfBufferUleb)
 	}
 }
+
+
+#[cfg(test)]
+mod test {
+	use crate::blk::error::ParseError;
+	use crate::blk::leb128::uleb128;
+
+	#[test]
+	fn empty() {
+		assert_eq!(uleb128(&[]), Err(ParseError::ZeroSizedUleb))
+	}
+
+	#[test]
+	fn unexpected_termination() {
+		assert_eq!(uleb128(&[u8::MAX]), Err(ParseError::UnexpectedEndOfBufferUleb))
+	}
+
+	#[test]
+	fn answer_of_life() {
+		assert_eq!(uleb128(&[42]), Ok((1,42)))
+	}
+
+	#[test]
+	fn aol_extended() {
+		assert_eq!(uleb128(&[u8::MAX, 42]), Ok((2,5503)))
+	}
+}

@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use thiserror::Error;
 
-#[derive(Debug, Error, Clone)]
+#[derive(Debug, Error, Clone, Eq, PartialEq)]
 pub enum ParseError {
 	#[error("Empty buffer is not a valid ULEB var-int")]
 	ZeroSizedUleb,
