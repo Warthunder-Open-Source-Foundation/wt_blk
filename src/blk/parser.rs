@@ -13,6 +13,7 @@ use crate::blk::{
 	leb128::uleb128,
 	nm_file::NameMap,
 };
+use crate::blk::util::blk_str;
 
 /// Lowest-level function which unpacks BLK to [`crate::blk::blk_structure::BlkField`]
 pub fn parse_blk(
@@ -118,7 +119,7 @@ pub fn parse_blk(
 	{
 		let block_id_to_name = |id| {
 			if id == 0 {
-				Arc::new("root".to_owned())
+				blk_str("root")
 			} else {
 				(&names)[(id - 1) as usize].clone()
 			}

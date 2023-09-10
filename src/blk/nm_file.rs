@@ -45,8 +45,8 @@ impl NameMap {
 		let mut names = vec![];
 		for (i, val) in file.iter().enumerate() {
 			if *val == 0 {
-				names.push(Arc::new(
-					String::from_utf8_lossy(&file[start..i]).to_string(),
+				names.push(Arc::from(
+					String::from_utf8_lossy(&file[start..i]),
 				));
 				start = i + 1;
 			}

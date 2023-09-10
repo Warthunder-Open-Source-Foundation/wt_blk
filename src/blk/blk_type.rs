@@ -10,7 +10,7 @@ use crate::blk::{
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset},
 };
 
-pub type BlkString = Arc<String>;
+pub type BlkString = Arc<str>;
 
 pub mod blk_type_id {
 	pub const STRING: u8 = 0x01;
@@ -29,7 +29,7 @@ pub mod blk_type_id {
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
 pub enum BlkType {
-	Str(Arc<String>),
+	Str(BlkString),
 	Int(i32),
 	Int2([i32; 2]),
 	Int3([i32; 3]),
@@ -84,7 +84,7 @@ impl BlkType {
 						}
 						buff.push(*byte)
 					}
-					Arc::new(String::from_utf8_lossy(&buff).to_string())
+					Arc::from(String::from_utf8_lossy(&buff).to_string())
 				};
 
 				Some(Self::Str(res))
@@ -299,10 +299,11 @@ mod test {
 	use std::sync::Arc;
 
 	use crate::blk::blk_type::BlkType;
+	use crate::blk::util::blk_str;
 
 	#[test]
 	fn test_string() {
-		let t = BlkType::Str(Arc::new("yeet".to_owned()));
+		let t = BlkType::Str(blk_str("yeet"));
 		assert_eq!(t.to_string(), "t = \"yeet\"")
 	}
 }

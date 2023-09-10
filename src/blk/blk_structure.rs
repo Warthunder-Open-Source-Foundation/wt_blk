@@ -3,6 +3,7 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 use crate::blk::blk_type::{BlkString, BlkType};
+use crate::blk::util::blk_str;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum BlkField {
@@ -16,7 +17,7 @@ pub enum BlkField {
 
 impl BlkField {
 	pub fn new_root() -> Self {
-		BlkField::Struct(Arc::new("root".to_owned()), vec![])
+		BlkField::Struct(blk_str("root"), vec![])
 	}
 
 	pub fn new_struct(name: BlkString) -> Self {

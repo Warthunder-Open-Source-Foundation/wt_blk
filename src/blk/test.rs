@@ -136,8 +136,5 @@ fn test_all() {
 		.collect::<Vec<_>>();
 
 	let stop = start.elapsed();
-	// println!(
-	// 	"Successfully parsed {} files! Thats all of them. The process took: {stop:?}",
-	// 	out.len()
-	// );
+	println!("Successfully parsed {} files! Thats all of them. The process took: {stop:?}", out.len());
 }

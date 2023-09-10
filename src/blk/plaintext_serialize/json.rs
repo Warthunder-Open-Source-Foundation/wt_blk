@@ -45,7 +45,7 @@ impl BlkField {
 						.into_iter()
 						.map(|e| old[e].take().expect("Infallible"))
 						.collect();
-					old[first_element] = Some(BlkField::Merged(Arc::new(key), to_merge));
+					old[first_element] = Some(BlkField::Merged(Arc::from(key), to_merge));
 				});
 			*fields = old.into_iter().filter_map(|e| e).collect();
 		}
