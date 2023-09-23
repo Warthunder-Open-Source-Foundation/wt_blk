@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use color_eyre::eyre::{bail, ContextCompat};
 use color_eyre::Report;
 
 use tracing::error;
@@ -89,7 +90,7 @@ pub fn parse_blk(
 		let name_id = u32::from_le_bytes([name_id_raw[0], name_id_raw[1], name_id_raw[2], 0]);
 		let type_id = chunk[3];
 		let data = &chunk[4..];
-		let name = names[name_id as usize].clone();
+		let name = names.get(name_id as usize).wrap_err(format!("Name index {} out of bounds for name map of length {}", name_id, names.len()))?.clone();
 
 		let parsed = if is_slim && type_id == STRING {
 			BlkType::from_raw_param_info(

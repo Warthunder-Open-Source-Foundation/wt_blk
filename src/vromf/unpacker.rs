@@ -1,9 +1,4 @@
-use std::{
-	ffi::OsStr,
-	fmt::{Debug, Formatter},
-	path::{Path, PathBuf},
-	sync::Arc,
-};
+use std::{ffi::OsStr, fmt::{Debug, Formatter}, fs, path::{Path, PathBuf}, sync::Arc};
 
 use color_eyre::{eyre::ContextCompat, Help, Report};
 use color_eyre::eyre::Context;
@@ -89,9 +84,10 @@ impl VromfUnpacker<'_> {
 								// uncompressed Slim and Fat files retain their initial magic bytes
 								offset = 1;
 							};
+							// fs::write("unknown.bin", &&file.1).unwrap();
 
 							let parsed =
-								parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone()).wrap_err(format!("file-path {}", file.0.to_string_lossy()))?;
+								parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone()).wrap_err(format!("{}", file.0.to_string_lossy()))?;
 							match format {
 								BlkOutputFormat::BlkText => {
 									file.1 = parsed.as_blk_text()?.into_bytes();
