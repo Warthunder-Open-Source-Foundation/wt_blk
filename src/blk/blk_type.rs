@@ -88,7 +88,7 @@ impl BlkType {
 				};
 
 				Some(Self::Str(res))
-			},
+			}
 			INT => Some(Self::Int(bytes_to_int(field)?)),
 			FLOAT => Some(Self::Float(bytes_to_float(field)?)),
 			FLOAT2 => {
@@ -98,7 +98,7 @@ impl BlkType {
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 				]))
-			},
+			}
 			FLOAT3 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 12)];
@@ -107,7 +107,7 @@ impl BlkType {
 					bytes_to_float(&data_region[4..8])?,
 					bytes_to_float(&data_region[8..12])?,
 				]))
-			},
+			}
 			FLOAT4 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 16)];
@@ -117,7 +117,7 @@ impl BlkType {
 					bytes_to_float(&data_region[8..12])?,
 					bytes_to_float(&data_region[12..16])?,
 				]))
-			},
+			}
 			INT2 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
@@ -125,7 +125,7 @@ impl BlkType {
 					bytes_to_int(&data_region[0..4])?,
 					bytes_to_int(&data_region[4..8])?,
 				]))
-			},
+			}
 			INT3 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 12)];
@@ -134,7 +134,7 @@ impl BlkType {
 					bytes_to_int(&data_region[4..8])?,
 					bytes_to_int(&data_region[8..12])?,
 				]))
-			},
+			}
 			BOOL => Some(Self::Bool(field[0] != 0)),
 			COLOR => {
 				// Game stores them in BGRA order
@@ -144,7 +144,7 @@ impl BlkType {
 					b: field[2],
 					a: field[3],
 				})
-			},
+			}
 			FLOAT12 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 48)];
@@ -162,12 +162,12 @@ impl BlkType {
 					bytes_to_float(&data_region[40..44])?,
 					bytes_to_float(&data_region[44..48])?,
 				])))
-			},
+			}
 			LONG => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
 				Some(Self::Long(bytes_to_long(data_region)?))
-			},
+			}
 			_ => None,
 		};
 	}
@@ -239,6 +239,22 @@ impl BlkType {
 			BlkType::Color { .. } => "c",
 		}
 	}
+	pub fn is_valid_type(t: &str) -> bool {
+		matches!(t,
+			"t"|
+			"i"|
+			"ip2"|
+			"ip3"|
+			"i64"|
+			"r"|
+			"p2"|
+			"p3"|
+			"p4"|
+			"m"|
+			"b"|
+			"c"
+		)
+	}
 }
 
 impl Display for BlkType {
@@ -246,33 +262,33 @@ impl Display for BlkType {
 		let value = match self {
 			BlkType::Str(v) => {
 				format!("\"{}\"", v)
-			},
+			}
 			BlkType::Int(v) => v.to_string(),
 			BlkType::Int2(v) => {
 				format!("{}, {}", v[0], v[1])
-			},
+			}
 			BlkType::Int3(v) => {
 				format!("{}, {}, {}", v[0], v[1], v[2])
-			},
+			}
 			BlkType::Long(v) => v.to_string(),
 			BlkType::Float(v) => v.to_string(),
 			BlkType::Float2(v) => {
 				format!("{}, {}", v[0], v[1])
-			},
+			}
 			BlkType::Float3(v) => {
 				format!("{}, {}, {}", v[0], v[1], v[2])
-			},
+			}
 			BlkType::Float4(v) => {
 				format!("{}, {}, {}, {}", v[0], v[1], v[2], v[3])
-			},
+			}
 			BlkType::Float12(v) => {
 				format!("{:?}", *v)
-			},
+			}
 			BlkType::Bool(v) => v.to_string(),
 			// BGRA
 			BlkType::Color { r, g, b, a } => {
 				format!("{b}, {g}, {r}, {a}")
-			},
+			}
 		};
 
 		write!(f, "{} = {}", self.blk_type_name(), value)
@@ -281,7 +297,7 @@ impl Display for BlkType {
 
 struct Indenter {
 	depth: usize,
-	with:  char,
+	with: char,
 	times: usize,
 }
 
@@ -296,8 +312,6 @@ impl Display for Indenter {
 
 #[cfg(test)]
 mod test {
-	use std::sync::Arc;
-
 	use crate::blk::blk_type::BlkType;
 	use crate::blk::util::blk_str;
 

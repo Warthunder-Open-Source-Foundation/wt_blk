@@ -56,6 +56,9 @@ mod repack;
 /// Implementations for serializing into human readable text formats
 pub mod plaintext_serialize;
 
+/// Implementations for deserializing into BLk binary format from BlkText
+mod plaintext_deserialize;
+
 #[allow(dead_code)]
 fn test_parse_dir(
 	pile: &mut Vec<(String, Vec<u8>)>,

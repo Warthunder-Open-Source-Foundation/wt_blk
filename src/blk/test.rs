@@ -37,11 +37,8 @@ use crate::blk::util::blk_str;
 // 	)
 // }
 
-#[test]
-fn fat_blk() {
-	let file = fs::read("./samples/section_fat.blk").unwrap();
-	let output = parse_blk(&file[1..], false, None).unwrap();
-	let expected = BlkField::Struct(blk_str("root"), vec![
+pub(crate) fn make_strict_test() -> BlkField {
+	BlkField::Struct(blk_str("root"), vec![
 		BlkField::Value(blk_str("vec4f"), BlkType::Float4([1.25, 2.5, 5.0, 10.0])),
 		BlkField::Value(blk_str("int"), BlkType::Int(42)),
 		BlkField::Value(blk_str("long"), BlkType::Long(64)),
@@ -60,7 +57,14 @@ fn fat_blk() {
 			BlkField::Value(blk_str("vec2i"), BlkType::Int2([1, 2])),
 			BlkField::Value(blk_str("vec3f"), BlkType::Float3([1.25, 2.5, 5.0])),
 		]),
-	]);
+	])
+}
+
+#[test]
+fn fat_blk() {
+	let file = fs::read("./samples/section_fat.blk").unwrap();
+	let output = parse_blk(&file[1..], false, None).unwrap();
+	let expected = make_strict_test();
 	assert_eq!(expected, output)
 }
 

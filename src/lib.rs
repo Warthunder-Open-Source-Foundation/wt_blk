@@ -1,6 +1,6 @@
 #![feature(array_chunks)]
 #![feature(iter_array_chunks)]
-#![feature(no_coverage)]
+#![feature(coverage_attribute)]
 
 extern crate core;
 
