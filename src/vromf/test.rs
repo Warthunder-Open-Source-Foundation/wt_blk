@@ -21,13 +21,13 @@ fn regular_vromf() {
 	assert_eq!(15632, unpacked.len())
 }
 
+// Smoke-test
 #[test]
 fn regional() {
-	let p = PathBuf::from_str("/home/flareflo/Downloads/regional.vromfs.bin").unwrap();
+	let p = PathBuf::from_str("./samples/regional.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
 	let unpacked = out.unpack_one(&PathBuf::from_str("dldata/downloadable_decals.blk").unwrap(),Some(BlkOutputFormat::BlkText)).unwrap();
-	dbg!(unpacked.len());
 }
 
 #[test]

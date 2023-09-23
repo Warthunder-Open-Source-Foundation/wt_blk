@@ -69,6 +69,7 @@ impl VromfUnpacker<'_> {
 		})
 	}
 
+	// TODO: Deduplicate unpack_all and unpack_one
 	pub fn unpack_all(self, unpack_blk_into: Option<BlkOutputFormat>) -> Result<Vec<File>, Report> {
 		self.files
 			.into_par_iter()
@@ -79,12 +80,12 @@ impl VromfUnpacker<'_> {
 							let mut offset = 0;
 							let file_type = FileType::from_byte(file.1[0])?;
 							if file_type.is_zstd() {
+								if file_type == FileType::FAT_ZSTD { offset += 1 }; // FAT_ZSTD has a leading byte indicating that its unpacked form is of the FAT format
 								file.1 = decode_zstd(&file.1, self.dict.as_ref().map(|e| &e.0))?;
 							} else {
 								// uncompressed Slim and Fat files retain their initial magic bytes
 								offset = 1;
 							};
-							// fs::write("unknown.bin", &&file.1).unwrap();
 
 							let parsed =
 								parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone()).wrap_err(format!("{}", file.0.to_string_lossy()))?;
@@ -126,6 +127,7 @@ impl VromfUnpacker<'_> {
 					let mut offset = 0;
 					let file_type = FileType::from_byte(file.1[0])?;
 					if file_type.is_zstd() {
+						if file_type == FileType::FAT_ZSTD { offset += 1 }; // FAT_ZSTD has a leading byte indicating that its unpacked form is of the FAT format
 						file.1 = decode_zstd(&file.1, self.dict.as_ref().map(|e| &e.0))?;
 					} else {
 						// uncompressed Slim and Fat files retain their initial magic bytes
