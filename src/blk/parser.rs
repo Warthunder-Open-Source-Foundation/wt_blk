@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use color_eyre::Report;
 
 use tracing::error;
 
@@ -20,7 +21,7 @@ pub fn parse_blk(
 	file: &[u8],
 	is_slim: bool,
 	shared_name_map: Option<Arc<NameMap>>,
-) -> Result<BlkField, ParseError> {
+) -> Result<BlkField, Report> {
 	let mut ptr = 0;
 
 	// Globally increments ptr and returns next uleb integer from file
