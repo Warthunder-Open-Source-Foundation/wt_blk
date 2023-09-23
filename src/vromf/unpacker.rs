@@ -6,6 +6,7 @@ use std::{
 };
 
 use color_eyre::{eyre::ContextCompat, Help, Report};
+use color_eyre::eyre::Context;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use zstd::dict::DecoderDictionary;
 
@@ -90,7 +91,7 @@ impl VromfUnpacker<'_> {
 							};
 
 							let parsed =
-								parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone())?;
+								parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone()).context(file.0.to_string_lossy().to_string())?;
 							match format {
 								BlkOutputFormat::BlkText => {
 									file.1 = parsed.as_blk_text()?.into_bytes();
@@ -136,7 +137,7 @@ impl VromfUnpacker<'_> {
 					};
 
 					let parsed =
-						parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone())?;
+						parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone()).context(path_name.to_string_lossy().to_string())?;
 					match format {
 						BlkOutputFormat::BlkText => {
 							file.1 = parsed.as_blk_text()?.into_bytes();
