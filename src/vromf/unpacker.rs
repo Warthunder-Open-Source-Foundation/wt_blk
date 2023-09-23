@@ -91,7 +91,7 @@ impl VromfUnpacker<'_> {
 							};
 
 							let parsed =
-								parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone()).context(file.0.to_string_lossy().to_string())?;
+								parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone()).wrap_err(format!("file-path {}", file.0.to_string_lossy()))?;
 							match format {
 								BlkOutputFormat::BlkText => {
 									file.1 = parsed.as_blk_text()?.into_bytes();
