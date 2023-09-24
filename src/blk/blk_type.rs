@@ -295,21 +295,6 @@ impl Display for BlkType {
 	}
 }
 
-struct Indenter {
-	depth: usize,
-	with: char,
-	times: usize,
-}
-
-impl Display for Indenter {
-	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		for _ in 0..(self.depth * self.times) {
-			f.write_char(self.with)?;
-		}
-		Ok(())
-	}
-}
-
 #[cfg(test)]
 mod test {
 	use crate::blk::blk_type::BlkType;
