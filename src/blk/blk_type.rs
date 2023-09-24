@@ -187,7 +187,7 @@ impl BlkType {
 			BlkType::Bool(_) => BOOL,
 			BlkType::Color { .. } => COLOR,
 		}
-	}
+	} //grcov-excl-line
 
 	pub const fn is_inline(&self) -> bool {
 		match self {
@@ -204,7 +204,7 @@ impl BlkType {
 			BlkType::Bool(_) => true,
 			BlkType::Color { .. } => true,
 		}
-	}
+	} //grcov-excl-line
 
 	pub fn size_bytes(&self) -> usize {
 		match self {
@@ -221,7 +221,7 @@ impl BlkType {
 			BlkType::Bool(_) => 4,
 			BlkType::Color { .. } => 4,
 		}
-	}
+	} //grcov-excl-line
 
 	pub const fn blk_type_name(&self) -> &'static str {
 		match self {
@@ -313,6 +313,6 @@ mod test {
 
 	#[test]
 	fn test_valid_types() {
-		assert_eq!(["t", "i", "ip2", "ip3", "i64", "r", "p2", "p3", "p4", "m", "b", "c"].iter().map(|e|BlkType::is_valid_type(e)).all(|e|e), true)
+		assert_eq!(["t", "i", "ip2", "ip3", "i64", "r", "p2", "p3", "p4", "m", "b", "c"].iter().all(|e|BlkType::is_valid_type(e)), true)
 	}
 }
