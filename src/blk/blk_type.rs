@@ -320,4 +320,14 @@ mod test {
 		let t = BlkType::Str(blk_str("yeet"));
 		assert_eq!(t.to_string(), "t = \"yeet\"")
 	}
+
+	#[test]
+	fn test_invalid_type() {
+		assert_eq!(BlkType::is_valid_type("invalid"), false)
+	}
+
+	#[test]
+	fn test_valid_types() {
+		assert_eq!(["t", "i", "ip2", "ip3", "i64", "r", "p2", "p3", "p4", "m", "b", "c"].iter().map(|e|BlkType::is_valid_type(e)).all(|e|e), true)
+	}
 }
