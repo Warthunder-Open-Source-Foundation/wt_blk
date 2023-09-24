@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, fmt::{Debug, Formatter}, fs, path::{Path, PathBuf}, sync::Arc};
+use std::{ffi::OsStr, fmt::{Debug, Formatter}, path::{Path, PathBuf}, sync::Arc};
 
 use color_eyre::{eyre::ContextCompat, Help, Report};
 use color_eyre::eyre::Context;

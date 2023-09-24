@@ -27,7 +27,7 @@ fn regional() {
 	let p = PathBuf::from_str("./samples/regional.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
-	let unpacked = out.unpack_one(&PathBuf::from_str("dldata/downloadable_decals.blk").unwrap(),Some(BlkOutputFormat::BlkText)).unwrap();
+	let _unpacked = out.unpack_one(&PathBuf::from_str("dldata/downloadable_decals.blk").unwrap(),Some(BlkOutputFormat::BlkText)).unwrap();
 }
 
 #[test]

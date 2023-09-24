@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use color_eyre::eyre::{bail, ContextCompat};
+use color_eyre::eyre::{ContextCompat};
 use color_eyre::Report;
 
 use tracing::error;
