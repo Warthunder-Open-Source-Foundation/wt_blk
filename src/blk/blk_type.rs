@@ -172,6 +172,7 @@ impl BlkType {
 		};
 	}
 
+	// grcov-excl-start
 	pub const fn type_code(&self) -> u8 {
 		match self {
 			BlkType::Str(_) => STRING,
@@ -187,8 +188,9 @@ impl BlkType {
 			BlkType::Bool(_) => BOOL,
 			BlkType::Color { .. } => COLOR,
 		}
-	} //grcov-excl-line
+	} // grcov-excl-stop
 
+	// grcov-excl-start
 	pub const fn is_inline(&self) -> bool {
 		match self {
 			BlkType::Str(_) => false,
@@ -204,8 +206,9 @@ impl BlkType {
 			BlkType::Bool(_) => true,
 			BlkType::Color { .. } => true,
 		}
-	} //grcov-excl-line
+	} // grcov-excl-stop
 
+	// grcov-excl-start
 	pub fn size_bytes(&self) -> usize {
 		match self {
 			BlkType::Str(inner) => inner.len(),
@@ -221,7 +224,7 @@ impl BlkType {
 			BlkType::Bool(_) => 4,
 			BlkType::Color { .. } => 4,
 		}
-	} //grcov-excl-line
+	} // grcov-excl-stop
 
 	pub const fn blk_type_name(&self) -> &'static str {
 		match self {
