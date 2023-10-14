@@ -1,5 +1,5 @@
 use std::{
-	fmt::{Display, Formatter, Write},
+	fmt::{Display, Formatter},
 	sync::Arc,
 };
 
@@ -25,6 +25,15 @@ pub mod blk_type_id {
 	pub const FLOAT12: u8 = 0x0B;
 	pub const BOOL: u8 = 0x09;
 	pub const COLOR: u8 = 0x0A;
+}
+
+mod size {
+	use std::mem::size_of;
+	use crate::blk::blk_type::{BlkType};
+
+	const GENERIC: usize = size_of::<BlkType>() - 24;
+	const OPTIONAL: usize = size_of::<Option<BlkType>>() - 24;
+
 }
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]

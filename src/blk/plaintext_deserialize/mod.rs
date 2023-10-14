@@ -31,7 +31,7 @@ enum State {
 	ParsingValue,
 }
 
-fn _deserialize_blk(input: &mut Cursor, parent: &mut BlkField) -> Result<BlkField, Report> {
+fn _deserialize_blk(input: &mut Cursor, _parent: &mut BlkField) -> Result<BlkField, Report> {
 	let mut typename = String::new();
 	let mut typ = String::new();
 	let mut state = State::Key;
