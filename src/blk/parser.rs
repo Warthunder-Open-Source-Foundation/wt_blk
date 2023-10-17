@@ -178,7 +178,7 @@ pub fn parse_blk(
 		flat_map.push(field);
 	}
 	#[cfg(debug_assertions)]
-	ensure!(results.into_iter().all(|e|e.1.is_none()) == true, "unused values in results");
+	color_eyre::eyre::ensure!(results.into_iter().all(|e|e.1.is_none()) == true, "unused values in results");
 
 	let out = BlkField::from_flat_blocks(flat_map);
 	Ok(out)
