@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use color_eyre::eyre::{ContextCompat};
+use color_eyre::eyre::{ContextCompat, ensure};
 use color_eyre::Report;
 
 use tracing::error;
@@ -79,7 +79,7 @@ pub fn parse_blk(
 
 	let _ptr = (); // Shadowing ptr causes it to become unusable, especially on accident
 
-	let mut results: Vec<(usize, BlkField)> = Vec::with_capacity(params_info.len() / 8);
+	let mut results: Vec<(usize, Option<BlkField>)> = Vec::with_capacity(params_info.len() / 8);
 
 	let chunks = params_info.array_chunks::<8>();
 	if chunks.remainder().len() != 0 {
@@ -107,14 +107,14 @@ pub fn parse_blk(
 					.parsed
 					.clone(),
 			)
-			.ok_or(BadBlkValue)?
+				.ok_or(BadBlkValue)?
 		} else {
 			BlkType::from_raw_param_info(type_id, data, params_data, names.clone())
 				.ok_or(BadBlkValue)?
 		};
 
 		let field = BlkField::Value(name, parsed);
-		results.push((name_id as usize, field));
+		results.push((name_id as usize, Some(field)));
 	}
 
 	let mut blocks = Vec::with_capacity(blocks_count);
@@ -172,11 +172,13 @@ pub fn parse_blk(
 			offset: offset.unwrap_or(0),
 		};
 		for i in (ptr)..(ptr + field_count) {
-			field.fields.push(results[i].1.clone());
+			field.fields.push(results[i].1.take().context("Infallible, already taken value")?);
 		}
 		ptr += field_count;
 		flat_map.push(field);
 	}
+	#[cfg(debug_assertions)]
+	ensure!(results.into_iter().all(|e|e.1.is_none()) == true, "unused values in results");
 
 	let out = BlkField::from_flat_blocks(flat_map);
 	Ok(out)
