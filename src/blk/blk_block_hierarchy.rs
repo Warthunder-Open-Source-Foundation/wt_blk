@@ -23,9 +23,10 @@ impl BlkField {
 	}
 
 	fn from_flat_blocks_with_parent(flat_blocks: &Vec<FlatBlock>, parent: FlatBlock) -> Self {
-		let mut block = BlkField::Struct(parent.name.clone(), parent.fields.clone());
+		let range = parent.location_range();
+		let mut block = BlkField::Struct(parent.name.clone(), parent.fields);
 
-		for flat_block in &flat_blocks[parent.location_range()] {
+		for flat_block in &flat_blocks[range] {
 			block
 				.insert_field(Self::from_flat_blocks_with_parent(
 					flat_blocks,
