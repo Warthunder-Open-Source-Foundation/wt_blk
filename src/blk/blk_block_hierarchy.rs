@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use crate::blk::{blk_structure::BlkField, blk_type::BlkString};
-use crate::blk::blk_block_hierarchy::BlkBlockBuilderError::{InsertingIntoNonStruct, TakenElementMissing, UnclaimedElements};
+use crate::blk::blk_block_hierarchy::BlkBlockBuilderError::{InitialElementMissing, InsertingIntoNonStruct, TakenElementMissing, UnclaimedElements};
 
 #[derive(Debug, thiserror::Error)]
 pub enum BlkBlockBuilderError {
@@ -11,6 +11,8 @@ pub enum BlkBlockBuilderError {
 	InsertingIntoNonStruct,
 	#[error("Unclaimed elements")]
 	UnclaimedElements,
+	#[error("Initial element missing from flat blocks (length 0)")]
+	InitialElementMissing,
 }
 
 #[derive(Debug, Clone)]
@@ -29,7 +31,7 @@ impl FlatBlock {
 
 impl BlkField {
 	pub fn from_flat_blocks(flat_blocks: &mut Vec<Option<FlatBlock>>) -> Result<Self, BlkBlockBuilderError> {
-		let cloned = flat_blocks[0].clone().expect("Infallible");
+		let cloned = flat_blocks[0].take().ok_or(InitialElementMissing)?;
 		let ret = Self::from_flat_blocks_with_parent(flat_blocks, cloned)?;
 
 		#[cfg(debug_assertions)]
