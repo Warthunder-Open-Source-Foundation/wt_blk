@@ -162,7 +162,7 @@ pub fn parse_blk(
 	// Create a flat hierarchy of all blocks including their non-block fields
 	// This ensures all values are actually assigned
 	// After this, the hierarchy will be assigned depth depending on the block-map
-	let mut flat_map: Vec<FlatBlock> = Vec::with_capacity(blocks_count);
+	let mut flat_map: Vec<Option<FlatBlock>> = Vec::with_capacity(blocks_count);
 	let mut ptr = 0;
 	for (name, field_count, blocks, offset) in blocks {
 		let mut field = FlatBlock {
@@ -175,11 +175,11 @@ pub fn parse_blk(
 			field.fields.push(results[i].1.take().context("Infallible, already taken value")?);
 		}
 		ptr += field_count;
-		flat_map.push(field);
+		flat_map.push(Some(field));
 	}
 	#[cfg(debug_assertions)]
 	color_eyre::eyre::ensure!(results.into_iter().all(|e|e.1.is_none()) == true, "unused values in results");
 
-	let out = BlkField::from_flat_blocks(flat_map);
+	let out = BlkField::from_flat_blocks(&mut flat_map)?;
 	Ok(out)
 }

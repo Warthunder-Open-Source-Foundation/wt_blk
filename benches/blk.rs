@@ -1,4 +1,3 @@
-use std::fs;
 use wt_blk::blk::parser::parse_blk;
 use divan::black_box;
 
