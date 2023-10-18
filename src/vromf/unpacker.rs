@@ -70,7 +70,7 @@ impl VromfUnpacker<'_> {
 	}
 
 	// TODO: Deduplicate unpack_all and unpack_one
-	pub fn unpack_all(self, unpack_blk_into: Option<BlkOutputFormat>) -> Result<Vec<File>, Report> {
+	pub fn unpack_all(self, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool) -> Result<Vec<File>, Report> {
 		self.files
 			.into_par_iter()
 			.map(|mut file| {
@@ -87,8 +87,11 @@ impl VromfUnpacker<'_> {
 								offset = 1;
 							};
 
-							let parsed =
+							let mut parsed =
 								parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone()).wrap_err(format!("{}", file.0.to_string_lossy()))?;
+							if apply_overrides {
+								parsed.apply_overrides();
+							}
 							match format {
 								BlkOutputFormat::BlkText => {
 									file.1 = parsed.as_blk_text()?.into_bytes();

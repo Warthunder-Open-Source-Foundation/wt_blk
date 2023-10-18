@@ -8,7 +8,7 @@ fn grp_vromf() {
 	let p = PathBuf::from_str("./samples/grp_hdr.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
-	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json)).unwrap();
+	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true).unwrap();
 	assert_eq!(2322, unpacked.len())
 }
 
@@ -17,7 +17,7 @@ fn regular_vromf() {
 	let p = PathBuf::from_str("./samples/aces.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
-	let unpacked = out.unpack_all(None).unwrap();
+	let unpacked = out.unpack_all(None, true).unwrap();
 	assert_eq!(15632, unpacked.len())
 }
 
@@ -35,7 +35,7 @@ fn no_nm_vromf() {
 	let p = PathBuf::from_str("./samples/atlases.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
-	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json)).unwrap();
+	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true).unwrap();
 	assert_eq!(8924, unpacked.len())
 }
 
