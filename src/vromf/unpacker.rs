@@ -89,15 +89,15 @@ impl VromfUnpacker<'_> {
 
 							let mut parsed =
 								parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone()).wrap_err(format!("{}", file.0.to_string_lossy()))?;
-							if apply_overrides {
-								parsed.apply_overrides();
-							}
 							match format {
 								BlkOutputFormat::BlkText => {
+									if apply_overrides {
+										parsed.apply_overrides();
+									}
 									file.1 = parsed.as_blk_text()?.into_bytes();
 								},
 								BlkOutputFormat::Json => {
-									file.1 = serde_json::to_string_pretty(&parsed.as_serde_obj())?
+									file.1 = serde_json::to_string_pretty(&parsed.as_serde_obj(apply_overrides))?
 										.into_bytes();
 								},
 							}
@@ -145,7 +145,7 @@ impl VromfUnpacker<'_> {
 						},
 						BlkOutputFormat::Json => {
 							file.1 =
-								serde_json::to_string_pretty(&parsed.as_serde_obj())?.into_bytes();
+								serde_json::to_string_pretty(&parsed.as_serde_obj(true))?.into_bytes();
 						},
 					}
 				}

@@ -6,10 +6,13 @@ use crate::blk::{blk_structure::BlkField, blk_type::BlkType};
 use crate::blk::blk_type::BlkString;
 
 impl BlkField {
-	pub fn as_serde_obj(&self) -> Value {
+	pub fn as_serde_obj(&self, should_override: bool) -> Value {
 		let mut merged = self.clone();
 		merged.merge_fields();
-		merged.as_serde_json().1
+		if should_override {
+			merged.apply_overrides();
+		}
+		merged.as_serde_json(should_override).1
 	}
 
 	/// Merges duplicate keys in struct fields into the Merged array variant
@@ -52,7 +55,7 @@ impl BlkField {
 		}
 	}
 
-	pub fn as_serde_json(&self) -> (String, Value) {
+	pub fn as_serde_json(&self, apply_overrides: bool) -> (String, Value) {
 		#[inline(always)]
 		fn std_num(num: f32) -> Value {
 			Value::Number(Number::from_str(&format!("{:?}", num)).expect("Infallible"))
@@ -64,19 +67,19 @@ impl BlkField {
 				match v {
 					BlkType::Str(s) => {
 						json!(s)
-					},
+					}
 					BlkType::Int(s) => {
 						json!(s)
-					},
+					}
 					BlkType::Int2(s) => {
 						json!(s)
-					},
+					}
 					BlkType::Int3(s) => {
 						json!(s)
-					},
+					}
 					BlkType::Long(s) => {
 						json!(s)
-					},
+					}
 					BlkType::Float(s) => std_num(*s as f32),
 					BlkType::Float2(s) => Value::Array(s.iter().map(|e| std_num(*e)).collect()),
 					BlkType::Float3(s) => Value::Array(s.iter().map(|e| std_num(*e)).collect()),
@@ -88,21 +91,21 @@ impl BlkField {
 					),
 					BlkType::Bool(s) => {
 						json!(s)
-					},
+					}
 					BlkType::Color { r, g, b, a } => {
 						json!([r, g, b, a])
-					},
+					}
 				},
 			),
 			BlkField::Struct(k, v) => (
 				k.to_string(),
 				Value::Object(serde_json::Map::from_iter(
-					v.iter().map(|e| e.as_serde_json()),
+					v.iter().map(|e| e.as_serde_json(apply_overrides)),
 				)),
 			),
 			BlkField::Merged(k, v) => (
 				k.to_string(),
-				Value::Array(v.iter().map(|e| e.as_serde_obj()).collect()),
+				Value::Array(v.iter().map(|e| e.as_serde_obj(apply_overrides)).collect()),
 			),
 		}
 	}
@@ -123,7 +126,7 @@ mod test {
 				BlkField::Value(blk_str("mass"), BlkType::Float2([420.0, 360.0])),
 			],
 		);
-		let blk = blk.as_serde_obj();
+		let blk = blk.as_serde_obj(true);
 		let expected = Value::Object(serde_json::Map::from_iter(vec![(
 			"mass".into(),
 			Value::Array(vec![
@@ -155,7 +158,7 @@ mod test {
 				BlkField::Value(blk_str("mass"), BlkType::Float(6.0)),
 			],
 		)
-			.as_serde_obj();
+			.as_serde_obj(true);
 		let expected = Value::Object(serde_json::Map::from_iter(vec![(
 			"mass".into(),
 			Value::Array(vec![
@@ -188,7 +191,7 @@ mod test {
 				Value::Number(Number::from_f64(69.0).unwrap()),
 			]),
 		)]));
-		assert_eq!(blk.as_serde_obj(), expected);
+		assert_eq!(blk.as_serde_obj(true), expected);
 	}
 
 	#[test]
@@ -212,8 +215,9 @@ mod test {
 		]));
 		// println!("Found: {:#?}", blk.as_serde_obj());
 		// println!("Expected: {:#?}", expected);
-		assert_eq!(blk.as_serde_obj(), expected);
+		assert_eq!(blk.as_serde_obj(true), expected);
 	}
+
 	#[test]
 	fn int_without_dot() {
 		let blk = BlkField::Struct(
@@ -230,24 +234,25 @@ mod test {
 		]));
 		// println!("Found: {:#?}", blk.as_serde_obj());
 		// println!("Expected: {:#?}", expected);
-		assert_ne!(blk.as_serde_obj(), expected);
+		assert_ne!(blk.as_serde_obj(true), expected);
 	}
+
 	#[test]
 	fn int_array_without_dot() {
 		let blk = BlkField::Struct(
 			blk_str("root"),
 			vec![
-				BlkField::Value(blk_str("salad"), BlkType::Int2([69,420])),
+				BlkField::Value(blk_str("salad"), BlkType::Int2([69, 420])),
 			],
 		);
 		let expected = Value::Object(serde_json::Map::from_iter(vec![
 			(
 				"salad".into(),
-				Value::Array(vec![Value::Number(Number::from_f64(69.0).unwrap()),Value::Number(Number::from_f64(420.0).unwrap())]),
+				Value::Array(vec![Value::Number(Number::from_f64(69.0).unwrap()), Value::Number(Number::from_f64(420.0).unwrap())]),
 			),
 		]));
 		// println!("Found: {:#?}", blk.as_serde_obj());
 		// println!("Expected: {:#?}", expected);
-		assert_ne!(blk.as_serde_obj(), expected);
+		assert_ne!(blk.as_serde_obj(true), expected);
 	}
 }
