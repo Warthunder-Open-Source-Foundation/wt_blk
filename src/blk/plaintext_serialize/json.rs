@@ -3,6 +3,7 @@ use std::{collections::HashMap, mem, str::FromStr, sync::Arc};
 use serde_json::{json, Number, Value};
 
 use crate::blk::{blk_structure::BlkField, blk_type::BlkType};
+use crate::blk::blk_type::BlkString;
 
 impl BlkField {
 	pub fn as_serde_obj(&self) -> Value {
@@ -25,14 +26,14 @@ impl BlkField {
 				.collect::<Vec<_>>(); // Yoink the old vector to merge its fields
 
 			// Key: Field-name, Value: Indexes of duplicates found
-			let mut maybe_merge: HashMap<String, Vec<usize>> = HashMap::with_capacity(old.len());
+			let mut maybe_merge: HashMap<BlkString, Vec<usize>> = HashMap::with_capacity(old.len());
 
 			for (i, elem) in old.iter().enumerate() {
 				let name = elem.as_ref().expect("Infallible").get_name();
-				if let Some(dupes) = maybe_merge.get_mut(&name) {
+				if let Some(dupes) = maybe_merge.get_mut(name.as_ref()) {
 					dupes.push(i);
 				} else {
-					maybe_merge.insert(name, vec![i]);
+					maybe_merge.insert(name.clone(), vec![i]);
 				}
 			}
 

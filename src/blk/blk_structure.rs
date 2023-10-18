@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::mem;
+use std::mem::replace;
 use serde::{Deserialize, Serialize};
 
 use crate::blk::blk_type::{BlkString, BlkType};
@@ -22,22 +25,65 @@ impl BlkField {
 		BlkField::Struct(name, vec![])
 	}
 
+	pub fn apply_overrides(&mut self) {
+		match self {
+			BlkField::Struct(_, values) => {
+				// Move values out of struct, we will return it later
+				let mut moved_values = mem::replace(values, vec![]);
+
+				moved_values.iter_mut().for_each(|v| v.apply_overrides());
+
+				// Left are overrides
+				let with_name: (Vec<_>, Vec<_>) = moved_values.into_iter()
+					.map(|e| (e.get_name(), e))
+					.partition(|(name, _)| name.starts_with("override:"));
+
+
+				// Map of to-replace keys
+				let mut map: HashMap<BlkString, BlkField> = HashMap::from_iter(with_name.1);
+
+				// Replace all keys where
+				for (key, mut value) in with_name.0 {
+					let replaced = key.replace("override:", "");
+					if let Some(inner) = map.get_mut(replaced.as_str()) {
+						value.set_name(blk_str(replaced.as_str()));
+						*inner = value;
+					}
+				}
+				*values = map.into_iter().map(|e|e.1).collect();
+			}
+			_ => {}
+		}
+	}
+
 	#[must_use]
 	pub fn insert_field(&mut self, field: Self) -> Option<()> {
 		match self {
 			BlkField::Struct(_, fields) => {
 				fields.push(field);
 				Some(())
-			},
+			}
 			_ => None,
 		}
 	}
 
-	pub fn get_name(&self) -> String {
+	pub fn get_name(&self) -> BlkString {
 		match self {
-			BlkField::Value(name, _) => name.to_string(),
-			BlkField::Struct(name, _) => name.to_string(),
-			BlkField::Merged(name, _) => name.to_string(),
+			BlkField::Value(name, _) |
+			BlkField::Struct(name, _) |
+			BlkField::Merged(name, _) => {
+				name.clone()
+			}
+		}
+	}
+
+	pub fn set_name(&mut self, new: BlkString) {
+		match self {
+			BlkField::Value(name, _) |
+			BlkField::Struct(name, _) |
+			BlkField::Merged(name, _) => {
+				*name = new;
+			}
 		}
 	}
 
@@ -70,13 +116,13 @@ impl BlkField {
 			BlkField::Value(key, value) => {
 				*total += key.len();
 				*total += value.size_bytes();
-			},
+			}
 			BlkField::Struct(key, fields) | BlkField::Merged(key, fields) => {
 				*total += key.len();
 				for field in fields {
 					field._estimate_size(total);
 				}
-			},
+			}
 		}
 	}
 }
@@ -84,4 +130,24 @@ impl BlkField {
 pub enum BlkFieldError {
 	// First is full pointer, 2nd is offending / missing string
 	NoSuchField(String, String),
+}
+
+#[cfg(test)]
+mod test {
+	use crate::blk::blk_structure::BlkField;
+	use crate::blk::blk_type::BlkType;
+	use crate::blk::util::blk_str;
+
+	#[test]
+	fn should_override() {
+		let mut before = BlkField::new_root();
+		before.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(0))).unwrap();
+		before.insert_field(BlkField::Value(blk_str("override:value"), BlkType::Int(42))).unwrap();
+		before.apply_overrides();
+
+		let mut expected = BlkField::new_root();
+		expected.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(42))).unwrap();
+
+		assert_eq!(before, expected);
+	}
 }
