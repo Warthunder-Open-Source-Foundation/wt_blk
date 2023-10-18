@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::mem;
 use std::mem::replace;
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 use crate::blk::blk_type::{BlkString, BlkType};
@@ -40,7 +41,7 @@ impl BlkField {
 
 
 				// Map of to-replace keys
-				let mut map: HashMap<BlkString, BlkField> = HashMap::from_iter(with_name.1);
+				let mut map: IndexMap<BlkString, BlkField> = IndexMap::from_iter(with_name.1);
 
 				// Replace all keys where
 				for (key, mut value) in with_name.0 {
@@ -149,5 +150,17 @@ mod test {
 		expected.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(42))).unwrap();
 
 		assert_eq!(before, expected);
+	}
+
+	#[test]
+	fn preserve_order() {
+		let mut after = BlkField::new_root();
+		after.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(0))).unwrap();
+		after.insert_field(BlkField::Value(blk_str("value3"), BlkType::Int(42))).unwrap();
+		after.insert_field(BlkField::Value(blk_str("value71q234"), BlkType::Int(213123))).unwrap();
+		let before = after.clone();
+		after.apply_overrides();
+
+		assert_eq!(after, before);
 	}
 }
