@@ -121,7 +121,7 @@ impl VromfUnpacker<'_> {
 			.files
 			.iter()
 			.find(|e| e.0 == path_name)
-			.context("File {path_name} was not found in VROMF")
+			.context(format!("File {} was not found in VROMF", path_name.to_string_lossy()))
 			.suggestion("Validate file-name and ensure it was typed correctly")?
 			.to_owned();
 		match () {
