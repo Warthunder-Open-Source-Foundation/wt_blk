@@ -16,6 +16,7 @@ impl Iterator for Cursor {
 	}
 }
 
+#[allow(unused)]
 pub fn deserialize_blk(input: &str) -> Result<BlkField, Report> {
 	let mut c = Cursor {
 		at: input.chars().count(),
@@ -65,7 +66,7 @@ fn _deserialize_blk(input: &mut Cursor, _parent: &mut BlkField) -> Result<BlkFie
 
 
 
-
+#[allow(unused)]
 #[cfg(test)]
 mod test {
 	use std::fs;
