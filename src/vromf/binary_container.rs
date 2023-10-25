@@ -53,7 +53,12 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<Vec<u8>, Report> {
 		// The version is always reversed in order. It may never exceed 255
 		let _version = (s[7], s[6], s[5], s[4]);
 
-		idx_file_offset(&mut ptr, extended_header_size as usize)?
+		// Null length means the remaining bytes are used
+		if extended_header_size == 0 {
+			&file[ptr..]
+		} else {
+			idx_file_offset(&mut ptr, extended_header_size as usize)?
+		}
 	} else {
 		if pack_type.is_compressed() {
 			idx_file_offset(&mut ptr, extended_header_size as usize)?
@@ -83,12 +88,6 @@ mod test {
 	use std::fs;
 
 	use crate::vromf::binary_container::decode_bin_vromf;
-
-	#[test]
-	fn decode_simple() {
-		let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
-		decode_bin_vromf(&f).unwrap();
-	}
 
 	#[test]
 	fn decode_compressed() {

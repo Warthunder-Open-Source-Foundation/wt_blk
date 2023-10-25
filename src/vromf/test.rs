@@ -1,4 +1,6 @@
 use std::{fs, path::PathBuf, str::FromStr};
+use crate::vromf::binary_container::decode_bin_vromf;
+use crate::vromf::inner_container::decode_inner_vromf;
 
 use crate::vromf::unpacker::VromfUnpacker;
 use crate::vromf::unpacker::BlkOutputFormat;
@@ -37,6 +39,23 @@ fn no_nm_vromf() {
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
 	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true).unwrap();
 	assert_eq!(8924, unpacked.len())
+}
+
+#[test]
+fn decode_simple() {
+	let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
+	let decoded = decode_bin_vromf(&f).unwrap();
+	let _ = decode_inner_vromf(&decoded).unwrap();
+}
+
+//New format
+#[test]
+fn new_format() {
+	let p = PathBuf::from_str("./samples/2_30_vromfs/aces.vromfs.bin").unwrap();
+	let file = fs::read(&p).unwrap();
+	let out = VromfUnpacker::from_file((p, file)).unwrap();
+	let _unpacked = out.unpack_all(None, false).unwrap();
+	println!("{}", _unpacked.len());
 }
 
 // Used for bugfixing, re-enable when this file acts up again
