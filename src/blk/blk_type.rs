@@ -31,8 +31,8 @@ mod size {
 	use std::mem::size_of;
 	use crate::blk::blk_type::{BlkType};
 
-	const GENERIC: usize = size_of::<BlkType>() - 24;
-	const OPTIONAL: usize = size_of::<Option<BlkType>>() - 24;
+	const _GENERIC: usize = size_of::<BlkType>() - 24;
+	const _OPTIONAL: usize = size_of::<Option<BlkType>>() - 24;
 
 }
 
