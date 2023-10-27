@@ -1,37 +1,37 @@
-use lazy_static::lazy_static;
+use std::mem::size_of;
 
 // This magic sequence runs XOR over input to deobfuscate it
-lazy_static! {
-	static ref HEAD: u128 = {
-		let hexed = hex::decode(b"55aa55aa0ff00ff055aa55aa48124812").unwrap();
-		u128::from_ne_bytes(hexed.try_into().unwrap())
-	};
-	static ref TAIL: u128 = {
-		let hexed = hex::decode(b"4812481255aa55aa0ff00ff055aa55aa").unwrap();
-		u128::from_ne_bytes(hexed.try_into().unwrap())
-	};
-}
+const ZSTD_XOR_PATTERN: [u32; 4] = [0xAA55AA55, 0xF00FF00F, 0xAA55AA55, 0x12481248];
+const ZSTD_XOR_PATTERN_REV: [u32; 4] = [
+	ZSTD_XOR_PATTERN[3],
+	ZSTD_XOR_PATTERN[2],
+	ZSTD_XOR_PATTERN[1],
+	ZSTD_XOR_PATTERN[0],
+];
 
+/// Unsets obfuscation bytes as defined by <https://github.com/GaijinEntertainment/DagorEngine/blob/main/prog/dagorInclude/supp/dag_zstdObfuscate.h>
 pub fn deobfuscate(input: &mut [u8]) {
 	match input.len() {
 		0..=15 => return,
 		16..=31 => {
-			xor_at_with(input, 0, *HEAD);
-		},
+			xor_at_with(input, 0, ZSTD_XOR_PATTERN);
+		}
 		32.. => {
-			xor_at_with(input, 0, *HEAD);
+			xor_at_with(input, 0, ZSTD_XOR_PATTERN);
 			let at = (input.len() & 0x03FF_FFFC) - 16;
-			xor_at_with(input, at, *TAIL);
-		},
+			xor_at_with(input, at, ZSTD_XOR_PATTERN_REV);
+		}
 		_ => {
 			unreachable!()
-		},
+		}
 	}
 }
 
-fn xor_at_with(input: &mut [u8], at: usize, with: u128) {
+
+// XORS sequence of 16 bytes from given starting point with 4x 32-bit u32
+fn xor_at_with(input: &mut [u8], at: usize, with: [u32; 4]) {
 	for (i, byte) in input[at..(at + 16)].iter_mut().enumerate() {
-		*byte = *byte ^ with.to_ne_bytes()[i];
+		*byte = *byte ^ with[i / 4].to_le_bytes()[i % size_of::<u32>()];
 	}
 }
 

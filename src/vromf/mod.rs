@@ -1,4 +1,5 @@
-mod de_obfuscation;
+/// De-obfuscates vromv stream and/or beginning
+pub mod de_obfuscation;
 mod enums;
 mod util;
 
