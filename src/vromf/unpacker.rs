@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, fmt::{Debug, Formatter}, path::{Path, PathBuf}, sync::Arc};
+use std::{ffi::OsStr, fmt::{Debug, Formatter}, mem, path::{Path, PathBuf}, sync::Arc};
 
 use color_eyre::{eyre::ContextCompat, Help, Report};
 use color_eyre::eyre::Context;
@@ -33,8 +33,8 @@ impl Debug for DictWrapper<'_> {
 #[derive(Debug)]
 pub struct VromfUnpacker<'a> {
 	files: Vec<File>,
-	dict:  Option<Arc<DictWrapper<'a>>>,
-	nm:    Option<Arc<NameMap>>,
+	dict: Option<Arc<DictWrapper<'a>>>,
+	nm: Option<Arc<NameMap>>,
 }
 
 /// Defines plaintext format should be exported to
@@ -69,45 +69,13 @@ impl VromfUnpacker<'_> {
 		})
 	}
 
-	// TODO: Deduplicate unpack_all and unpack_one
-	pub fn unpack_all(self, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool) -> Result<Vec<File>, Report> {
-		self.files
-			.into_par_iter()
-			.map(|mut file| {
-				match () {
-					_ if maybe_blk(&file) => {
-						if let Some(format) = unpack_blk_into {
-							let mut offset = 0;
-							let file_type = FileType::from_byte(file.1[0])?;
-							if file_type.is_zstd() {
-								if file_type == FileType::FAT_ZSTD { offset += 1 }; // FAT_ZSTD has a leading byte indicating that its unpacked form is of the FAT format
-								file.1 = decode_zstd(&file.1, self.dict.as_ref().map(|e| &e.0))?;
-							} else {
-								// uncompressed Slim and Fat files retain their initial magic bytes
-								offset = 1;
-							};
-
-							let mut parsed =
-								parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone()).wrap_err(format!("{}", file.0.to_string_lossy()))?;
-							match format {
-								BlkOutputFormat::BlkText => {
-									if apply_overrides {
-										parsed.apply_overrides();
-									}
-									file.1 = parsed.as_blk_text()?.into_bytes();
-								},
-								BlkOutputFormat::Json => {
-									file.1 = serde_json::to_string_pretty(&parsed.as_serde_obj(apply_overrides))?
-										.into_bytes();
-								},
-							}
-						}
-						Ok(file)
-					},
-
-					// Default to the raw file
-					_ => Ok(file),
-				}
+	pub fn unpack_all(mut self, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool) -> Result<Vec<File>, Report> {
+		// Important: We own self here, so "destroying" the files vector isn't an issue
+		// meaning an option isnt required
+		let files = mem::replace(&mut self.files, vec![]);
+		files.into_par_iter()
+			.map(|file| {
+				self.unpack_file(file, unpack_blk_into, apply_overrides)
 			})
 			.collect::<Result<Vec<File>, Report>>()
 	}
@@ -116,14 +84,19 @@ impl VromfUnpacker<'_> {
 		&self,
 		path_name: &Path,
 		unpack_blk_into: Option<BlkOutputFormat>,
-	) -> Result<Vec<u8>, Report> {
-		let mut file = self
+		apply_overrides: bool,
+	) -> Result<File, Report> {
+		let file = self
 			.files
 			.iter()
 			.find(|e| e.0 == path_name)
 			.context(format!("File {} was not found in VROMF", path_name.to_string_lossy()))
 			.suggestion("Validate file-name and ensure it was typed correctly")?
 			.to_owned();
+		self.unpack_file(file, unpack_blk_into, apply_overrides)
+	}
+
+	pub fn unpack_file(&self, mut file: File, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool) -> Result<File, Report> {
 		match () {
 			_ if maybe_blk(&file) => {
 				if let Some(format) = unpack_blk_into {
@@ -137,23 +110,26 @@ impl VromfUnpacker<'_> {
 						offset = 1;
 					};
 
-					let parsed =
-						parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone()).context(path_name.to_string_lossy().to_string())?;
+					let mut parsed =
+						parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone()).wrap_err(format!("{}", file.0.to_string_lossy()))?;
 					match format {
 						BlkOutputFormat::BlkText => {
+							if apply_overrides {
+								parsed.apply_overrides();
+							}
 							file.1 = parsed.as_blk_text()?.into_bytes();
-						},
+						}
 						BlkOutputFormat::Json => {
-							file.1 =
-								serde_json::to_string_pretty(&parsed.as_serde_obj(true))?.into_bytes();
-						},
+							file.1 = serde_json::to_string_pretty(&parsed.as_serde_obj(apply_overrides))?
+								.into_bytes();
+						}
 					}
 				}
-				Ok(file.1)
-			},
+				Ok(file)
+			}
 
 			// Default to the raw file
-			_ => Ok(file.1),
+			_ => Ok(file),
 		}
 	}
 
@@ -182,7 +158,7 @@ impl VromfUnpacker<'_> {
 					file_type.is_slim(),
 					self.nm.clone(),
 				)?)
-			},
+			}
 			_ => panic!("Not a blk"),
 		}
 	}
