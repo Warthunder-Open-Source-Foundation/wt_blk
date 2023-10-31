@@ -104,7 +104,7 @@ impl VromfUnpacker<'_> {
 					let file_type = FileType::from_byte(file.1[0])?;
 					if file_type.is_zstd() {
 						if file_type == FileType::FAT_ZSTD { offset += 1 }; // FAT_ZSTD has a leading byte indicating that its unpacked form is of the FAT format
-						file.1 = decode_zstd(&file.1, self.dict.as_ref().map(|e| &e.0))?;
+						file.1 = decode_zstd(file_type, &file.1, self.dict.as_ref().map(|e| &e.0))?;
 					} else {
 						// uncompressed Slim and Fat files retain their initial magic bytes
 						offset = 1;
@@ -147,7 +147,7 @@ impl VromfUnpacker<'_> {
 				let mut offset = 0;
 				let file_type = FileType::from_byte(file.1[0])?;
 				if file_type.is_zstd() {
-					file.1 = decode_zstd(&file.1, self.dict.as_ref().map(|e| &e.0))?;
+					file.1 = decode_zstd(file_type, &file.1, self.dict.as_ref().map(|e| &e.0))?;
 				} else {
 					// uncompressed Slim and Fat files retain their initial magic bytes
 					offset = 1;

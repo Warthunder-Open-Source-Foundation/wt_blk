@@ -87,7 +87,7 @@ fn slim_zstd_rendist() {
 	let mut offset = 0;
 	let file_type = FileType::from_byte(file[0]).unwrap();
 	if file_type.is_zstd() {
-		file = decode_zstd(&file, Some(&frame_decoder)).unwrap();
+		file = decode_zstd(file_type, &file, Some(&frame_decoder)).unwrap();
 	} else {
 		// uncompressed Slim and Fat files retain their initial magic bytes
 		offset = 1;

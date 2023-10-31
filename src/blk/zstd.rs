@@ -8,10 +8,7 @@ use crate::blk::file::FileType;
 pub type BlkDecoder<'a> = DecoderDictionary<'a>;
 
 /// Decodes zstd compressed file using shared dictionary if available
-pub fn decode_zstd(file: &[u8], frame_decoder: Option<&BlkDecoder>) -> Result<Vec<u8>, Report> {
-	// validate magic byte
-	let file_type = FileType::from_byte(*file.get(0).context("Empty BLK file passed to decoder")?)?;
-
+pub fn decode_zstd(file_type: FileType, file: &[u8], frame_decoder: Option<&BlkDecoder>) -> Result<Vec<u8>, Report> {
 	let (len, to_decode) = if !file_type.is_slim() {
 		let len_raw = &file[1..4];
 		let len = u32::from_be_bytes([0, len_raw[2], len_raw[1], len_raw[0]]);
@@ -41,20 +38,21 @@ mod test {
 	use std::{fs, io::Read};
 
 	use zstd::{dict::DecoderDictionary, Decoder};
+	use crate::blk::file::FileType;
 
 	use crate::blk::zstd::decode_zstd;
 
 	#[test]
 	fn fat_zstd() {
 		let decoded =
-			decode_zstd(include_bytes!("../../samples/section_fat_zst.blk"), None).unwrap();
+			decode_zstd(FileType::FAT_ZSTD, include_bytes!("../../samples/section_fat_zst.blk"), None).unwrap();
 		pretty_assertions::assert_eq!(&decoded, &include_bytes!("../../samples/section_fat.blk"));
 	}
 
 	#[test]
 	fn slim_zstd() {
 		let decoded =
-			decode_zstd(include_bytes!("../../samples/section_slim_zst.blk"), None).unwrap();
+			decode_zstd(FileType::SLIM_ZSTD,include_bytes!("../../samples/section_slim_zst.blk"), None).unwrap();
 		pretty_assertions::assert_eq!(
 			&decoded,
 			&include_bytes!("../../samples/section_slim.blk")[1..]
