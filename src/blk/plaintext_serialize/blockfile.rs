@@ -44,7 +44,7 @@ impl BlkField {
 
 #[cfg(test)]
 mod test {
-	use crate::blk::test::make_strict_test;
+	use crate::blk::make_strict_test;
 
 	#[test]
 	fn test_expected() {

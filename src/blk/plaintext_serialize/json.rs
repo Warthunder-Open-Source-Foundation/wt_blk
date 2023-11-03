@@ -55,6 +55,7 @@ impl BlkField {
 		}
 	}
 
+	/// Returns key as string, and value as `serde_json::Value`
 	pub fn as_serde_json(&self, apply_overrides: bool) -> (String, Value) {
 		#[inline(always)]
 		fn std_num(num: f32) -> Value {
@@ -113,9 +114,10 @@ impl BlkField {
 
 #[cfg(test)]
 mod test {
+	use std::fs;
 	use serde_json::{Number, Value};
 
-	use crate::blk::{blk_structure::BlkField, blk_type::BlkType, util::blk_str};
+	use crate::blk::{blk_structure::BlkField, blk_type::BlkType, make_strict_test, util::blk_str};
 
 	#[test]
 	fn dedup_arr() {
@@ -254,5 +256,11 @@ mod test {
 		// println!("Found: {:#?}", blk.as_serde_obj());
 		// println!("Expected: {:#?}", expected);
 		assert_ne!(blk.as_serde_obj(true), expected);
+	}
+
+	#[test]
+	fn consistency() {
+		let sample = make_strict_test();
+		assert_eq!(serde_json::to_string_pretty(&sample.as_serde_obj(true)).unwrap(), fs::read_to_string("./samples/expected.json").unwrap());
 	}
 }

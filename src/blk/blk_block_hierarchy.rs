@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use crate::blk::{blk_structure::BlkField, blk_type::BlkString};
-use crate::blk::blk_block_hierarchy::BlkBlockBuilderError::{InitialElementMissing, InsertingIntoNonStruct, TakenElementMissing, UnclaimedElements};
+use crate::blk::blk_block_hierarchy::BlkBlockBuilderError::{InitialElementMissing, InsertingIntoNonStruct, TakenElementMissing};
 
 #[derive(Debug, thiserror::Error)]
 pub enum BlkBlockBuilderError {

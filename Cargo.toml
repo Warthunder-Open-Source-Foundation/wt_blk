@@ -19,6 +19,7 @@ memmap2 = "0.5.10"
 color-eyre = "^0.6"
 strum = { version = "0.25.0", default-features = false, features = ["derive"] }
 indexmap = "2.0.0"
+cfg-if = "1.0.0"
 
 [profile.test]
 opt-level = 3

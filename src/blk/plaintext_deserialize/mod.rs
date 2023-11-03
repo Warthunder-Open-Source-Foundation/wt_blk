@@ -71,7 +71,7 @@ fn _deserialize_blk(input: &mut Cursor, _parent: &mut BlkField) -> Result<BlkFie
 mod test {
 	use std::fs;
 	use crate::blk::plaintext_deserialize::deserialize_blk;
-	use crate::blk::test::make_strict_test;
+	use crate::blk::make_strict_test;
 
 	// #[test]
 	fn test_simple() {
