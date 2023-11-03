@@ -64,7 +64,6 @@ pub fn parse_blk(
 		}
 		Arc::new(names)
 	};
-	dbg!(names.clone());
 
 	let blocks_count = next_uleb(&mut ptr)?;
 
