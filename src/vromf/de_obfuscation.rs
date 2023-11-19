@@ -21,9 +21,6 @@ pub fn deobfuscate(input: &mut [u8]) {
 			let at = (input.len() & 0x03FF_FFFC) - 16;
 			xor_at_with(input, at, ZSTD_XOR_PATTERN_REV);
 		}
-		_ => {
-			unreachable!()
-		}
 	}
 }
 

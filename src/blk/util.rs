@@ -30,6 +30,15 @@ pub(crate) fn bytes_to_int(input: &[u8]) -> Option<i32> {
 }
 
 #[inline(always)]
+pub(crate) fn bytes_to_uint(input: &[u8]) -> Option<u32> {
+	if input.len() != 4 {
+		return None;
+	}
+
+	Some(u32::from_le_bytes([input[0], input[1], input[2], input[3]]))
+}
+
+#[inline(always)]
 pub(crate) fn bytes_to_long(input: &[u8]) -> Option<i64> {
 	if input.len() != 8 {
 		return None;

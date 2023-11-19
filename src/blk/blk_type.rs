@@ -9,6 +9,7 @@ use crate::blk::{
 	blk_type::blk_type_id::*,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset},
 };
+use crate::blk::util::bytes_to_uint;
 
 pub type BlkString = Arc<str>;
 
@@ -79,7 +80,7 @@ impl BlkType {
 				// Strings have their offset encoded as a LE integer constructed from 31 bits
 				// The first bit in their field is an indicator whether or not to search in the regular data region or name map
 				// The remaining bytes represent the integer
-				let offset = u32::from_le_bytes([field[0], field[1], field[2], field[3]]); // Construct int from the individual bytes
+				let offset = bytes_to_uint(field)?; // Construct int from the individual bytes
 				let in_nm = (offset >> 31) == 1; // Compare first bit to check where to look
 				let offset = i32::MAX as u32 & offset; // Set first byte to 0
 				let res: BlkString = if in_nm {
