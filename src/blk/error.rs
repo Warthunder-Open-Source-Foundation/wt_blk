@@ -1,6 +1,7 @@
 use std::ops::Range;
 
 use thiserror::Error;
+use crate::blk::blk_decoder::BlkDecoderError;
 
 #[derive(Debug, Error, Clone, Eq, PartialEq)]
 pub enum ParseError {
@@ -32,4 +33,7 @@ pub enum ParseError {
 
 	#[error("Missing dictionary")]
 	MissingDict {},
+
+	#[error(transparent)]
+	BlkDecoderError(BlkDecoderError),
 }

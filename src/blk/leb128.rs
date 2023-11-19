@@ -1,7 +1,7 @@
 use crate::blk::error::ParseError;
 
-// Yields length in buffer and value
-// ULEB variable length integer format: `https://en.wikipedia.org/wiki/LEB128`
+/// Yields length in buffer and value
+/// ULEB variable length integer format: `https://en.wikipedia.org/wiki/LEB128`
 #[inline]
 pub fn uleb128(bytes: &[u8]) -> Result<(usize, usize), ParseError> {
 	let mut result = 0_usize;

@@ -66,6 +66,9 @@ pub mod plaintext_serialize;
 /// Implementations for deserializing into BLk binary format from BlkText
 mod plaintext_deserialize;
 
+/// Utility struct which wraps
+mod blk_decoder;
+
 #[allow(dead_code)]
 fn test_parse_dir(
 	pile: &mut Vec<(String, Vec<u8>)>,
