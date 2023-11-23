@@ -1,8 +1,12 @@
 use std::{ffi::OsStr, fmt::{Debug, Formatter}, mem, path::{Path, PathBuf}, sync::Arc};
+use std::io::{Cursor, Write};
+use std::ops::Deref;
 
 use color_eyre::{eyre::ContextCompat, Help, Report};
 use color_eyre::eyre::Context;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
+use zip::write::FileOptions;
+use zip::{CompressionMethod, ZipWriter};
 use zstd::dict::DecoderDictionary;
 
 use crate::{
@@ -38,10 +42,16 @@ pub struct VromfUnpacker<'a> {
 }
 
 /// Defines plaintext format should be exported to
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum BlkOutputFormat {
 	Json,
 	BlkText,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum ZipFormat {
+	Uncompressed,
+	Compressed(u8),
 }
 
 
@@ -78,6 +88,41 @@ impl VromfUnpacker<'_> {
 				self.unpack_file(file, unpack_blk_into, apply_overrides)
 			})
 			.collect::<Result<Vec<File>, Report>>()
+	}
+
+	pub fn unpack_all_to_zip(mut self, zip_format: ZipFormat, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool) -> Result<Vec<u8>, Report> {
+		// Important: We own self here, so "destroying" the files vector isn't an issue
+		// meaning an option isnt required
+		let files = mem::replace(&mut self.files, Default::default());
+		let unpacked = files.into_par_iter()
+			.map(|file| {
+				self.unpack_file(file, unpack_blk_into, apply_overrides)
+			})
+			.collect::<Result<Vec<File>, Report>>()?;
+
+		let mut buf = Cursor::new(Vec::with_capacity(4096));
+		let mut writer = ZipWriter::new(&mut buf);
+
+		let (compression_level, compression_method) = match zip_format {
+			ZipFormat::Uncompressed => {
+				(0, CompressionMethod::STORE)
+			}
+			ZipFormat::Compressed(level) => {
+				(level, CompressionMethod::DEFLATE)
+			}
+		};
+
+		for (path, data) in unpacked.into_iter() {
+			writer.start_file(path.to_string_lossy(),
+							  FileOptions::default()
+								  .compression_level(Some(compression_level as i32))
+								  .compression_method(compression_method),
+			)?;
+			writer.write_all(&data)?;
+		}
+
+		let buf = mem::replace(writer.finish()?, Default::default());
+		Ok(buf.into_inner())
 	}
 
 	pub fn unpack_one(
