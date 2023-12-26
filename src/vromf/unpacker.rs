@@ -1,9 +1,11 @@
 use std::{ffi::OsStr, fmt::{Debug, Formatter}, mem, path::{Path, PathBuf}, sync::Arc};
 use std::io::{Cursor, Write};
+use std::str::FromStr;
 
 use color_eyre::{eyre::ContextCompat, Help, Report};
-use color_eyre::eyre::Context;
+use color_eyre::eyre::{Context, eyre};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
+use wt_version::Version;
 use zip::write::FileOptions;
 use zip::{CompressionMethod, ZipWriter};
 use zstd::dict::DecoderDictionary;
@@ -208,6 +210,20 @@ impl VromfUnpacker<'_> {
 			}
 			_ => panic!("Not a blk"),
 		}
+	}
+
+	pub fn query_versions(&self) -> Result<Vec<Version>, Report> {
+		let mut versions = vec![];
+		 if let Some(meta) = self.metadata.version {
+			versions.push(Version::new(meta[0] as u16, meta[1] as u16, meta[2] as u16, meta[3] as u16));
+		};
+
+		if let Ok((_, version_file)) = self.unpack_one(Path::new("version"), None, false) {
+			let s = String::from_utf8(version_file)?;
+			versions.push(Version::from_str(&s).map_err(|_| eyre!("Invalid version file contents: {s}"))?);
+		}
+
+		Ok(versions)
 	}
 }
 

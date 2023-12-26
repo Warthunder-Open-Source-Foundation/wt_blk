@@ -21,6 +21,7 @@ strum = { version = "0.25.0", default-features = false, features = ["derive"] }
 indexmap = "2.0.0"
 cfg-if = "1.0.0"
 zip = { version = "0.6.6", features = ["deflate"], default-features = false}
+wt_version = { git = "https://github.com/Warthunder-Open-Source-Foundation/wt_version.git" }
 
 [profile.test]
 opt-level = 3
