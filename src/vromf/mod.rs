@@ -12,6 +12,7 @@ mod inner_container;
 #[cfg(test)]
 mod test;
 mod unpacker;
+mod header;
 
 pub use {
 	unpacker::VromfUnpacker,

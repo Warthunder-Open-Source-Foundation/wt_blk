@@ -1,6 +1,5 @@
 use std::{ffi::OsStr, fmt::{Debug, Formatter}, mem, path::{Path, PathBuf}, sync::Arc};
 use std::io::{Cursor, Write};
-use std::ops::Deref;
 
 use color_eyre::{eyre::ContextCompat, Help, Report};
 use color_eyre::eyre::Context;
@@ -19,6 +18,7 @@ use crate::{
 	},
 	vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf},
 };
+use crate::vromf::header::Metadata;
 
 /// Simple type alias for (Path, Data) pair
 pub type File = (PathBuf, Vec<u8>);
@@ -39,6 +39,7 @@ pub struct VromfUnpacker<'a> {
 	files: Vec<File>,
 	dict: Option<Arc<DictWrapper<'a>>>,
 	nm: Option<Arc<NameMap>>,
+	metadata: Metadata,
 }
 
 /// Defines plaintext format should be exported to
@@ -57,7 +58,7 @@ pub enum ZipFormat {
 
 impl VromfUnpacker<'_> {
 	pub fn from_file(file: File) -> Result<Self, Report> {
-		let decoded = decode_bin_vromf(&file.1)?;
+		let (decoded, metadata) = decode_bin_vromf(&file.1)?;
 		let inner = decode_inner_vromf(&decoded)?;
 
 		let nm = inner
@@ -76,6 +77,7 @@ impl VromfUnpacker<'_> {
 			files: inner,
 			dict,
 			nm,
+			metadata,
 		})
 	}
 

@@ -1,5 +1,4 @@
 use std::{fs, path::PathBuf, str::FromStr};
-use std::num::NonZeroU8;
 use crate::vromf::binary_container::decode_bin_vromf;
 use crate::vromf::inner_container::decode_inner_vromf;
 
@@ -55,7 +54,7 @@ fn no_nm_vromf() {
 #[test]
 fn decode_simple() {
 	let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
-	let decoded = decode_bin_vromf(&f).unwrap();
+	let (decoded, _) = decode_bin_vromf(&f).unwrap();
 	let _ = decode_inner_vromf(&decoded).unwrap();
 }
 
