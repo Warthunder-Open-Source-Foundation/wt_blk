@@ -9,6 +9,8 @@ use std::{
 
 pub use ::zstd::dict::DecoderDictionary;
 use cfg_if::cfg_if;
+use color_eyre::eyre::{Context, ContextCompat};
+use color_eyre::Report;
 
 use crate::blk::{
 	file::FileType,
@@ -19,6 +21,7 @@ use crate::blk::{
 use crate::blk::blk_structure::BlkField;
 use crate::blk::blk_type::BlkType;
 use crate::blk::util::blk_str;
+use crate::vromf::BlkOutputFormat;
 
 /// Decodes flat map of fields into the corresponding nested datastructure
 mod blk_block_hierarchy;
@@ -91,7 +94,23 @@ fn test_parse_dir(
 }
 
 /// Highest-level function for unpacking one BLK explicitly, for direct low level control call [`parser::parse_blk`]
-pub fn parse_file(
+pub fn unpack_blk(mut file: Vec<u8>, dictionary: Option<&BlkDecoder>, nm: Option<Arc<NameMap>>) -> Result<BlkField, Report> {
+	let mut offset = 0;
+	let file_type = FileType::from_byte(file[0])?;
+	if file_type.is_zstd() {
+		if file_type == FileType::FAT_ZSTD { offset += 1 }; // FAT_ZSTD has a leading byte indicating that its unpacked form is of the FAT format
+		file = decode_zstd(file_type, &file, dictionary)?;
+	} else {
+		// uncompressed Slim and Fat files retain their initial magic bytes
+		offset = 1;
+	};
+
+	let parsed = parse_blk(&file[offset..], file_type.is_slim(), nm)?;
+	Ok(parsed)
+}
+
+
+pub(crate) fn test_parse_file(
 	mut file: Vec<u8>,
 	fd: Arc<BlkDecoder>,
 	shared_name_map: Option<Arc<NameMap>>,
@@ -109,7 +128,7 @@ pub fn parse_file(
 		serde_json::to_string(
 			&parse_blk(&file[offset..], file_type.is_slim(), shared_name_map).ok()?,
 		)
-		.unwrap(),
+			.unwrap(),
 	)
 }
 

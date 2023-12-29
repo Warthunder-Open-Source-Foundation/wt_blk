@@ -7,7 +7,7 @@ use std::{
 
 use zstd::dict::DecoderDictionary;
 
-use crate::blk::{file::FileType, make_strict_test, nm_file::NameMap, parse_file, parser::parse_blk, test_parse_dir, zstd::decode_zstd};
+use crate::blk::{file::FileType, make_strict_test, nm_file::NameMap, test_parse_file, parser::parse_blk, test_parse_dir, zstd::decode_zstd};
 
 // #[test]
 // fn json_parity() {
@@ -102,7 +102,7 @@ fn test_all() {
 	let arced_fd = Arc::new(frame_decoder);
 	let out = pile
 		.into_iter()
-		.map(|file| parse_file(file.1, arced_fd.clone(), shared_name_map.clone()))
+		.map(|file| test_parse_file(file.1, arced_fd.clone(), shared_name_map.clone()))
 		.filter_map(|x| x)
 		.collect::<Vec<_>>();
 
