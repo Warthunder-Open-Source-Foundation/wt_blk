@@ -1,4 +1,5 @@
 use std::{fs, path::PathBuf, str::FromStr};
+use wt_version::Version;
 use crate::vromf::binary_container::decode_bin_vromf;
 use crate::vromf::inner_container::decode_inner_vromf;
 
@@ -56,6 +57,14 @@ fn decode_simple() {
 	let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
 	let (decoded, _) = decode_bin_vromf(&f).unwrap();
 	let _ = decode_inner_vromf(&decoded).unwrap();
+}
+
+#[test]
+fn version() {
+	let p = PathBuf::from_str("./samples/aces.vromfs.bin").unwrap();
+	let file = fs::read(&p).unwrap();
+	let out = VromfUnpacker::from_file((p, file)).unwrap();
+	assert_eq!(vec![Version::from_str("2.25.1.39").unwrap(), Version::from_str("2.25.1.39").unwrap()], out.query_versions().unwrap());
 }
 
 //New format
