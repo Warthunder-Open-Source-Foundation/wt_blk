@@ -1,6 +1,7 @@
 use std::mem::size_of;
 
 use color_eyre::{Report, Section};
+use wt_version::Version;
 
 use crate::vromf::{
 	de_obfuscation::deobfuscate,
@@ -58,7 +59,7 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<(Vec<u8>, Metadata), Repor
 		let _flags = u16::from_le_bytes([s[2], s[3]]);
 		// The version is always reversed in order. It may never exceed 255
 		let version = [s[7], s[6], s[5], s[4]];
-		metadata.version = Some(version);
+		metadata.version = Some(Version::new(version[0] as u16, version[1] as u16, version[2] as u16, version[3] as u16));
 
 		// Null length means the remaining bytes are used
 		if extended_header_size == 0 {

@@ -215,7 +215,7 @@ impl VromfUnpacker<'_> {
 	pub fn query_versions(&self) -> Result<Vec<Version>, Report> {
 		let mut versions = vec![];
 		 if let Some(meta) = self.metadata.version {
-			versions.push(Version::new(meta[0] as u16, meta[1] as u16, meta[2] as u16, meta[3] as u16));
+			versions.push(meta);
 		};
 
 		if let Ok((_, version_file)) = self.unpack_one(Path::new("version"), None, false) {
@@ -224,6 +224,13 @@ impl VromfUnpacker<'_> {
 		}
 
 		Ok(versions)
+	}
+
+	pub fn latest_version(&self) -> Result<Version, Report> {
+		let mut versions = self.query_versions()?;
+		versions.sort_unstable();
+		let res = versions.last().context("No versions discovered, this is an error")?;
+		Ok(res.to_owned())
 	}
 }
 
