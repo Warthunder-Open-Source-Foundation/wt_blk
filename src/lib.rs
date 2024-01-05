@@ -18,3 +18,6 @@ pub mod vromf;
 
 /// Experimental WRPL unpacking (WIP)
 mod wrpl;
+
+/// Performance instrumentation, using the stamp! macro
+mod perf_instrumentation;
