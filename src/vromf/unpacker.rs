@@ -96,7 +96,7 @@ impl VromfUnpacker<'_> {
 
 	pub fn unpack_all(mut self, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool) -> Result<Vec<File>, Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
-		// meaning an option isnt required
+		// Due to partial moving rules this is necessary
 		let files = mem::replace(&mut self.files, vec![]);
 		files.into_par_iter()
 			.map(|file| {
@@ -107,7 +107,7 @@ impl VromfUnpacker<'_> {
 
 	pub fn unpack_all_to_zip(mut self, zip_format: ZipFormat, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool) -> Result<Vec<u8>, Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
-		// meaning an option isnt required
+		// Due to partial moving rules this is necessary
 		let files = mem::replace(&mut self.files, Default::default());
 		let unpacked = files.into_par_iter()
 			.map(|file| {
