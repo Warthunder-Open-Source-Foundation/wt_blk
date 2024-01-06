@@ -9,19 +9,17 @@ use std::{
 
 pub use ::zstd::dict::DecoderDictionary;
 use cfg_if::cfg_if;
-use color_eyre::eyre::{Context, ContextCompat};
 use color_eyre::Report;
 
 use crate::blk::{
 	file::FileType,
 	nm_file::NameMap,
 	parser::parse_blk,
-	zstd::{BlkDecoder, decode_zstd},
+	zstd::{decode_zstd},
 };
 use crate::blk::blk_structure::BlkField;
 use crate::blk::blk_type::BlkType;
 use crate::blk::util::blk_str;
-use crate::vromf::BlkOutputFormat;
 
 /// Decodes flat map of fields into the corresponding nested datastructure
 mod blk_block_hierarchy;
@@ -94,7 +92,7 @@ fn test_parse_dir(
 }
 
 /// Highest-level function for unpacking one BLK explicitly, for direct low level control call [`parser::parse_blk`]
-pub fn unpack_blk(mut file: Vec<u8>, dictionary: Option<&BlkDecoder>, nm: Option<Arc<NameMap>>) -> Result<BlkField, Report> {
+pub fn unpack_blk(mut file: Vec<u8>, dictionary: Option<&DecoderDictionary>, nm: Option<Arc<NameMap>>) -> Result<BlkField, Report> {
 	let mut offset = 0;
 	let file_type = FileType::from_byte(file[0])?;
 	if file_type.is_zstd() {
@@ -112,7 +110,7 @@ pub fn unpack_blk(mut file: Vec<u8>, dictionary: Option<&BlkDecoder>, nm: Option
 
 pub(crate) fn test_parse_file(
 	mut file: Vec<u8>,
-	fd: Arc<BlkDecoder>,
+	fd: Arc<DecoderDictionary>,
 	shared_name_map: Option<Arc<NameMap>>,
 ) -> Option<String> {
 	let mut offset = 0;

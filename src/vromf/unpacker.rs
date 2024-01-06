@@ -1,10 +1,11 @@
 use std::{ffi::OsStr, fmt::{Debug, Formatter}, mem, path::{Path, PathBuf}, sync::Arc};
 use std::io::{Cursor, Write};
+use std::ops::Deref;
 use std::str::FromStr;
 use std::time::Instant;
 
 use color_eyre::{eyre::ContextCompat, Help, Report};
-use color_eyre::eyre::{Context, eyre};
+use color_eyre::eyre::{eyre};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use wt_version::Version;
 use zip::write::FileOptions;
@@ -17,7 +18,7 @@ use crate::{blk::{
 	nm_file::NameMap,
 	parser::parse_blk,
 	zstd::decode_zstd,
-}, stamp, vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf}};
+}, blk, stamp, vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf}};
 use crate::vromf::header::Metadata;
 
 /// Simple type alias for (Path, Data) pair
@@ -29,6 +30,13 @@ struct DictWrapper<'a>(DecoderDictionary<'a>);
 impl Debug for DictWrapper<'_> {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		write!(f, "DecoderDictionary {{...}}")
+	}
+}
+
+impl<'a> Deref for DictWrapper<'a> {
+	type Target = DecoderDictionary<'a>;
+	fn deref(&self) -> &Self::Target {
+		&self.0
 	}
 }
 
@@ -152,18 +160,8 @@ impl VromfUnpacker<'_> {
 		match () {
 			_ if maybe_blk(&file) => {
 				if let Some(format) = unpack_blk_into {
-					let mut offset = 0;
-					let file_type = FileType::from_byte(file.1[0])?;
-					if file_type.is_zstd() {
-						if file_type == FileType::FAT_ZSTD { offset += 1 }; // FAT_ZSTD has a leading byte indicating that its unpacked form is of the FAT format
-						file.1 = decode_zstd(file_type, &file.1, self.dict.as_ref().map(|e| &e.0))?;
-					} else {
-						// uncompressed Slim and Fat files retain their initial magic bytes
-						offset = 1;
-					};
+					let mut parsed = blk::unpack_blk(file.1, self.dict.as_deref().map(Deref::deref), self.nm.clone())?;
 
-					let mut parsed =
-						parse_blk(&file.1[offset..], file_type.is_slim(), self.nm.clone()).wrap_err(format!("{}", file.0.to_string_lossy()))?;
 					match format {
 						BlkOutputFormat::BlkText => {
 							if apply_overrides {
@@ -217,7 +215,7 @@ impl VromfUnpacker<'_> {
 
 	pub fn query_versions(&self) -> Result<Vec<Version>, Report> {
 		let mut versions = vec![];
-		 if let Some(meta) = self.metadata.version {
+		if let Some(meta) = self.metadata.version {
 			versions.push(meta);
 		};
 

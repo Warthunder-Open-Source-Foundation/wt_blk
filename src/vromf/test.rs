@@ -1,6 +1,5 @@
 use std::{fs, path::PathBuf, str::FromStr};
 use wt_version::Version;
-use crate::perf_instrumentation::PerformanceStamp;
 use crate::vromf::binary_container::decode_bin_vromf;
 use crate::vromf::inner_container::decode_inner_vromf;
 

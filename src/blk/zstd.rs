@@ -5,10 +5,8 @@ use zstd::{dict::DecoderDictionary, Decoder};
 
 use crate::blk::file::FileType;
 
-pub type BlkDecoder<'a> = DecoderDictionary<'a>;
-
 /// Decodes zstd compressed file using shared dictionary if available
-pub fn decode_zstd(file_type: FileType, file: &[u8], frame_decoder: Option<&BlkDecoder>) -> Result<Vec<u8>, Report> {
+pub fn decode_zstd(file_type: FileType, file: &[u8], frame_decoder: Option<&DecoderDictionary>) -> Result<Vec<u8>, Report> {
 	let (len, to_decode) = if !file_type.is_slim() {
 		let len_raw = &file[1..4];
 		let len = u32::from_be_bytes([0, len_raw[2], len_raw[1], len_raw[0]]);
