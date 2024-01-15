@@ -6,13 +6,12 @@ use crate::blk::{blk_structure::BlkField, blk_type::BlkType};
 use crate::blk::blk_type::BlkString;
 
 impl BlkField {
-	pub fn as_serde_obj(&self, should_override: bool) -> Value {
-		let mut merged = self.clone();
-		merged.merge_fields();
+	pub fn as_serde_obj(&mut self, should_override: bool) -> Value {
+		self.merge_fields();
 		if should_override {
-			merged.apply_overrides();
+			self.apply_overrides();
 		}
-		merged.as_serde_json(should_override).1
+		self.as_serde_json(should_override).1
 	}
 
 	/// Merges duplicate keys in struct fields into the Merged array variant
@@ -56,7 +55,7 @@ impl BlkField {
 	}
 
 	/// Returns key as string, and value as `serde_json::Value`
-	pub fn as_serde_json(&self, apply_overrides: bool) -> (String, Value) {
+	pub fn as_serde_json(&mut self, apply_overrides: bool) -> (String, Value) {
 		#[inline(always)]
 		fn std_num(num: f32) -> Value {
 			Value::Number(Number::from_str(&format!("{:?}", num)).expect("Infallible"))
@@ -101,12 +100,12 @@ impl BlkField {
 			BlkField::Struct(k, v) => (
 				k.to_string(),
 				Value::Object(serde_json::Map::from_iter(
-					v.iter().map(|e| e.as_serde_json(apply_overrides)),
+					v.iter_mut().map(|e| e.as_serde_json(apply_overrides)),
 				)),
 			),
 			BlkField::Merged(k, v) => (
 				k.to_string(),
-				Value::Array(v.iter().map(|e| e.as_serde_obj(apply_overrides)).collect()),
+				Value::Array(v.iter_mut().map(|e| e.as_serde_obj(apply_overrides)).collect()),
 			),
 		}
 	}
