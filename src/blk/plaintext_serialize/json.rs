@@ -1,6 +1,10 @@
 use std::{collections::HashMap, mem, str::FromStr, sync::Arc};
 
+use color_eyre::Report;
+use serde::ser::{SerializeMap, SerializeSeq, SerializeStruct};
+use serde::Serializer;
 use serde_json::{json, Number, Value};
+use serde_json::ser::PrettyFormatter;
 
 use crate::blk::{blk_structure::BlkField, blk_type::BlkType};
 use crate::blk::blk_type::BlkString;
@@ -109,12 +113,60 @@ impl BlkField {
 			),
 		}
 	}
+
+	pub fn as_serde_json_streaming(self, w: &mut serde_json::Serializer<Vec<u8>, PrettyFormatter>, apply_overrides: bool) -> Result<(), Report> {
+		#[inline(always)]
+		fn std_num(num: f32) -> Value {
+			Value::Number(Number::from_str(&format!("{:?}", num)).expect("Infallible"))
+		}
+
+		match self {
+			BlkField::Value(k, v) => {
+				match v {
+					BlkType::Str(s) => {
+						w.serialize_str(&s).unwrap();
+					}
+					BlkType::Int(s) => {
+						w.serialize_i32(s).unwrap();
+					}
+					BlkType::Int2(s) => {
+						let mut seq = w.serialize_seq(Some(2)).unwrap();
+						seq.serialize_element(&s).unwrap();
+						SerializeSeq::end(seq).unwrap();
+					}
+					BlkType::Int3(s) => {
+						()
+					}
+					BlkType::Long(s) => {
+						()
+					}
+					BlkType::Float(s) => (),
+					BlkType::Float2(s) => (),
+					BlkType::Float3(s) => (),
+					BlkType::Float4(s) => (),
+					BlkType::Float12(s) => {}
+					BlkType::Bool(s) => {}
+					BlkType::Color { r, g, b, a } => {}
+				}
+			}
+			BlkField::Struct(k, v) => {
+				let mut ser = w.serialize_struct("balls", v.len()).unwrap();
+				for value in v {
+					ser.serialize_field("test", &value)?;
+				}
+				SerializeSeq::end(ser)?;
+			}
+			BlkField::Merged(k, v) => {}
+		}
+		Ok(())
+	}
 }
 
 #[cfg(test)]
 mod test {
 	use std::fs;
-	use serde_json::{Number, Value};
+
+	use serde_json::{Number, Serializer, Value};
 
 	use crate::blk::{blk_structure::BlkField, blk_type::BlkType, make_strict_test, util::blk_str};
 
@@ -255,6 +307,17 @@ mod test {
 		// println!("Found: {:#?}", blk.as_serde_obj());
 		// println!("Expected: {:#?}", expected);
 		assert_ne!(blk.as_serde_obj(true), expected);
+	}
+
+	#[test]
+	fn streaming() {
+		let mut blk = make_strict_test();
+		// println!("Found: {:#?}", blk.as_serde_obj());
+		// println!("Expected: {:#?}", expected);
+		let buf = vec![];
+		let mut ser = Serializer::pretty(buf);
+		blk.as_serde_json_streaming(&mut ser, false).unwrap();
+		println!("{}", String::from_utf8(ser.into_inner()).unwrap());
 	}
 
 	#[test]
