@@ -122,39 +122,10 @@ impl BlkField {
 
 		match self {
 			BlkField::Value(k, v) => {
-				match v {
-					BlkType::Str(s) => {
-						w.serialize_str(&s).unwrap();
-					}
-					BlkType::Int(s) => {
-						w.serialize_i32(s).unwrap();
-					}
-					BlkType::Int2(s) => {
-						let mut seq = w.serialize_seq(Some(2)).unwrap();
-						seq.serialize_element(&s).unwrap();
-						SerializeSeq::end(seq).unwrap();
-					}
-					BlkType::Int3(s) => {
-						()
-					}
-					BlkType::Long(s) => {
-						()
-					}
-					BlkType::Float(s) => (),
-					BlkType::Float2(s) => (),
-					BlkType::Float3(s) => (),
-					BlkType::Float4(s) => (),
-					BlkType::Float12(s) => {}
-					BlkType::Bool(s) => {}
-					BlkType::Color { r, g, b, a } => {}
-				}
+				v.serialize_streaming(w);
 			}
 			BlkField::Struct(k, v) => {
-				let mut ser = w.serialize_struct("balls", v.len()).unwrap();
-				for value in v {
-					ser.serialize_field("test", &value)?;
-				}
-				SerializeSeq::end(ser)?;
+
 			}
 			BlkField::Merged(k, v) => {}
 		}

@@ -3,7 +3,9 @@ use std::{
 	sync::Arc,
 };
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
+use serde::ser::{SerializeSeq, SerializeStruct};
+use serde_json::ser::PrettyFormatter;
 
 use crate::blk::{
 	blk_type::blk_type_id::*,
@@ -267,6 +269,34 @@ impl BlkType {
 			"b"|
 			"c"
 		)
+	}
+	pub fn serialize_streaming(self, w: &mut serde_json::Serializer<Vec<u8>, PrettyFormatter>) {
+		match self {
+			BlkType::Str(s) => {
+				w.serialize_str(&s).unwrap();
+			}
+			BlkType::Int(s) => {
+				w.serialize_i32(s).unwrap();
+			}
+			BlkType::Int2(s) => {
+				let mut seq = w.serialize_seq(Some(2)).unwrap();
+				seq.serialize_element(&s).unwrap();
+				SerializeSeq::end(seq).unwrap();
+			}
+			BlkType::Int3(s) => {
+				()
+			}
+			BlkType::Long(s) => {
+				()
+			}
+			BlkType::Float(s) => (),
+			BlkType::Float2(s) => (),
+			BlkType::Float3(s) => (),
+			BlkType::Float4(s) => (),
+			BlkType::Float12(s) => {}
+			BlkType::Bool(s) => {}
+			BlkType::Color { r, g, b, a } => {}
+		}
 	}
 }
 
