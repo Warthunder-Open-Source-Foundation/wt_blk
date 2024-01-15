@@ -120,7 +120,7 @@ mod test {
 
 	#[test]
 	fn dedup_arr() {
-		let blk = BlkField::Struct(
+		let mut blk = BlkField::Struct(
 			blk_str("root"),
 			vec![
 				BlkField::Value(blk_str("mass"), BlkType::Float2([69.0, 42.0])),
@@ -178,7 +178,7 @@ mod test {
 
 	#[test]
 	fn dedup_float() {
-		let blk = BlkField::Struct(
+		let mut blk = BlkField::Struct(
 			blk_str("root"),
 			vec![
 				BlkField::Value(blk_str("mass"), BlkType::Float(42.0)),
@@ -197,7 +197,7 @@ mod test {
 
 	#[test]
 	fn not_everything_array() {
-		let blk = BlkField::Struct(
+		let mut blk = BlkField::Struct(
 			blk_str("root"),
 			vec![
 				BlkField::Value(blk_str("cheese"), BlkType::Float(42.0)),
@@ -221,7 +221,7 @@ mod test {
 
 	#[test]
 	fn int_without_dot() {
-		let blk = BlkField::Struct(
+		let mut blk = BlkField::Struct(
 			blk_str("root"),
 			vec![
 				BlkField::Value(blk_str("salad"), BlkType::Int(69)),
@@ -240,7 +240,7 @@ mod test {
 
 	#[test]
 	fn int_array_without_dot() {
-		let blk = BlkField::Struct(
+		let mut blk = BlkField::Struct(
 			blk_str("root"),
 			vec![
 				BlkField::Value(blk_str("salad"), BlkType::Int2([69, 420])),
@@ -259,7 +259,7 @@ mod test {
 
 	#[test]
 	fn consistency() {
-		let sample = make_strict_test();
+		let mut sample = make_strict_test();
 		assert_eq!(serde_json::to_string_pretty(&sample.as_serde_obj(true)).unwrap(), fs::read_to_string("./samples/expected.json").unwrap());
 	}
 }
