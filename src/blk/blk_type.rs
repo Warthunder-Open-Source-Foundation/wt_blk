@@ -8,6 +8,7 @@ use color_eyre::Report;
 use serde::{Deserialize, Serialize, Serializer};
 use serde::ser::{SerializeSeq, SerializeStruct};
 use serde_json::ser::{Formatter, PrettyFormatter};
+use serde_json::{Number, Value};
 
 use crate::blk::{
 	blk_type::blk_type_id::*,
@@ -38,7 +39,6 @@ mod size {
 
 	const _GENERIC: usize = size_of::<BlkType>() - 24;
 	const _OPTIONAL: usize = size_of::<Option<BlkType>>() - 24;
-
 }
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
@@ -273,7 +273,10 @@ impl BlkType {
 		)
 	}
 	pub fn serialize_streaming(&self, w: &mut Vec<u8>, ser: &mut PrettyFormatter) -> Result<(), Report> {
-		bail!("fuck");
+		#[inline(always)]
+		fn std_num(num: f32) -> String {
+			format!("{:?}", num)
+		}
 		match self {
 			BlkType::Str(s) => {
 				ser.begin_string(w)?;
@@ -285,29 +288,48 @@ impl BlkType {
 			}
 			BlkType::Int2(s) => {
 				ser.begin_array(w)?;
-				//ser.begin_ar
+
+				ser.begin_array_value(w, true)?;
+				ser.write_i32(w, s[0])?;
+				ser.end_array_value(w)?;
+
+				ser.begin_array_value(w, false)?;
+				ser.write_i32(w, s[1])?;
+				ser.end_array_value(w)?;
+
+				ser.end_array(w)?;
 			}
-			BlkType::Int3(s) => {
-				()
-			}
+			BlkType::Int3(s) => {}
 			BlkType::Long(s) => {
-				()
+				ser.write_i64(w, *s)?;
 			}
-			BlkType::Float(s) => (),
-			BlkType::Float2(s) => (),
-			BlkType::Float3(s) => (),
-			BlkType::Float4(s) => (),
+			BlkType::Float(s) => {
+				ser.write_number_str(w, std_num(*s).as_str())?;
+			}
+			BlkType::Float2(s) => write_float_array(s.iter(), w, ser)?,
+			BlkType::Float3(s) => write_float_array(s.iter(), w, ser)?,
+			BlkType::Float4(s) => write_float_array(s.iter(), w, ser)?,
 			BlkType::Float12(s) => {}
-			BlkType::Bool(s) => {}
+			BlkType::Bool(s) => {
+				ser.write_bool(w, *s)?;
+			}
 			BlkType::Color { r, g, b, a } => {}
 		}
 		Ok(())
 	}
 }
 
-fn ser_array_type<T>(arr_writer: fn(&mut Vec<u8>, &mut PrettyFormatter) -> Result<(), Report>, w: &mut Vec<u8>, ser: &mut PrettyFormatter) -> Result<(), Report> {
+fn write_float_array<'a>(mut input: impl Iterator<Item=&'a f32>, w: &mut Vec<u8>, ser: &mut PrettyFormatter) -> Result<(), Report> {
 	ser.begin_array(w)?;
-	arr_writer(w, ser)?;
+
+	let mut begin = true;
+	while let Some(value) = input.next() {
+		ser.begin_array_value(w, begin)?;
+		ser.write_f32(w, *value)?;
+		ser.end_array_value(w)?;
+		begin = false;
+	}
+
 	ser.end_array(w)?;
 	Ok(())
 }
@@ -368,6 +390,6 @@ mod test {
 
 	#[test]
 	fn test_valid_types() {
-		assert_eq!(["t", "i", "ip2", "ip3", "i64", "r", "p2", "p3", "p4", "m", "b", "c"].iter().all(|e|BlkType::is_valid_type(e)), true)
+		assert_eq!(["t", "i", "ip2", "ip3", "i64", "r", "p2", "p3", "p4", "m", "b", "c"].iter().all(|e| BlkType::is_valid_type(e)), true)
 	}
 }

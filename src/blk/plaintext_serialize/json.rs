@@ -115,28 +115,30 @@ impl BlkField {
 	}
 
 	pub fn as_serde_json_streaming(&self, w: &mut Vec<u8>, apply_overrides: bool) -> Result<(), Report> {
-		let mut ser = PrettyFormatter::with_indent(b"\t");
-		self._as_serde_json_streaming(w, apply_overrides, &mut ser)?;
+		//let mut ser = PrettyFormatter::with_indent(b"\t");
+		let mut ser = PrettyFormatter::new();
+		self._as_serde_json_streaming(w, apply_overrides, &mut ser, true)?;
 		Ok(())
 	}
 
-	fn _as_serde_json_streaming(&self, w: &mut Vec<u8>, apply_overrides: bool, ser: &mut PrettyFormatter) -> Result<(), Report> {
-		#[inline(always)]
-		fn std_num(num: f32) -> Value {
-			Value::Number(Number::from_str(&format!("{:?}", num)).expect("Infallible"))
-		}
-
+	fn _as_serde_json_streaming(&self, w: &mut Vec<u8>, apply_overrides: bool, ser: &mut PrettyFormatter, is_root: bool) -> Result<(), Report> {
 		match self {
 			BlkField::Value(k, v) => {
 				ser.begin_object_key(w, false)?;
 				ser.write_string_fragment(w, k.as_ref())?;
+				ser.end_object_key(w)?;
+
 				ser.begin_object_value(w)?;
 				v.serialize_streaming(w, ser)?;
+				ser.end_object_value(w)?;
 			}
 			BlkField::Struct(k, v) => {
+				if !is_root {
+					ser.write_string_fragment(w, k.as_ref())?;
+				}
 				ser.begin_object(w)?;
 				for value in v {
-					value._as_serde_json_streaming(w, apply_overrides, ser)?;
+					value._as_serde_json_streaming(w, apply_overrides, ser, false)?;
 				}
 				ser.end_object(w)?;
 			}
@@ -300,7 +302,7 @@ mod test {
 		// println!("Expected: {:#?}", expected);
 		let mut buf = vec![];
 		blk.as_serde_json_streaming(&mut buf, false).unwrap();
-		println!("{}", String::from_utf8(buf).unwrap());
+		assert_eq!(String::from_utf8(buf).unwrap(), fs::read_to_string("./samples/expected.json").unwrap());
 	}
 
 	#[test]
