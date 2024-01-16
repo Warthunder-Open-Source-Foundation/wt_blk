@@ -114,7 +114,7 @@ impl BlkField {
 		}
 	}
 
-	pub fn as_serde_json_streaming(self, w: &mut serde_json::Serializer<Vec<u8>, PrettyFormatter>, apply_overrides: bool) -> Result<(), Report> {
+	pub fn as_serde_json_streaming(&self, w: &mut serde_json::Serializer<Vec<u8>, PrettyFormatter>, apply_overrides: bool) -> Result<(), Report> {
 		#[inline(always)]
 		fn std_num(num: f32) -> Value {
 			Value::Number(Number::from_str(&format!("{:?}", num)).expect("Infallible"))
@@ -122,7 +122,6 @@ impl BlkField {
 
 		match self {
 			BlkField::Value(k, v) => {
-				v.serialize_streaming(w);
 			}
 			BlkField::Struct(k, v) => {
 
