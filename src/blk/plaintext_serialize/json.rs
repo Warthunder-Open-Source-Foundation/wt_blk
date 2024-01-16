@@ -4,7 +4,7 @@ use color_eyre::Report;
 use serde::ser::{SerializeMap, SerializeSeq, SerializeStruct};
 use serde::Serializer;
 use serde_json::{json, Number, Value};
-use serde_json::ser::PrettyFormatter;
+use serde_json::ser::{Formatter, PrettyFormatter};
 
 use crate::blk::{blk_structure::BlkField, blk_type::BlkType};
 use crate::blk::blk_type::BlkString;
@@ -114,7 +114,13 @@ impl BlkField {
 		}
 	}
 
-	pub fn as_serde_json_streaming(&self, w: &mut serde_json::Serializer<Vec<u8>, PrettyFormatter>, apply_overrides: bool) -> Result<(), Report> {
+	pub fn as_serde_json_streaming(&self, w: &mut Vec<u8>, apply_overrides: bool) -> Result<(), Report> {
+		let mut ser = PrettyFormatter::with_indent(b"\t");
+		self._as_serde_json_streaming(w, apply_overrides, &mut ser)?;
+		Ok(())
+	}
+
+	fn _as_serde_json_streaming(&self, w: &mut Vec<u8>, apply_overrides: bool, ser: &mut PrettyFormatter) -> Result<(), Report> {
 		#[inline(always)]
 		fn std_num(num: f32) -> Value {
 			Value::Number(Number::from_str(&format!("{:?}", num)).expect("Infallible"))
@@ -122,9 +128,17 @@ impl BlkField {
 
 		match self {
 			BlkField::Value(k, v) => {
+				ser.begin_object_key(w, false)?;
+				ser.write_string_fragment(w, k.as_ref())?;
+				ser.begin_object_value(w)?;
+				v.serialize_streaming(w, ser)?;
 			}
 			BlkField::Struct(k, v) => {
-
+				ser.begin_object(w)?;
+				for value in v {
+					value._as_serde_json_streaming(w, apply_overrides, ser)?;
+				}
+				ser.end_object(w)?;
 			}
 			BlkField::Merged(k, v) => {}
 		}
@@ -284,10 +298,9 @@ mod test {
 		let mut blk = make_strict_test();
 		// println!("Found: {:#?}", blk.as_serde_obj());
 		// println!("Expected: {:#?}", expected);
-		let buf = vec![];
-		let mut ser = Serializer::pretty(buf);
-		blk.as_serde_json_streaming(&mut ser, false).unwrap();
-		println!("{}", String::from_utf8(ser.into_inner()).unwrap());
+		let mut buf = vec![];
+		blk.as_serde_json_streaming(&mut buf, false).unwrap();
+		println!("{}", String::from_utf8(buf).unwrap());
 	}
 
 	#[test]

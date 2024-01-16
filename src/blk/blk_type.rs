@@ -1,11 +1,13 @@
 use std::{
-	fmt::{Display, Formatter},
+	fmt::{Display, Formatter as StdFormatter},
 	sync::Arc,
 };
+use color_eyre::eyre::bail;
+use color_eyre::Report;
 
 use serde::{Deserialize, Serialize, Serializer};
 use serde::ser::{SerializeSeq, SerializeStruct};
-use serde_json::ser::PrettyFormatter;
+use serde_json::ser::{Formatter, PrettyFormatter};
 
 use crate::blk::{
 	blk_type::blk_type_id::*,
@@ -270,18 +272,20 @@ impl BlkType {
 			"c"
 		)
 	}
-	pub fn serialize_streaming(self, w: &mut serde_json::Serializer<Vec<u8>, PrettyFormatter>) {
+	pub fn serialize_streaming(&self, w: &mut Vec<u8>, ser: &mut PrettyFormatter) -> Result<(), Report> {
+		bail!("fuck");
 		match self {
 			BlkType::Str(s) => {
-				w.serialize_str(&s).unwrap();
+				ser.begin_string(w)?;
+				ser.write_string_fragment(w, s.as_ref())?;
+				ser.end_string(w)?;
 			}
 			BlkType::Int(s) => {
-				w.serialize_i32(s).unwrap();
+				ser.write_i32(w, *s)?;
 			}
 			BlkType::Int2(s) => {
-				let mut seq = w.serialize_seq(Some(2)).unwrap();
-				seq.serialize_element(&s).unwrap();
-				SerializeSeq::end(seq).unwrap();
+				ser.begin_array(w)?;
+				//ser.begin_ar
 			}
 			BlkType::Int3(s) => {
 				()
@@ -297,11 +301,19 @@ impl BlkType {
 			BlkType::Bool(s) => {}
 			BlkType::Color { r, g, b, a } => {}
 		}
+		Ok(())
 	}
 }
 
+fn ser_array_type<T>(arr_writer: fn(&mut Vec<u8>, &mut PrettyFormatter) -> Result<(), Report>, w: &mut Vec<u8>, ser: &mut PrettyFormatter) -> Result<(), Report> {
+	ser.begin_array(w)?;
+	arr_writer(w, ser)?;
+	ser.end_array(w)?;
+	Ok(())
+}
+
 impl Display for BlkType {
-	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+	fn fmt(&self, f: &mut StdFormatter<'_>) -> std::fmt::Result {
 		let value = match self {
 			BlkType::Str(v) => {
 				format!("\"{}\"", v)
