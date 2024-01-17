@@ -162,7 +162,7 @@ impl BlkField {
 mod test {
 	use std::fs;
 
-	use serde_json::{Number, Serializer, Value};
+	use serde_json::{Number, Value};
 
 	use crate::blk::{blk_structure::BlkField, blk_type::BlkType, make_strict_test, util::blk_str};
 
@@ -318,6 +318,7 @@ mod test {
 	#[test]
 	fn consistency() {
 		let mut sample = make_strict_test();
-		assert_eq!(serde_json::to_string_pretty(&sample.as_serde_obj(true)).unwrap(), fs::read_to_string("./samples/expected.json").unwrap());
+		let s = serde_json::to_string_pretty(&sample.as_serde_obj(true)).unwrap();
+		assert_eq!(s, fs::read_to_string("./samples/expected.json").unwrap());
 	}
 }
