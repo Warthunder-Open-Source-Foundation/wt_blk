@@ -5,11 +5,11 @@ use std::str::FromStr;
 use std::time::Instant;
 
 use color_eyre::{eyre::ContextCompat, Help, Report};
-use color_eyre::eyre::{eyre};
+use color_eyre::eyre::eyre;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use wt_version::Version;
-use zip::write::FileOptions;
 use zip::{CompressionMethod, ZipWriter};
+use zip::write::FileOptions;
 use zstd::dict::DecoderDictionary;
 
 use crate::{blk::{
@@ -105,6 +105,25 @@ impl VromfUnpacker<'_> {
 			.collect::<Result<Vec<File>, Report>>()
 	}
 
+	/// Skips the buffering step and directly writes the file to disk, using a provided writer
+	pub fn unpack_all_with_writer(
+		mut self,
+		unpack_blk_into: Option<BlkOutputFormat>,
+		apply_overrides: bool,
+		writer: impl FnOnce(File) -> Result<(), Report> + Sync + Send + Copy,
+	) -> Result<(), Report> {
+		// Important: We own self here, so "destroying" the files vector isn't an issue
+		// Due to partial moving rules this is necessary
+		let files = mem::replace(&mut self.files, vec![]);
+		files.into_par_iter()
+			.map(|file| {
+				let file = self.unpack_file(file, unpack_blk_into, apply_overrides)?;
+				writer(file)?;
+				Ok(())
+			})
+			.collect::<Result<(), Report>>()
+	}
+
 	pub fn unpack_all_to_zip(mut self, zip_format: ZipFormat, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool) -> Result<Vec<u8>, Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
 		// Due to partial moving rules this is necessary
@@ -160,7 +179,7 @@ impl VromfUnpacker<'_> {
 		match () {
 			_ if maybe_blk(&file) => {
 				if let Some(format) = unpack_blk_into {
-					let mut parsed = blk::unpack_blk(file.1, self.dict.as_deref().map(Deref::deref), self.nm.clone())?;
+					let mut parsed = blk::unpack_blk(&mut file.1, self.dict.as_deref().map(Deref::deref), self.nm.clone())?;
 
 					match format {
 						BlkOutputFormat::BlkText => {
@@ -170,8 +189,7 @@ impl VromfUnpacker<'_> {
 							file.1 = parsed.as_blk_text()?.into_bytes();
 						}
 						BlkOutputFormat::Json => {
-							file.1 = serde_json::to_string_pretty(&parsed.as_serde_obj(apply_overrides))?
-								.into_bytes();
+							parsed.as_serde_json_streaming(&mut file.1, apply_overrides)?;
 						}
 					}
 				}
