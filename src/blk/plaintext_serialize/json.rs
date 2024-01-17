@@ -125,7 +125,9 @@ impl BlkField {
 		match self {
 			BlkField::Value(k, v) => {
 				ser.begin_object_key(w, false)?;
+				ser.begin_string(w)?;
 				ser.write_string_fragment(w, k.as_ref())?;
+				ser.end_string(w)?;
 				ser.end_object_key(w)?;
 
 				ser.begin_object_value(w)?;
@@ -133,10 +135,12 @@ impl BlkField {
 				ser.end_object_value(w)?;
 			}
 			BlkField::Struct(k, v) => {
-				if !is_root {
-					ser.write_string_fragment(w, k.as_ref())?;
-				}
 				ser.begin_object(w)?;
+				if !is_root {
+					ser.begin_string(w)?;
+					ser.write_string_fragment(w, k.as_ref())?;
+					ser.end_string(w)?;
+				}
 				for value in v {
 					value._as_serde_json_streaming(w, apply_overrides, ser, false)?;
 				}
