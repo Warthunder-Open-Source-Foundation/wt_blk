@@ -106,19 +106,19 @@ impl VromfUnpacker<'_> {
 	}
 
 	/// Skips the buffering step and directly writes the file to disk, using a provided writer
-	pub fn unpack_all_with_writer(
+	pub fn unpack_all_with_writer<W: Write>(
 		mut self,
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
-		writer: impl FnOnce(File) -> Result<(), Report> + Sync + Send + Copy,
+		writer: impl FnOnce(&mut File) -> Result<W, Report> + Sync + Send + Copy,
 	) -> Result<(), Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
 		// Due to partial moving rules this is necessary
 		let files = mem::replace(&mut self.files, vec![]);
 		files.into_par_iter()
-			.map(|file| {
-				let file = self.unpack_file(file, unpack_blk_into, apply_overrides)?;
-				writer(file)?;
+			.map(|mut file| {
+				let mut w = writer(&mut file)?;
+				self.unpack_file_with_writer(file, unpack_blk_into, apply_overrides, &mut w)?;
 				Ok(())
 			})
 			.collect::<Result<(), Report>>()
@@ -190,6 +190,32 @@ impl VromfUnpacker<'_> {
 						}
 						BlkOutputFormat::Json => {
 							parsed.as_serde_json_streaming(&mut file.1, apply_overrides)?;
+						}
+					}
+				}
+				Ok(file)
+			}
+
+			// Default to the raw file
+			_ => Ok(file),
+		}
+	}
+
+	pub fn unpack_file_with_writer(&self, mut file: File, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool, mut writer: impl Write) -> Result<File, Report> {
+		match () {
+			_ if maybe_blk(&file) => {
+				if let Some(format) = unpack_blk_into {
+					let mut parsed = blk::unpack_blk(&mut file.1, self.dict.as_deref().map(Deref::deref), self.nm.clone())?;
+
+					match format {
+						BlkOutputFormat::BlkText => {
+							if apply_overrides {
+								parsed.apply_overrides();
+							}
+							file.1 = parsed.as_blk_text()?.into_bytes();
+						}
+						BlkOutputFormat::Json => {
+							parsed.as_serde_json_streaming(&mut writer, apply_overrides)?;
 						}
 					}
 				}
