@@ -92,12 +92,12 @@ fn test_parse_dir(
 }
 
 /// Highest-level function for unpacking one BLK explicitly, for direct low level control call [`parser::parse_blk`]
-pub fn unpack_blk(mut file: Vec<u8>, dictionary: Option<&DecoderDictionary>, nm: Option<Arc<NameMap>>) -> Result<BlkField, Report> {
+pub fn unpack_blk(mut file: &mut Vec<u8>, dictionary: Option<&DecoderDictionary>, nm: Option<Arc<NameMap>>) -> Result<BlkField, Report> {
 	let mut offset = 0;
 	let file_type = FileType::from_byte(file[0])?;
 	if file_type.is_zstd() {
 		if file_type == FileType::FAT_ZSTD { offset += 1 }; // FAT_ZSTD has a leading byte indicating that its unpacked form is of the FAT format
-		file = decode_zstd(file_type, &file, dictionary)?;
+		*file = decode_zstd(file_type, &file, dictionary)?;
 	} else {
 		// uncompressed Slim and Fat files retain their initial magic bytes
 		offset = 1;
