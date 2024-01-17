@@ -9,25 +9,24 @@ fn main() {
 
 const FILE: &[u8] = include_bytes!("../samples/section_fat.blk");
 
-// Define a `fibonacci` function and register it for benchmarking.
 #[divan::bench]
-fn parse() {
-	let file = black_box(FILE);
-	let mut output = parse_blk(black_box(&file[1..]), black_box(false), black_box(None)).unwrap();
-	for _ in 0..10000 {
-		output = parse_blk(black_box(&file[1..]), black_box(false), black_box(None)).unwrap();
+fn to_string_bench() {
+	let mut sample = make_strict_test();
+	let mut out = String::new();
+	for _ in 0..100_000 {
+		out = serde_json::to_string_pretty(black_box(&sample.as_serde_obj(true))).unwrap();
 	}
-	if output.estimate_size() == 0 && file.len() == 0 {
-		panic!("infallible benchmark harness")
+	if out.len() == 0 {
+		panic!("infallible benchmark harness");
 	}
 }
 
 #[divan::bench]
-fn to_string_bench() {
+fn streaming_bench() {
 	let sample = make_strict_test();
-	let mut out = String::new();
-	for _ in 0..10000 {
-		out = serde_json::to_string_pretty(black_box(&sample.as_serde_obj(true))).unwrap();
+	let mut out = vec![];
+	for _ in 0..100_000 {
+		sample.as_serde_json_streaming(&mut out, false).unwrap();
 	}
 	if out.len() == 0 {
 		panic!("infallible benchmark harness");
