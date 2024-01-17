@@ -1,7 +1,5 @@
-use std::{
-	fmt::{Display, Formatter as StdFormatter},
-	sync::Arc,
-};
+use std::{fmt::{Display, Formatter as StdFormatter}, io, sync::Arc};
+use std::ops::Deref;
 use color_eyre::eyre::bail;
 use color_eyre::Report;
 
@@ -287,45 +285,44 @@ impl BlkType {
 				ser.write_i32(w, *s)?;
 			}
 			BlkType::Int2(s) => {
-				ser.begin_array(w)?;
-
-				ser.begin_array_value(w, true)?;
-				ser.write_i32(w, s[0])?;
-				ser.end_array_value(w)?;
-
-				ser.begin_array_value(w, false)?;
-				ser.write_i32(w, s[1])?;
-				ser.end_array_value(w)?;
-
-				ser.end_array(w)?;
+				write_generic_array(PrettyFormatter::write_i32, s.iter(), w, ser)?;
 			}
-			BlkType::Int3(s) => {}
+			BlkType::Int3(s) => {
+				write_generic_array(PrettyFormatter::write_i32, s.iter(), w, ser)?;
+			}
 			BlkType::Long(s) => {
 				ser.write_i64(w, *s)?;
 			}
 			BlkType::Float(s) => {
 				ser.write_number_str(w, std_num(*s).as_str())?;
 			}
-			BlkType::Float2(s) => write_float_array(s.iter(), w, ser)?,
-			BlkType::Float3(s) => write_float_array(s.iter(), w, ser)?,
-			BlkType::Float4(s) => write_float_array(s.iter(), w, ser)?,
+			BlkType::Float2(s) => write_generic_array(PrettyFormatter::write_f32, s.iter(), w, ser)?,
+			BlkType::Float3(s) => write_generic_array(PrettyFormatter::write_f32, s.iter(), w, ser)?,
+			BlkType::Float4(s) => write_generic_array(PrettyFormatter::write_f32, s.iter(), w, ser)?,
 			BlkType::Float12(s) => {}
 			BlkType::Bool(s) => {
 				ser.write_bool(w, *s)?;
 			}
-			BlkType::Color { r, g, b, a } => {}
+			BlkType::Color { r, g, b, a } => {
+				write_generic_array(PrettyFormatter::write_u8, [*r,*g,*b,*a].iter(), w, ser)?
+			}
 		}
 		Ok(())
 	}
 }
 
-fn write_float_array<'a>(mut input: impl Iterator<Item=&'a f32>, w: &mut Vec<u8>, ser: &mut PrettyFormatter) -> Result<(), Report> {
+fn write_generic_array<'a, 'b, T: 'a + Copy>(
+	writer: impl FnOnce(&mut PrettyFormatter<'b>, &mut Vec<u8>, T) -> io::Result<()> + std::marker::Copy,
+	mut input: impl Iterator<Item=&'a T>,
+	w: &mut Vec<u8>,
+	ser: &mut PrettyFormatter<'b>,
+) -> Result<(), Report> {
 	ser.begin_array(w)?;
 
 	let mut begin = true;
 	while let Some(value) = input.next() {
 		ser.begin_array_value(w, begin)?;
-		ser.write_f32(w, *value)?;
+		writer(ser, w, *value)?;
 		ser.end_array_value(w)?;
 		begin = false;
 	}
