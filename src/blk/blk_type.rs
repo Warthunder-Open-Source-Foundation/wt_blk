@@ -1,12 +1,9 @@
 use std::{fmt::{Display, Formatter as StdFormatter}, io, sync::Arc};
-use std::ops::Deref;
-use color_eyre::eyre::bail;
+use std::io::Write;
 use color_eyre::Report;
 
-use serde::{Deserialize, Serialize, Serializer};
-use serde::ser::{SerializeSeq, SerializeStruct};
+use serde::{Deserialize, Serialize};
 use serde_json::ser::{Formatter, PrettyFormatter};
-use serde_json::{Number, Value};
 
 use crate::blk::{
 	blk_type::blk_type_id::*,
@@ -270,7 +267,7 @@ impl BlkType {
 			"c"
 		)
 	}
-	pub fn serialize_streaming(&self, w: &mut Vec<u8>, ser: &mut PrettyFormatter) -> Result<(), Report> {
+	pub fn serialize_streaming(&self, w: &mut impl Write, ser: &mut PrettyFormatter) -> Result<(), Report> {
 		#[inline(always)]
 		fn std_num(num: f32) -> String {
 			format!("{:?}", num)
@@ -321,10 +318,10 @@ impl BlkType {
 	}
 }
 
-fn write_generic_array<'a, 'b, T: 'a + Copy>(
-	writer: impl FnOnce(&mut PrettyFormatter<'b>, &mut Vec<u8>, T) -> io::Result<()> + std::marker::Copy,
+fn write_generic_array<'a, 'b, T: 'a + Copy, W: Write>(
+	writer: impl FnOnce(&mut PrettyFormatter<'b>, &mut W, T) -> io::Result<()> + std::marker::Copy,
 	mut input: impl Iterator<Item=&'a T>,
-	w: &mut Vec<u8>,
+	w: &mut W,
 	ser: &mut PrettyFormatter<'b>,
 ) -> Result<(), Report> {
 	ser.begin_array(w)?;

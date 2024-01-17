@@ -1,8 +1,7 @@
 use std::{collections::HashMap, mem, str::FromStr, sync::Arc};
+use std::io::Write;
 
 use color_eyre::Report;
-use serde::ser::{SerializeMap, SerializeSeq, SerializeStruct};
-use serde::Serializer;
 use serde_json::{json, Number, Value};
 use serde_json::ser::{Formatter, PrettyFormatter};
 
@@ -114,14 +113,14 @@ impl BlkField {
 		}
 	}
 
-	pub fn as_serde_json_streaming(&self, w: &mut Vec<u8>, apply_overrides: bool) -> Result<(), Report> {
+	pub fn as_serde_json_streaming(&self, w: &mut impl Write, apply_overrides: bool) -> Result<(), Report> {
 		//let mut ser = PrettyFormatter::with_indent(b"\t");
 		let mut ser = PrettyFormatter::new();
 		self._as_serde_json_streaming(w, apply_overrides, &mut ser, true, true)?;
 		Ok(())
 	}
 
-	fn _as_serde_json_streaming(&self, w: &mut Vec<u8>, apply_overrides: bool, ser: &mut PrettyFormatter, is_root: bool, is_first: bool) -> Result<(), Report> {
+	fn _as_serde_json_streaming(&self, w: &mut impl Write, apply_overrides: bool, ser: &mut PrettyFormatter, is_root: bool, is_first: bool) -> Result<(), Report> {
 		match self {
 			BlkField::Value(k, v) => {
 				ser.begin_object_key(w, is_first)?;
