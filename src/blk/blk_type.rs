@@ -299,12 +299,22 @@ impl BlkType {
 			BlkType::Float2(s) => write_generic_array(PrettyFormatter::write_f32, s.iter(), w, ser)?,
 			BlkType::Float3(s) => write_generic_array(PrettyFormatter::write_f32, s.iter(), w, ser)?,
 			BlkType::Float4(s) => write_generic_array(PrettyFormatter::write_f32, s.iter(), w, ser)?,
-			BlkType::Float12(s) => {}
+			BlkType::Float12(s) => {
+				ser.begin_array(w)?;
+				let mut begin = true;
+				for chunk in s.chunks_exact(3) {
+					ser.begin_array_value(w, begin)?;
+					write_generic_array(PrettyFormatter::write_f32, chunk.iter(), w, ser)?;
+					ser.end_array_value(w)?;
+					begin = false;
+				}
+				ser.end_array(w)?;
+			}
 			BlkType::Bool(s) => {
 				ser.write_bool(w, *s)?;
 			}
 			BlkType::Color { r, g, b, a } => {
-				write_generic_array(PrettyFormatter::write_u8, [*r,*g,*b,*a].iter(), w, ser)?
+				write_generic_array(PrettyFormatter::write_u8, [*r, *g, *b, *a].iter(), w, ser)?
 			}
 		}
 		Ok(())

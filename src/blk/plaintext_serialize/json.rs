@@ -117,14 +117,14 @@ impl BlkField {
 	pub fn as_serde_json_streaming(&self, w: &mut Vec<u8>, apply_overrides: bool) -> Result<(), Report> {
 		//let mut ser = PrettyFormatter::with_indent(b"\t");
 		let mut ser = PrettyFormatter::new();
-		self._as_serde_json_streaming(w, apply_overrides, &mut ser, true)?;
+		self._as_serde_json_streaming(w, apply_overrides, &mut ser, true, true)?;
 		Ok(())
 	}
 
-	fn _as_serde_json_streaming(&self, w: &mut Vec<u8>, apply_overrides: bool, ser: &mut PrettyFormatter, is_root: bool) -> Result<(), Report> {
+	fn _as_serde_json_streaming(&self, w: &mut Vec<u8>, apply_overrides: bool, ser: &mut PrettyFormatter, is_root: bool, is_first: bool) -> Result<(), Report> {
 		match self {
 			BlkField::Value(k, v) => {
-				ser.begin_object_key(w, false)?;
+				ser.begin_object_key(w, is_first)?;
 				ser.begin_string(w)?;
 				ser.write_string_fragment(w, k.as_ref())?;
 				ser.end_string(w)?;
@@ -135,15 +135,21 @@ impl BlkField {
 				ser.end_object_value(w)?;
 			}
 			BlkField::Struct(k, v) => {
-				ser.begin_object(w)?;
 				if !is_root {
+					ser.begin_object_key(w, is_first)?;
 					ser.begin_string(w)?;
 					ser.write_string_fragment(w, k.as_ref())?;
 					ser.end_string(w)?;
+					ser.end_object_key(w)?;
+					ser.begin_object_value(w)?;
 				}
+				ser.begin_object(w)?;
+				let mut is_first = true;
 				for value in v {
-					value._as_serde_json_streaming(w, apply_overrides, ser, false)?;
+					value._as_serde_json_streaming(w, apply_overrides, ser, false, is_first)?;
+					is_first = false;
 				}
+				ser.end_object_value(w)?;
 				ser.end_object(w)?;
 			}
 			BlkField::Merged(k, v) => {}
