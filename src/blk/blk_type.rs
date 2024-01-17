@@ -319,7 +319,7 @@ impl BlkType {
 }
 
 fn write_generic_array<'a, 'b, T: 'a + Copy, W: Write>(
-	writer: impl FnOnce(&mut PrettyFormatter<'b>, &mut W, T) -> io::Result<()> + std::marker::Copy,
+	writer: impl FnOnce(&mut PrettyFormatter<'b>, &mut W, T) -> io::Result<()> + Copy,
 	mut input: impl Iterator<Item=&'a T>,
 	w: &mut W,
 	ser: &mut PrettyFormatter<'b>,
