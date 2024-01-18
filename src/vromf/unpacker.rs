@@ -19,6 +19,7 @@ use crate::{blk::{
 	parser::parse_blk,
 	zstd::decode_zstd,
 }, blk, stamp, vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf}};
+use crate::blk::util::maybe_blk;
 use crate::vromf::header::Metadata;
 
 /// Simple type alias for (Path, Data) pair
@@ -201,7 +202,7 @@ impl VromfUnpacker<'_> {
 		}
 	}
 
-	pub fn unpack_file_with_writer(&self, mut file: File, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool, mut writer: impl Write) -> Result<File, Report> {
+	pub fn unpack_file_with_writer(&self, mut file: File, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool, mut writer: impl Write) -> Result<(), Report> {
 		match () {
 			_ if maybe_blk(&file) => {
 				if let Some(format) = unpack_blk_into {
@@ -212,19 +213,21 @@ impl VromfUnpacker<'_> {
 
 					match format {
 						BlkOutputFormat::BlkText => {
-							file.1 = parsed.as_blk_text()?.into_bytes();
+							writer.write_all(parsed.as_blk_text()?.as_bytes())?;
 						}
 						BlkOutputFormat::Json => {
 							parsed.as_serde_json_streaming(&mut writer)?;
 						}
 					}
 				}
-				Ok(file)
 			}
-
 			// Default to the raw file
-			_ => Ok(file),
+			_ => {
+				writer.write_all(&file.1)?;
+			},
 		}
+		writer.flush()?;
+		Ok(())
 	}
 
 	// For debugging purposes
@@ -277,10 +280,10 @@ impl VromfUnpacker<'_> {
 		let res = versions.last().context("No versions discovered, this is an error")?;
 		Ok(res.to_owned())
 	}
-}
 
-fn maybe_blk(file: &File) -> bool {
-	file.0.extension() == Some(OsStr::new("blk"))
-		&& file.1.len() > 0
-		&& FileType::from_byte(file.1[0]).is_ok()
+	pub fn list_files(&self) {
+		for (path,_) in &self.files {
+			println!("{}", path.to_string_lossy());
+		}
+	}
 }
