@@ -116,22 +116,27 @@ impl BlkField {
 	pub fn as_serde_json_streaming(&self, w: &mut impl Write) -> Result<(), Report> {
 		//let mut ser = PrettyFormatter::with_indent(b"\t");
 		let mut ser = PrettyFormatter::new();
-		self._as_serde_json_streaming(w, &mut ser, true, true)?;
+		self._as_serde_json_streaming(w, &mut ser, true, true, false)?;
 		Ok(())
 	}
 
-	fn _as_serde_json_streaming(&self, w: &mut impl Write, ser: &mut PrettyFormatter, is_root: bool, is_first: bool) -> Result<(), Report> {
+	fn _as_serde_json_streaming(&self, w: &mut impl Write, ser: &mut PrettyFormatter, is_root: bool, is_first: bool, in_merging_array: bool) -> Result<(), Report> {
 		match self {
 			BlkField::Value(k, v) => {
-				ser.begin_object_key(w, is_first)?;
-				ser.begin_string(w)?;
-				ser.write_string_fragment(w, k.as_ref())?;
-				ser.end_string(w)?;
-				ser.end_object_key(w)?;
+				if !in_merging_array {
+					ser.begin_object_key(w, is_first)?;
+					ser.begin_string(w)?;
+					ser.write_string_fragment(w, k.as_ref())?;
+					ser.end_string(w)?;
+					ser.end_object_key(w)?;
 
-				ser.begin_object_value(w)?;
+					ser.begin_object_value(w)?;
+				}
 				v.serialize_streaming(w, ser)?;
-				ser.end_object_value(w)?;
+
+				if !in_merging_array {
+					ser.end_object_value(w)?;
+				}
 			}
 			BlkField::Struct(k, v) => {
 				if !is_root {
@@ -145,13 +150,30 @@ impl BlkField {
 				ser.begin_object(w)?;
 				let mut is_first = true;
 				for value in v {
-					value._as_serde_json_streaming(w, ser, false, is_first)?;
+					value._as_serde_json_streaming(w, ser, false, is_first, false)?;
 					is_first = false;
 				}
 				ser.end_object_value(w)?;
 				ser.end_object(w)?;
 			}
-			BlkField::Merged(k, v) => {}
+			BlkField::Merged(k, v) => {
+				ser.begin_object_key(w, is_first)?;
+				ser.begin_string(w)?;
+				ser.write_string_fragment(w, k.as_ref())?;
+				ser.end_string(w)?;
+				ser.end_object_key(w)?;
+				ser.begin_object_value(w)?;
+
+				ser.begin_array(w)?;
+				let mut is_first = true;
+				for value in v {
+					ser.begin_array_value(w, is_first)?;
+					value._as_serde_json_streaming(w, ser, false, is_first, true)?;
+					is_first = false;
+					ser.end_array_value(w)?;
+				}
+				ser.end_array(w)?;
+			}
 		}
 		Ok(())
 	}
@@ -312,6 +334,16 @@ mod test {
 		let mut buf = vec![];
 		blk.as_serde_json_streaming(&mut buf).unwrap();
 		assert_eq!(String::from_utf8(buf).unwrap(), fs::read_to_string("./samples/expected.json").unwrap());
+	}
+
+	#[test]
+	fn streaming_merge() {
+		let mut blk = make_strict_test();
+		blk.insert_field(BlkField::Value(blk_str("int"), BlkType::Int(420))).unwrap();
+		blk.merge_fields();
+		let mut buf = vec![];
+		blk.as_serde_json_streaming(&mut buf).unwrap();
+		assert_eq!(String::from_utf8(buf).unwrap(), fs::read_to_string("./samples/expected_merged.json").unwrap());
 	}
 
 	#[test]

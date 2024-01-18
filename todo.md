@@ -2,5 +2,5 @@
 - [ ] Fix empty objects having newlines in them
 - [ ] Fix regular text BLK showing up empty
 - [ ] Re-Enable overrides
-- [ ] Implement/Enable merging
+- [X] Implement/Enable merging
 - [ ] (Feature): Investigate pat normalization and possibly resolve it 
