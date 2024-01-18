@@ -1,0 +1,1 @@
+- [ ] Impl custom writer that injects \r when \n is written (conditionally)
