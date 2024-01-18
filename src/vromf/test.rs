@@ -15,13 +15,13 @@ fn grp_vromf() {
 	assert_eq!(2322, unpacked.len())
 }
 
-// #[test]
+#[test]
 fn write_to_zip() {
 	let p = PathBuf::from_str("./samples/aces.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
 	let out = VromfUnpacker::from_file((p, file)).unwrap();
 	let unpacked = out.unpack_all_to_zip(ZipFormat::Compressed(1), Some(BlkOutputFormat::Json), true).unwrap();
-	assert_eq!(55063125, unpacked.len())
+	assert_eq!(62871961, unpacked.len())
 }
 
 
