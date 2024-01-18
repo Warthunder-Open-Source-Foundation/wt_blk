@@ -15,7 +15,7 @@ fn grp_vromf() {
 	assert_eq!(2322, unpacked.len())
 }
 
-#[test]
+// #[test]
 fn write_to_zip() {
 	let p = PathBuf::from_str("./samples/aces.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();

@@ -4,3 +4,4 @@
 - [ ] Re-Enable overrides
 - [X] Implement/Enable merging
 - [ ] (Feature): Investigate pat normalization and possibly resolve it 
+- [ ] Re-Enable zip test
