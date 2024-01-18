@@ -147,14 +147,21 @@ impl BlkField {
 					ser.end_object_key(w)?;
 					ser.begin_object_value(w)?;
 				}
-				ser.begin_object(w)?;
-				let mut is_first = true;
-				for value in v {
-					value._as_serde_json_streaming(w, ser, false, is_first, false)?;
-					is_first = false;
+				// Empty objects should not have newlines in them, so we simply skip them
+				if !v.is_empty() {
+					ser.begin_object(w)?;
+					let mut is_first = true;
+					for value in v {
+						value._as_serde_json_streaming(w, ser, false, is_first, false)?;
+						is_first = false;
+					}
+					ser.end_object_value(w)?;
+					ser.end_object(w)?;
+
+					// Instead we just write brackets without a newline in them
+				} else {
+					ser.write_string_fragment(w, "{}")?;
 				}
-				ser.end_object_value(w)?;
-				ser.end_object(w)?;
 			}
 			BlkField::Merged(k, v) => {
 				ser.begin_object_key(w, is_first)?;
@@ -344,6 +351,14 @@ mod test {
 		let mut buf = vec![];
 		blk.as_serde_json_streaming(&mut buf).unwrap();
 		assert_eq!(String::from_utf8(buf).unwrap(), fs::read_to_string("./samples/expected_merged.json").unwrap());
+	}
+
+	#[test]
+	fn streaming_empty() {
+		let mut blk = BlkField::new_root();
+		let mut buf = vec![];
+		blk.as_serde_json_streaming(&mut buf).unwrap();
+		assert_eq!(String::from_utf8(buf).unwrap(), "{}");
 	}
 
 	#[test]
