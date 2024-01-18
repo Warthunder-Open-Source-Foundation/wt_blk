@@ -1,1 +1,4 @@
-- [ ] Impl custom writer that injects \r when \n is written (conditionally)
+- [X] Impl custom writer that injects \r when \n is written (conditionally)
+- [ ] Fix empty objects having newlines in them
+- [ ] Fix regular text BLK showing up empty
+- [ ] (Feature): Investigate pat normalization and possibly resolve it 
