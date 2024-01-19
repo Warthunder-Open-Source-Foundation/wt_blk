@@ -190,6 +190,7 @@ impl VromfUnpacker<'_> {
 							file.1 = parsed.as_blk_text()?.into_bytes();
 						}
 						BlkOutputFormat::Json => {
+							parsed.merge_fields();
 							parsed.as_serde_json_streaming(&mut file.1)?;
 						}
 					}
@@ -216,6 +217,7 @@ impl VromfUnpacker<'_> {
 							writer.write_all(parsed.as_blk_text()?.as_bytes())?;
 						}
 						BlkOutputFormat::Json => {
+							parsed.merge_fields();
 							parsed.as_serde_json_streaming(&mut writer)?;
 						}
 					}
