@@ -54,7 +54,7 @@ pub(crate) fn bytes_to_long(input: &[u8]) -> Option<i64> {
 
 /// Wrapper for quickly creating Arced string
 pub fn blk_str(s: &str) -> BlkString {
-	Arc::from(s)
+	Arc::from(s.to_string())
 }
 
 /// Simple check to differentiate plaintext BLK from binary one

@@ -11,7 +11,7 @@ use crate::blk::{
 };
 use crate::blk::util::bytes_to_uint;
 
-pub type BlkString = Arc<str>;
+pub type BlkString = Arc<String>;
 
 pub mod blk_type_id {
 	pub const STRING: u8 = 0x01;
@@ -93,7 +93,7 @@ impl BlkType {
 						}
 						buff.push(*byte)
 					}
-					Arc::from(String::from_utf8_lossy(&buff).to_string())
+					Arc::from(String::from_utf8(buff).ok()?)
 				};
 
 				Some(Self::Str(res))
