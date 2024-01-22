@@ -4,7 +4,7 @@ use crate::blk::{blk_structure::BlkField, blk_type::BlkString};
 #[allow(unused_imports)] // Debug only imports make release output noisy
 use crate::blk::blk_block_hierarchy::BlkBlockBuilderError::{InitialElementMissing, InsertingIntoNonStruct, TakenElementMissing, UnclaimedElements};
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug,  Clone, thiserror::Error, Eq, PartialEq)]
 pub enum BlkBlockBuilderError {
 	#[error("Element(s) in flat blocks already taken when it was allocated to current block")]
 	TakenElementMissing,

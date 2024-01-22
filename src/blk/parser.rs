@@ -1,6 +1,4 @@
 use std::sync::Arc;
-use color_eyre::eyre::ContextCompat;
-use color_eyre::Report;
 
 use tracing::error;
 
@@ -90,7 +88,7 @@ pub fn parse_blk(
 		let name_id = u32::from_le_bytes([name_id_raw[0], name_id_raw[1], name_id_raw[2], 0]);
 		let type_id = chunk[3];
 		let data = &chunk[4..];
-		let name = names.get(name_id as usize).wrap_err(format!("Name index {} out of bounds for name map of length {}", name_id, names.len()))?.clone();
+		let name = names.get(name_id as usize).ok_or(ParseError::Custom(format!("Name index {} out of bounds for name map of length {}", name_id, names.len())))?.clone();
 
 		let parsed = if is_slim && type_id == STRING {
 			BlkType::from_raw_param_info(
@@ -172,14 +170,14 @@ pub fn parse_blk(
 			offset: offset.unwrap_or(0),
 		};
 		for i in (ptr)..(ptr + field_count) {
-			field.fields.push(results[i].1.take().context("Infallible, already taken value")?);
+			field.fields.push(results[i].1.take().expect("Infallible, already taken value"));
 		}
 		ptr += field_count;
 		flat_map.push(Some(field));
 	}
 	#[cfg(debug_assertions)]
-	color_eyre::eyre::ensure!(results.into_iter().all(|e|e.1.is_none()) == true, "unused values in results");
+	assert!(results.into_iter().all(|e|e.1.is_none()), "unused values in results");
 
-	let out = BlkField::from_flat_blocks(&mut flat_map)?;
+	let out = BlkField::from_flat_blocks(&mut flat_map).map_err(|e|ParseError::BlkBlockBuilderError(e))?;
 	Ok(out)
 }
