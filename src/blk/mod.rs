@@ -68,6 +68,7 @@ pub mod plaintext_serialize;
 mod plaintext_deserialize;
 
 /// Utility struct which wraps
+#[allow(unused)]
 mod blk_decoder;
 
 #[allow(dead_code)]
@@ -92,7 +93,7 @@ fn test_parse_dir(
 }
 
 /// Highest-level function for unpacking one BLK explicitly, for direct low level control call [`parser::parse_blk`]
-pub fn unpack_blk(mut file: &mut Vec<u8>, dictionary: Option<&DecoderDictionary>, nm: Option<Arc<NameMap>>) -> Result<BlkField, Report> {
+pub fn unpack_blk(file: &mut Vec<u8>, dictionary: Option<&DecoderDictionary>, nm: Option<Arc<NameMap>>) -> Result<BlkField, Report> {
 	let mut offset = 0;
 	let file_type = FileType::from_byte(file[0])?;
 	if file_type.is_zstd() {

@@ -337,7 +337,7 @@ mod test {
 
 	#[test]
 	fn streaming() {
-		let mut blk = make_strict_test();
+		let blk = make_strict_test();
 		// println!("Found: {:#?}", blk.as_serde_obj());
 		// println!("Expected: {:#?}", expected);
 		let mut buf = vec![];
@@ -357,7 +357,7 @@ mod test {
 
 	#[test]
 	fn streaming_empty() {
-		let mut blk = BlkField::new_root();
+		let blk = BlkField::new_root();
 		let mut buf = vec![];
 		blk.as_serde_json_streaming(&mut buf).unwrap();
 		assert_eq!(String::from_utf8(buf).unwrap(), "{}");

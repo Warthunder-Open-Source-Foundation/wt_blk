@@ -20,4 +20,5 @@ pub mod vromf;
 mod wrpl;
 
 /// Performance instrumentation, using the stamp! macro
+#[allow(unused)]
 mod perf_instrumentation;
