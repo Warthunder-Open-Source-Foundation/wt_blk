@@ -67,7 +67,7 @@ pub enum ZipFormat {
 
 impl VromfUnpacker<'_> {
 	pub fn from_file(file: File) -> Result<Self, Report> {
-		let mut _start = Instant::now();
+		let mut start = Instant::now();
 		let (decoded, metadata) = decode_bin_vromf(&file.1)?;
 		stamp!("Vromf bin", start);
 		let inner = decode_inner_vromf(&decoded)?;
