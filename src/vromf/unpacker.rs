@@ -208,16 +208,20 @@ impl VromfUnpacker<'_> {
 			_ if maybe_blk(&file) => {
 				if let Some(format) = unpack_blk_into {
 					let mut parsed = blk::unpack_blk(&mut file.1, self.dict.as_deref().map(Deref::deref), self.nm.clone())?;
-					if apply_overrides {
-						parsed.apply_overrides();
-					}
 
 					match format {
+
 						BlkOutputFormat::BlkText => {
+							if apply_overrides {
+								parsed.apply_overrides();
+							}
 							writer.write_all(parsed.as_blk_text()?.as_bytes())?;
 						}
 						BlkOutputFormat::Json => {
 							parsed.merge_fields();
+							if apply_overrides {
+								parsed.apply_overrides();
+							}
 							parsed.as_serde_json_streaming(&mut writer)?;
 						}
 					}
