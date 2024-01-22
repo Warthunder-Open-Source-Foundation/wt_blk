@@ -269,8 +269,9 @@ impl BlkType {
 	}
 	pub fn serialize_streaming(&self, w: &mut impl Write, ser: &mut PrettyFormatter) -> Result<(), Report> {
 		#[inline(always)]
-		fn std_num(num: f32) -> String {
-			format!("{:?}", num)
+		/// Writes float in format that std debug uses
+		fn std_num<'b, W: Write>(_: &mut PrettyFormatter<'b>, w: &mut W, v: f32) -> io::Result<()> {
+			write!(w, "{v:?}")
 		}
 		match self {
 			BlkType::Str(s) => {
@@ -291,17 +292,17 @@ impl BlkType {
 				ser.write_i64(w, *s)?;
 			}
 			BlkType::Float(s) => {
-				ser.write_number_str(w, std_num(*s).as_str())?;
+				std_num(ser, w, *s)?;
 			}
-			BlkType::Float2(s) => write_generic_array(PrettyFormatter::write_f32, s.iter(), w, ser)?,
-			BlkType::Float3(s) => write_generic_array(PrettyFormatter::write_f32, s.iter(), w, ser)?,
-			BlkType::Float4(s) => write_generic_array(PrettyFormatter::write_f32, s.iter(), w, ser)?,
+			BlkType::Float2(s) => write_generic_array(std_num, s.iter(), w, ser)?,
+			BlkType::Float3(s) => write_generic_array(std_num, s.iter(), w, ser)?,
+			BlkType::Float4(s) => write_generic_array(std_num, s.iter(), w, ser)?,
 			BlkType::Float12(s) => {
 				ser.begin_array(w)?;
 				let mut begin = true;
 				for chunk in s.chunks_exact(3) {
 					ser.begin_array_value(w, begin)?;
-					write_generic_array(PrettyFormatter::write_f32, chunk.iter(), w, ser)?;
+					write_generic_array(std_num, chunk.iter(), w, ser)?;
 					ser.end_array_value(w)?;
 					begin = false;
 				}
