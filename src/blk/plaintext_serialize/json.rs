@@ -140,7 +140,8 @@ impl BlkField {
 				}
 			}
 			BlkField::Struct(k, v) => {
-				if !is_root {
+				// Skip over object key when root or merging an array
+				if !is_root && !in_merging_array {
 					ser.begin_object_key(w, is_first)?;
 					ser.begin_string(w)?;
 					ser.write_string_fragment(w, k.as_ref())?;
