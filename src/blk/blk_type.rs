@@ -1,12 +1,9 @@
 use std::{fmt::{Display, Formatter as StdFormatter}, io, sync::Arc};
-use std::ops::Deref;
-use color_eyre::eyre::bail;
+use std::io::Write;
 use color_eyre::Report;
 
-use serde::{Deserialize, Serialize, Serializer};
-use serde::ser::{SerializeSeq, SerializeStruct};
+use serde::{Deserialize, Serialize};
 use serde_json::ser::{Formatter, PrettyFormatter};
-use serde_json::{Number, Value};
 
 use crate::blk::{
 	blk_type::blk_type_id::*,
@@ -14,7 +11,7 @@ use crate::blk::{
 };
 use crate::blk::util::bytes_to_uint;
 
-pub type BlkString = Arc<str>;
+pub type BlkString = Arc<String>;
 
 pub mod blk_type_id {
 	pub const STRING: u8 = 0x01;
@@ -96,7 +93,7 @@ impl BlkType {
 						}
 						buff.push(*byte)
 					}
-					Arc::from(String::from_utf8_lossy(&buff).to_string())
+					Arc::from(String::from_utf8(buff).ok()?)
 				};
 
 				Some(Self::Str(res))
@@ -270,10 +267,11 @@ impl BlkType {
 			"c"
 		)
 	}
-	pub fn serialize_streaming(&self, w: &mut Vec<u8>, ser: &mut PrettyFormatter) -> Result<(), Report> {
+	pub fn serialize_streaming(&self, w: &mut impl Write, ser: &mut PrettyFormatter) -> Result<(), Report> {
 		#[inline(always)]
-		fn std_num(num: f32) -> String {
-			format!("{:?}", num)
+		/// Writes float in format that std debug uses
+		fn std_num<'b, W: Write>(_: &mut PrettyFormatter<'b>, w: &mut W, v: f32) -> io::Result<()> {
+			write!(w, "{v:?}")
 		}
 		match self {
 			BlkType::Str(s) => {
@@ -294,17 +292,17 @@ impl BlkType {
 				ser.write_i64(w, *s)?;
 			}
 			BlkType::Float(s) => {
-				ser.write_number_str(w, std_num(*s).as_str())?;
+				std_num(ser, w, *s)?;
 			}
-			BlkType::Float2(s) => write_generic_array(PrettyFormatter::write_f32, s.iter(), w, ser)?,
-			BlkType::Float3(s) => write_generic_array(PrettyFormatter::write_f32, s.iter(), w, ser)?,
-			BlkType::Float4(s) => write_generic_array(PrettyFormatter::write_f32, s.iter(), w, ser)?,
+			BlkType::Float2(s) => write_generic_array(std_num, s.iter(), w, ser)?,
+			BlkType::Float3(s) => write_generic_array(std_num, s.iter(), w, ser)?,
+			BlkType::Float4(s) => write_generic_array(std_num, s.iter(), w, ser)?,
 			BlkType::Float12(s) => {
 				ser.begin_array(w)?;
 				let mut begin = true;
 				for chunk in s.chunks_exact(3) {
 					ser.begin_array_value(w, begin)?;
-					write_generic_array(PrettyFormatter::write_f32, chunk.iter(), w, ser)?;
+					write_generic_array(std_num, chunk.iter(), w, ser)?;
 					ser.end_array_value(w)?;
 					begin = false;
 				}
@@ -321,10 +319,10 @@ impl BlkType {
 	}
 }
 
-fn write_generic_array<'a, 'b, T: 'a + Copy>(
-	writer: impl FnOnce(&mut PrettyFormatter<'b>, &mut Vec<u8>, T) -> io::Result<()> + std::marker::Copy,
+fn write_generic_array<'a, 'b, T: 'a + Copy, W: Write>(
+	writer: impl FnOnce(&mut PrettyFormatter<'b>, &mut W, T) -> io::Result<()> + Copy,
 	mut input: impl Iterator<Item=&'a T>,
-	w: &mut Vec<u8>,
+	w: &mut W,
 	ser: &mut PrettyFormatter<'b>,
 ) -> Result<(), Report> {
 	ser.begin_array(w)?;

@@ -1,0 +1,7 @@
+- [X] Impl custom writer that injects \r when \n is written (conditionally)
+- [X] Fix empty objects having newlines in them
+- [X] Fix regular text BLK showing up empty
+- [X] Re-Enable overrides
+- [X] Implement/Enable merging
+- [ ] (Feature): Investigate pat normalization and possibly resolve it 
+- [X] Re-Enable zip test

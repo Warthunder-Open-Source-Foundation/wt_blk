@@ -5,11 +5,11 @@ use std::str::FromStr;
 use std::time::Instant;
 
 use color_eyre::{eyre::ContextCompat, Help, Report};
-use color_eyre::eyre::{eyre};
+use color_eyre::eyre::eyre;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use wt_version::Version;
-use zip::write::FileOptions;
 use zip::{CompressionMethod, ZipWriter};
+use zip::write::FileOptions;
 use zstd::dict::DecoderDictionary;
 
 use crate::{blk::{
@@ -19,6 +19,7 @@ use crate::{blk::{
 	parser::parse_blk,
 	zstd::decode_zstd,
 }, blk, stamp, vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf}};
+use crate::blk::util::maybe_blk;
 use crate::vromf::header::Metadata;
 
 /// Simple type alias for (Path, Data) pair
@@ -105,6 +106,25 @@ impl VromfUnpacker<'_> {
 			.collect::<Result<Vec<File>, Report>>()
 	}
 
+	/// Skips the buffering step and directly writes the file to disk, using a provided writer
+	pub fn unpack_all_with_writer<W: Write>(
+		mut self,
+		unpack_blk_into: Option<BlkOutputFormat>,
+		apply_overrides: bool,
+		writer: impl FnOnce(&mut File) -> Result<W, Report> + Sync + Send + Copy,
+	) -> Result<(), Report> {
+		// Important: We own self here, so "destroying" the files vector isn't an issue
+		// Due to partial moving rules this is necessary
+		let files = mem::replace(&mut self.files, vec![]);
+		files.into_par_iter()
+			.map(|mut file| {
+				let mut w = writer(&mut file)?;
+				self.unpack_file_with_writer(file, unpack_blk_into, apply_overrides, &mut w)?;
+				Ok(())
+			})
+			.collect::<Result<(), Report>>()
+	}
+
 	pub fn unpack_all_to_zip(mut self, zip_format: ZipFormat, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool) -> Result<Vec<u8>, Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
 		// Due to partial moving rules this is necessary
@@ -160,18 +180,18 @@ impl VromfUnpacker<'_> {
 		match () {
 			_ if maybe_blk(&file) => {
 				if let Some(format) = unpack_blk_into {
-					let mut parsed = blk::unpack_blk(file.1, self.dict.as_deref().map(Deref::deref), self.nm.clone())?;
+					let mut parsed = blk::unpack_blk(&mut file.1, self.dict.as_deref().map(Deref::deref), self.nm.clone())?;
+					if apply_overrides {
+						parsed.apply_overrides();
+					}
 
 					match format {
 						BlkOutputFormat::BlkText => {
-							if apply_overrides {
-								parsed.apply_overrides();
-							}
 							file.1 = parsed.as_blk_text()?.into_bytes();
 						}
 						BlkOutputFormat::Json => {
-							file.1 = serde_json::to_string_pretty(&parsed.as_serde_obj(apply_overrides))?
-								.into_bytes();
+							parsed.merge_fields();
+							parsed.as_serde_json_streaming(&mut file.1)?;
 						}
 					}
 				}
@@ -181,6 +201,39 @@ impl VromfUnpacker<'_> {
 			// Default to the raw file
 			_ => Ok(file),
 		}
+	}
+
+	pub fn unpack_file_with_writer(&self, mut file: File, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool, mut writer: impl Write) -> Result<(), Report> {
+		match () {
+			_ if maybe_blk(&file) => {
+				if let Some(format) = unpack_blk_into {
+					let mut parsed = blk::unpack_blk(&mut file.1, self.dict.as_deref().map(Deref::deref), self.nm.clone())?;
+
+					match format {
+
+						BlkOutputFormat::BlkText => {
+							if apply_overrides {
+								parsed.apply_overrides();
+							}
+							writer.write_all(parsed.as_blk_text()?.as_bytes())?;
+						}
+						BlkOutputFormat::Json => {
+							parsed.merge_fields();
+							if apply_overrides {
+								parsed.apply_overrides();
+							}
+							parsed.as_serde_json_streaming(&mut writer)?;
+						}
+					}
+				}
+			}
+			// Default to the raw file
+			_ => {
+				writer.write_all(&file.1)?;
+			},
+		}
+		writer.flush()?;
+		Ok(())
 	}
 
 	// For debugging purposes
@@ -233,10 +286,10 @@ impl VromfUnpacker<'_> {
 		let res = versions.last().context("No versions discovered, this is an error")?;
 		Ok(res.to_owned())
 	}
-}
 
-fn maybe_blk(file: &File) -> bool {
-	file.0.extension() == Some(OsStr::new("blk"))
-		&& file.1.len() > 0
-		&& FileType::from_byte(file.1[0]).is_ok()
+	pub fn list_files(&self) {
+		for (path,_) in &self.files {
+			println!("{}", path.to_string_lossy());
+		}
+	}
 }

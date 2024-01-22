@@ -46,7 +46,7 @@ impl NameMap {
 		for (i, val) in file.iter().enumerate() {
 			if *val == 0 {
 				names.push(Arc::from(
-					String::from_utf8_lossy(&file[start..i]),
+					String::from_utf8_lossy(&file[start..i]).to_string(),
 				));
 				start = i + 1;
 			}
