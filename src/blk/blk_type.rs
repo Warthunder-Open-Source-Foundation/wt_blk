@@ -271,7 +271,9 @@ impl BlkType {
 		#[inline(always)]
 		/// Writes float in format that std debug uses
 		fn std_num<'b, W: Write>(_: &mut PrettyFormatter<'b>, w: &mut W, v: f32) -> io::Result<()> {
-			write!(w, "{v:?}")
+			let mut buf = ryu::Buffer::new();
+			w.write_all(buf.format(v).as_bytes())?;
+			Ok(())
 		}
 		match self {
 			BlkType::Str(s) => {

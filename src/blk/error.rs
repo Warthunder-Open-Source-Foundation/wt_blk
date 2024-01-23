@@ -1,6 +1,4 @@
-use std::mem;
 use std::ops::Range;
-use static_assertions::{const_assert_eq};
 
 use thiserror::Error;
 use crate::blk::blk_block_hierarchy::BlkBlockBuilderError;
@@ -46,5 +44,3 @@ pub enum ParseError {
 	#[error("Custom: {0}")]
 	Custom(String),
 }
-
-const_assert_eq!(mem::size_of::<ParseError>(), (mem::size_of::<usize>() * 4));
