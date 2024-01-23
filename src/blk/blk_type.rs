@@ -2,8 +2,9 @@ use std::{fmt::{Display, Formatter as StdFormatter}, io, sync::Arc};
 use std::io::Write;
 use color_eyre::Report;
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use serde_json::ser::{Formatter, PrettyFormatter};
+use serde_json::Serializer as JsonSerializer;
 
 use crate::blk::{
 	blk_type::blk_type_id::*,
@@ -267,7 +268,7 @@ impl BlkType {
 			"c"
 		)
 	}
-	pub fn serialize_streaming(&self, w: &mut impl Write, ser: &mut PrettyFormatter) -> Result<(), Report> {
+	pub fn serialize_streaming(&self, mut w: &mut impl Write, ser: &mut PrettyFormatter) -> Result<(), Report> {
 		#[inline(always)]
 		/// Writes float in format that std debug uses
 		fn std_num<'b, W: Write>(_: &mut PrettyFormatter<'b>, w: &mut W, v: f32) -> io::Result<()> {
@@ -277,9 +278,9 @@ impl BlkType {
 		}
 		match self {
 			BlkType::Str(s) => {
-				ser.begin_string(w)?;
-				ser.write_string_fragment(w, s.as_ref())?;
-				ser.end_string(w)?;
+				let mut ser = JsonSerializer::new(w);
+				ser.serialize_str(s.as_str())?;
+				w = ser.into_inner();
 			}
 			BlkType::Int(s) => {
 				ser.write_i32(w, *s)?;
