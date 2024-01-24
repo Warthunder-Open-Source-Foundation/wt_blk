@@ -280,11 +280,10 @@ impl VromfUnpacker<'_> {
 		Ok(versions)
 	}
 
-	pub fn latest_version(&self) -> Result<Version, Report> {
+	pub fn latest_version(&self) -> Result<Option<Version>, Report> {
 		let mut versions = self.query_versions()?;
 		versions.sort_unstable();
-		let res = versions.last().context("No versions discovered, this is an error")?;
-		Ok(res.to_owned())
+		Ok(versions.last().map(|e|e.to_owned()))
 	}
 
 	pub fn list_files(&self) {
