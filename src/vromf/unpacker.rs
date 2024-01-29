@@ -100,6 +100,7 @@ impl VromfUnpacker<'_> {
 		// Due to partial moving rules this is necessary
 		let files = mem::replace(&mut self.files, vec![]);
 		files.into_par_iter()
+			.panic_fuse()
 			.map(|file| {
 				self.unpack_file(file, unpack_blk_into, apply_overrides)
 			})
@@ -117,6 +118,7 @@ impl VromfUnpacker<'_> {
 		// Due to partial moving rules this is necessary
 		let files = mem::replace(&mut self.files, vec![]);
 		files.into_par_iter()
+			.panic_fuse()
 			.map(|mut file| {
 				let mut w = writer(&mut file)?;
 				self.unpack_file_with_writer(file, unpack_blk_into, apply_overrides, &mut w)?;
@@ -130,6 +132,7 @@ impl VromfUnpacker<'_> {
 		// Due to partial moving rules this is necessary
 		let files = mem::replace(&mut self.files, Default::default());
 		let unpacked = files.into_par_iter()
+			.panic_fuse()
 			.map(|file| {
 				self.unpack_file(file, unpack_blk_into, apply_overrides)
 			})
