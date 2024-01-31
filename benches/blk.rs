@@ -1,6 +1,5 @@
-use wt_blk::blk::parser::parse_blk;
-use wt_blk::blk::make_strict_test;
 use divan::black_box;
+use wt_blk::blk::{make_strict_test, parser::parse_blk};
 
 fn main() {
 	// Run registered benchmarks.

@@ -1,11 +1,14 @@
-use std::{
-	fs,
-	sync::{Arc},
-};
+use std::{fs, sync::Arc};
 
 use zstd::dict::DecoderDictionary;
 
-use crate::blk::{file::FileType, make_strict_test, nm_file::NameMap, parser::parse_blk, zstd::decode_zstd};
+use crate::blk::{
+	file::FileType,
+	make_strict_test,
+	nm_file::NameMap,
+	parser::parse_blk,
+	zstd::decode_zstd,
+};
 
 // #[test]
 // fn json_parity() {
@@ -45,7 +48,10 @@ fn slim_zstd_rendist() {
 	let mut file = fs::read("./samples/rendist/rendinst_dmg.blk").unwrap();
 
 	let nm = fs::read("./samples/rendist/nm").unwrap();
-	let dict = fs::read("./samples/rendist/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
+	let dict = fs::read(
+		"./samples/rendist/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict",
+	)
+	.unwrap();
 
 	let frame_decoder = DecoderDictionary::copy(&dict);
 
@@ -64,7 +70,7 @@ fn slim_zstd_rendist() {
 		file_type.is_slim(),
 		Some(Arc::new(shared_name_map)),
 	)
-		.unwrap();
+	.unwrap();
 
 	assert_eq!(
 		fs::read_to_string("./samples/rendist_sample_stability.txt").unwrap(),

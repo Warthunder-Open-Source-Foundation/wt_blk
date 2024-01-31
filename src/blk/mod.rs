@@ -2,8 +2,8 @@ use std::{
 	fs,
 	fs::ReadDir,
 	sync::{
-		Arc,
 		atomic::{AtomicUsize, Ordering},
+		Arc,
 	},
 };
 
@@ -12,14 +12,14 @@ use cfg_if::cfg_if;
 use color_eyre::Report;
 
 use crate::blk::{
+	blk_structure::BlkField,
+	blk_type::BlkType,
 	file::FileType,
 	nm_file::NameMap,
 	parser::parse_blk,
-	zstd::{decode_zstd},
+	util::blk_str,
+	zstd::decode_zstd,
 };
-use crate::blk::blk_structure::BlkField;
-use crate::blk::blk_type::BlkType;
-use crate::blk::util::blk_str;
 
 /// Decodes flat map of fields into the corresponding nested datastructure
 mod blk_block_hierarchy;
@@ -57,9 +57,9 @@ cfg_if! {
 /// Collection of macros and functions used in all BLK modules
 pub mod util;
 
+mod repack;
 /// Zstandard unpacking functionality
 pub mod zstd;
-mod repack;
 
 /// Implementations for serializing into human readable text formats
 pub mod plaintext_serialize;
@@ -93,11 +93,17 @@ fn test_parse_dir(
 }
 
 /// Highest-level function for unpacking one BLK explicitly, for direct low level control call [`parser::parse_blk`]
-pub fn unpack_blk(file: &mut Vec<u8>, dictionary: Option<&DecoderDictionary>, nm: Option<Arc<NameMap>>) -> Result<BlkField, Report> {
+pub fn unpack_blk(
+	file: &mut Vec<u8>,
+	dictionary: Option<&DecoderDictionary>,
+	nm: Option<Arc<NameMap>>,
+) -> Result<BlkField, Report> {
 	let mut offset = 0;
 	let file_type = FileType::from_byte(file[0])?;
 	if file_type.is_zstd() {
-		if file_type == FileType::FAT_ZSTD { offset += 1 }; // FAT_ZSTD has a leading byte indicating that its unpacked form is of the FAT format
+		if file_type == FileType::FAT_ZSTD {
+			offset += 1
+		}; // FAT_ZSTD has a leading byte indicating that its unpacked form is of the FAT format
 		*file = decode_zstd(file_type, &file, dictionary)?;
 	} else {
 		// uncompressed Slim and Fat files retain their initial magic bytes
@@ -109,24 +115,49 @@ pub fn unpack_blk(file: &mut Vec<u8>, dictionary: Option<&DecoderDictionary>, nm
 }
 
 pub fn make_strict_test() -> BlkField {
-	BlkField::Struct(blk_str("root"), vec![
-		BlkField::Value(blk_str("vec4f"), BlkType::Float4([1.25, 2.5, 5.0, 10.0])),
-		BlkField::Value(blk_str("int"), BlkType::Int(42)),
-		BlkField::Value(blk_str("long"), BlkType::Long(64)),
-		BlkField::Struct(blk_str("alpha"), vec![
-			BlkField::Value(blk_str("str"), BlkType::Str(blk_str("hello"))),
-			BlkField::Value(blk_str("bool"), BlkType::Bool(true)),
-			BlkField::Value(blk_str("color"), BlkType::Color { r: 3, g: 2, b: 1, a: 4 }),
-			BlkField::Struct(blk_str("gamma"), vec![
-				BlkField::Value(blk_str("vec2i"), BlkType::Int2([3, 4])),
-				BlkField::Value(blk_str("vec2f"), BlkType::Float2([1.25, 2.5])),
-				BlkField::Value(blk_str("transform"), BlkType::Float12(Box::new([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.25, 2.5, 5.0]))),
-			]),
-		]),
-		BlkField::Struct(blk_str("beta"), vec![
-			BlkField::Value(blk_str("float"), BlkType::Float(1.25)),
-			BlkField::Value(blk_str("vec2i"), BlkType::Int2([1, 2])),
-			BlkField::Value(blk_str("vec3f"), BlkType::Float3([1.25, 2.5, 5.0])),
-		]),
-	])
+	BlkField::Struct(
+		blk_str("root"),
+		vec![
+			BlkField::Value(blk_str("vec4f"), BlkType::Float4([1.25, 2.5, 5.0, 10.0])),
+			BlkField::Value(blk_str("int"), BlkType::Int(42)),
+			BlkField::Value(blk_str("long"), BlkType::Long(64)),
+			BlkField::Struct(
+				blk_str("alpha"),
+				vec![
+					BlkField::Value(blk_str("str"), BlkType::Str(blk_str("hello"))),
+					BlkField::Value(blk_str("bool"), BlkType::Bool(true)),
+					BlkField::Value(
+						blk_str("color"),
+						BlkType::Color {
+							r: 3,
+							g: 2,
+							b: 1,
+							a: 4,
+						},
+					),
+					BlkField::Struct(
+						blk_str("gamma"),
+						vec![
+							BlkField::Value(blk_str("vec2i"), BlkType::Int2([3, 4])),
+							BlkField::Value(blk_str("vec2f"), BlkType::Float2([1.25, 2.5])),
+							BlkField::Value(
+								blk_str("transform"),
+								BlkType::Float12(Box::new([
+									1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.25, 2.5, 5.0,
+								])),
+							),
+						],
+					),
+				],
+			),
+			BlkField::Struct(
+				blk_str("beta"),
+				vec![
+					BlkField::Value(blk_str("float"), BlkType::Float(1.25)),
+					BlkField::Value(blk_str("vec2i"), BlkType::Int2([1, 2])),
+					BlkField::Value(blk_str("vec3f"), BlkType::Float3([1.25, 2.5, 5.0])),
+				],
+			),
+		],
+	)
 }

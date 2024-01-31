@@ -1,11 +1,9 @@
-use std::{collections::HashMap, mem, sync::Arc};
-use std::io::Write;
+use std::{collections::HashMap, io::Write, mem, sync::Arc};
 
 use color_eyre::Report;
 use serde_json::ser::{Formatter, PrettyFormatter};
 
-use crate::blk::{blk_structure::BlkField};
-use crate::blk::blk_type::BlkString;
+use crate::blk::{blk_structure::BlkField, blk_type::BlkString};
 
 impl BlkField {
 	/// Merges duplicate keys in struct fields into the Merged array variant
@@ -61,14 +59,21 @@ impl BlkField {
 	}
 
 	pub fn as_serde_json_streaming(&self, w: &mut impl Write) -> Result<(), Report> {
-		//let mut ser = PrettyFormatter::with_indent(b"\t");
+		// let mut ser = PrettyFormatter::with_indent(b"\t");
 		let mut ser = PrettyFormatter::new();
 		self._as_serde_json_streaming(w, &mut ser, true, true, false)?;
 		w.flush()?;
 		Ok(())
 	}
 
-	fn _as_serde_json_streaming(&self, w: &mut impl Write, ser: &mut PrettyFormatter, is_root: bool, is_first: bool, in_merging_array: bool) -> Result<(), Report> {
+	fn _as_serde_json_streaming(
+		&self,
+		w: &mut impl Write,
+		ser: &mut PrettyFormatter,
+		is_root: bool,
+		is_first: bool,
+		in_merging_array: bool,
+	) -> Result<(), Report> {
 		match self {
 			BlkField::Value(k, v) => {
 				if !in_merging_array {
@@ -85,7 +90,7 @@ impl BlkField {
 				if !in_merging_array {
 					ser.end_object_value(w)?;
 				}
-			}
+			},
 			BlkField::Struct(k, v) => {
 				// Skip over object key when root or merging an array
 				if !is_root && !in_merging_array {
@@ -107,11 +112,11 @@ impl BlkField {
 					ser.end_object_value(w)?;
 					ser.end_object(w)?;
 
-					// Instead we just write brackets without a newline in them
+				// Instead we just write brackets without a newline in them
 				} else {
 					ser.write_string_fragment(w, "{}")?;
 				}
-			}
+			},
 			BlkField::Merged(k, v) => {
 				ser.begin_object_key(w, is_first)?;
 				ser.begin_string(w)?;
@@ -129,7 +134,7 @@ impl BlkField {
 					ser.end_array_value(w)?;
 				}
 				ser.end_array(w)?;
-			}
+			},
 		}
 		Ok(())
 	}
@@ -148,17 +153,24 @@ mod test {
 		// println!("Expected: {:#?}", expected);
 		let mut buf = vec![];
 		blk.as_serde_json_streaming(&mut buf).unwrap();
-		assert_eq!(String::from_utf8(buf).unwrap(), fs::read_to_string("./samples/expected.json").unwrap());
+		assert_eq!(
+			String::from_utf8(buf).unwrap(),
+			fs::read_to_string("./samples/expected.json").unwrap()
+		);
 	}
 
 	#[test]
 	fn streaming_merge() {
 		let mut blk = make_strict_test();
-		blk.insert_field(BlkField::Value(blk_str("int"), BlkType::Int(420))).unwrap();
+		blk.insert_field(BlkField::Value(blk_str("int"), BlkType::Int(420)))
+			.unwrap();
 		blk.merge_fields();
 		let mut buf = vec![];
 		blk.as_serde_json_streaming(&mut buf).unwrap();
-		assert_eq!(String::from_utf8(buf).unwrap(), fs::read_to_string("./samples/expected_merged.json").unwrap());
+		assert_eq!(
+			String::from_utf8(buf).unwrap(),
+			fs::read_to_string("./samples/expected_merged.json").unwrap()
+		);
 	}
 
 	#[test]

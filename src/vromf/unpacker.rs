@@ -1,21 +1,33 @@
-use std::{ffi::OsStr, fmt::{Debug, Formatter}, mem, path::{Path, PathBuf}, sync::Arc};
-use std::io::{Cursor, Write};
-use std::ops::Deref;
-use std::str::FromStr;
+use std::{
+	ffi::OsStr,
+	fmt::{Debug, Formatter},
+	io::{Cursor, Write},
+	mem,
+	ops::Deref,
+	path::{Path, PathBuf},
+	str::FromStr,
+	sync::Arc,
+};
 
-use color_eyre::{eyre::ContextCompat, Help, Report};
-use color_eyre::eyre::eyre;
+use color_eyre::{
+	eyre::{eyre, ContextCompat},
+	Help,
+	Report,
+};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use wt_version::Version;
-use zip::{CompressionMethod, ZipWriter};
-use zip::write::FileOptions;
+use zip::{write::FileOptions, CompressionMethod, ZipWriter};
 use zstd::dict::DecoderDictionary;
 
-use crate::{blk::{
-	nm_file::NameMap,
-}, blk, vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf}};
-use crate::blk::util::maybe_blk;
-use crate::vromf::header::Metadata;
+use crate::{
+	blk,
+	blk::{nm_file::NameMap, util::maybe_blk},
+	vromf::{
+		binary_container::decode_bin_vromf,
+		header::Metadata,
+		inner_container::decode_inner_vromf,
+	},
+};
 
 /// Simple type alias for (Path, Data) pair
 pub type File = (PathBuf, Vec<u8>);
@@ -31,18 +43,18 @@ impl Debug for DictWrapper<'_> {
 
 impl<'a> Deref for DictWrapper<'a> {
 	type Target = DecoderDictionary<'a>;
+
 	fn deref(&self) -> &Self::Target {
 		&self.0
 	}
 }
 
-
 /// Unpacks vromf image into all internal files, optionally formatting binary BLK files
 #[derive(Debug)]
 pub struct VromfUnpacker<'a> {
-	files: Vec<File>,
-	dict: Option<Arc<DictWrapper<'a>>>,
-	nm: Option<Arc<NameMap>>,
+	files:    Vec<File>,
+	dict:     Option<Arc<DictWrapper<'a>>>,
+	nm:       Option<Arc<NameMap>>,
 	metadata: Metadata,
 }
 
@@ -58,7 +70,6 @@ pub enum ZipFormat {
 	Uncompressed,
 	Compressed(u8),
 }
-
 
 impl VromfUnpacker<'_> {
 	pub fn from_file(file: File) -> Result<Self, Report> {
@@ -85,15 +96,18 @@ impl VromfUnpacker<'_> {
 		})
 	}
 
-	pub fn unpack_all(mut self, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool) -> Result<Vec<File>, Report> {
+	pub fn unpack_all(
+		mut self,
+		unpack_blk_into: Option<BlkOutputFormat>,
+		apply_overrides: bool,
+	) -> Result<Vec<File>, Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
 		// Due to partial moving rules this is necessary
 		let files = mem::replace(&mut self.files, vec![]);
-		files.into_par_iter()
+		files
+			.into_par_iter()
 			.panic_fuse()
-			.map(|file| {
-				self.unpack_file(file, unpack_blk_into, apply_overrides)
-			})
+			.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides))
 			.collect::<Result<Vec<File>, Report>>()
 	}
 
@@ -107,7 +121,8 @@ impl VromfUnpacker<'_> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
 		// Due to partial moving rules this is necessary
 		let files = mem::replace(&mut self.files, vec![]);
-		files.into_par_iter()
+		files
+			.into_par_iter()
 			.panic_fuse()
 			.map(|mut file| {
 				let mut w = writer(&mut file)?;
@@ -117,34 +132,35 @@ impl VromfUnpacker<'_> {
 			.collect::<Result<(), Report>>()
 	}
 
-	pub fn unpack_all_to_zip(mut self, zip_format: ZipFormat, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool) -> Result<Vec<u8>, Report> {
+	pub fn unpack_all_to_zip(
+		mut self,
+		zip_format: ZipFormat,
+		unpack_blk_into: Option<BlkOutputFormat>,
+		apply_overrides: bool,
+	) -> Result<Vec<u8>, Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
 		// Due to partial moving rules this is necessary
 		let files = mem::replace(&mut self.files, Default::default());
-		let unpacked = files.into_par_iter()
+		let unpacked = files
+			.into_par_iter()
 			.panic_fuse()
-			.map(|file| {
-				self.unpack_file(file, unpack_blk_into, apply_overrides)
-			})
+			.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides))
 			.collect::<Result<Vec<File>, Report>>()?;
 
 		let mut buf = Cursor::new(Vec::with_capacity(4096));
 		let mut writer = ZipWriter::new(&mut buf);
 
 		let (compression_level, compression_method) = match zip_format {
-			ZipFormat::Uncompressed => {
-				(0, CompressionMethod::STORE)
-			}
-			ZipFormat::Compressed(level) => {
-				(level, CompressionMethod::DEFLATE)
-			}
+			ZipFormat::Uncompressed => (0, CompressionMethod::STORE),
+			ZipFormat::Compressed(level) => (level, CompressionMethod::DEFLATE),
 		};
 
 		for (path, data) in unpacked.into_iter() {
-			writer.start_file(path.to_string_lossy(),
-							  FileOptions::default()
-								  .compression_level(Some(compression_level as i32))
-								  .compression_method(compression_method),
+			writer.start_file(
+				path.to_string_lossy(),
+				FileOptions::default()
+					.compression_level(Some(compression_level as i32))
+					.compression_method(compression_method),
 			)?;
 			writer.write_all(&data)?;
 		}
@@ -163,13 +179,21 @@ impl VromfUnpacker<'_> {
 			.files
 			.iter()
 			.find(|e| e.0 == path_name)
-			.context(format!("File {} was not found in VROMF", path_name.to_string_lossy()))
+			.context(format!(
+				"File {} was not found in VROMF",
+				path_name.to_string_lossy()
+			))
 			.suggestion("Validate file-name and ensure it was typed correctly")?
 			.to_owned();
 		self.unpack_file(file, unpack_blk_into, apply_overrides)
 	}
 
-	pub fn unpack_file(&self, mut file: File, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool) -> Result<File, Report> {
+	pub fn unpack_file(
+		&self,
+		mut file: File,
+		unpack_blk_into: Option<BlkOutputFormat>,
+		apply_overrides: bool,
+	) -> Result<File, Report> {
 		match () {
 			_ if maybe_blk(&file) => {
 				if let Some(format) = unpack_blk_into {
@@ -181,45 +205,50 @@ impl VromfUnpacker<'_> {
 					match format {
 						BlkOutputFormat::BlkText => {
 							file.1 = parsed.as_blk_text()?.into_bytes();
-						}
+						},
 						BlkOutputFormat::Json => {
 							parsed.merge_fields();
 							parsed.as_serde_json_streaming(&mut file.1)?;
-						}
+						},
 					}
 				}
 				Ok(file)
-			}
+			},
 
 			// Default to the raw file
 			_ => Ok(file),
 		}
 	}
 
-	pub fn unpack_file_with_writer(&self, mut file: File, unpack_blk_into: Option<BlkOutputFormat>, apply_overrides: bool, mut writer: impl Write) -> Result<(), Report> {
+	pub fn unpack_file_with_writer(
+		&self,
+		mut file: File,
+		unpack_blk_into: Option<BlkOutputFormat>,
+		apply_overrides: bool,
+		mut writer: impl Write,
+	) -> Result<(), Report> {
 		match () {
 			_ if maybe_blk(&file) => {
 				if let Some(format) = unpack_blk_into {
 					let mut parsed = blk::unpack_blk(&mut file.1, self.dict(), self.nm.clone())?;
 
 					match format {
-
 						BlkOutputFormat::BlkText => {
 							if apply_overrides {
 								parsed.apply_overrides();
 							}
 							writer.write_all(parsed.as_blk_text()?.as_bytes())?;
-						}
+						},
 						BlkOutputFormat::Json => {
 							parsed.merge_fields();
 							if apply_overrides {
 								parsed.apply_overrides();
 							}
 							parsed.as_serde_json_streaming(&mut writer)?;
-						}
+						},
 					}
 				}
-			}
+			},
 			// Default to the raw file
 			_ => {
 				writer.write_all(&file.1)?;
@@ -237,7 +266,9 @@ impl VromfUnpacker<'_> {
 
 		if let Ok((_, version_file)) = self.unpack_one(Path::new("version"), None, false) {
 			let s = String::from_utf8(version_file)?;
-			versions.push(Version::from_str(&s).map_err(|_| eyre!("Invalid version file contents: {s}"))?);
+			versions.push(
+				Version::from_str(&s).map_err(|_| eyre!("Invalid version file contents: {s}"))?,
+			);
 		}
 
 		Ok(versions)
@@ -246,11 +277,11 @@ impl VromfUnpacker<'_> {
 	pub fn latest_version(&self) -> Result<Option<Version>, Report> {
 		let mut versions = self.query_versions()?;
 		versions.sort_unstable();
-		Ok(versions.last().map(|e|e.to_owned()))
+		Ok(versions.last().map(|e| e.to_owned()))
 	}
 
 	pub fn list_files(&self) {
-		for (path,_) in &self.files {
+		for (path, _) in &self.files {
 			println!("{}", path.to_string_lossy());
 		}
 	}

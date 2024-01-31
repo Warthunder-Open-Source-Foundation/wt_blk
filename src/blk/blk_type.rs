@@ -1,16 +1,21 @@
-use std::{fmt::{Display, Formatter as StdFormatter}, io, sync::Arc};
-use std::io::Write;
-use color_eyre::Report;
+use std::{
+	fmt::{Display, Formatter as StdFormatter},
+	io,
+	io::Write,
+	sync::Arc,
+};
 
+use color_eyre::Report;
 use serde::{Deserialize, Serialize, Serializer};
-use serde_json::ser::{Formatter, PrettyFormatter};
-use serde_json::Serializer as JsonSerializer;
+use serde_json::{
+	ser::{Formatter, PrettyFormatter},
+	Serializer as JsonSerializer,
+};
 
 use crate::blk::{
 	blk_type::blk_type_id::*,
-	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset},
+	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset, bytes_to_uint},
 };
-use crate::blk::util::bytes_to_uint;
 
 pub type BlkString = Arc<String>;
 
@@ -31,7 +36,8 @@ pub mod blk_type_id {
 
 mod size {
 	use std::mem::size_of;
-	use crate::blk::blk_type::{BlkType};
+
+	use crate::blk::blk_type::BlkType;
 
 	const _GENERIC: usize = size_of::<BlkType>() - 24;
 	const _OPTIONAL: usize = size_of::<Option<BlkType>>() - 24;
@@ -98,7 +104,7 @@ impl BlkType {
 				};
 
 				Some(Self::Str(res))
-			}
+			},
 			INT => Some(Self::Int(bytes_to_int(field)?)),
 			FLOAT => Some(Self::Float(bytes_to_float(field)?)),
 			FLOAT2 => {
@@ -108,7 +114,7 @@ impl BlkType {
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 				]))
-			}
+			},
 			FLOAT3 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 12)];
@@ -117,7 +123,7 @@ impl BlkType {
 					bytes_to_float(&data_region[4..8])?,
 					bytes_to_float(&data_region[8..12])?,
 				]))
-			}
+			},
 			FLOAT4 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 16)];
@@ -127,7 +133,7 @@ impl BlkType {
 					bytes_to_float(&data_region[8..12])?,
 					bytes_to_float(&data_region[12..16])?,
 				]))
-			}
+			},
 			INT2 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
@@ -135,7 +141,7 @@ impl BlkType {
 					bytes_to_int(&data_region[0..4])?,
 					bytes_to_int(&data_region[4..8])?,
 				]))
-			}
+			},
 			INT3 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 12)];
@@ -144,7 +150,7 @@ impl BlkType {
 					bytes_to_int(&data_region[4..8])?,
 					bytes_to_int(&data_region[8..12])?,
 				]))
-			}
+			},
 			BOOL => Some(Self::Bool(field[0] != 0)),
 			COLOR => {
 				// Game stores them in BGRA order
@@ -154,7 +160,7 @@ impl BlkType {
 					b: field[2],
 					a: field[3],
 				})
-			}
+			},
 			FLOAT12 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 48)];
@@ -172,12 +178,12 @@ impl BlkType {
 					bytes_to_float(&data_region[40..44])?,
 					bytes_to_float(&data_region[44..48])?,
 				])))
-			}
+			},
 			LONG => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
 				Some(Self::Long(bytes_to_long(data_region)?))
-			}
+			},
 			_ => None,
 		};
 	}
@@ -198,7 +204,9 @@ impl BlkType {
 			BlkType::Bool(_) => BOOL,
 			BlkType::Color { .. } => COLOR,
 		}
-	} // grcov-excl-stop
+	}
+
+	// grcov-excl-stop
 
 	// grcov-excl-start
 	pub const fn is_inline(&self) -> bool {
@@ -216,7 +224,9 @@ impl BlkType {
 			BlkType::Bool(_) => true,
 			BlkType::Color { .. } => true,
 		}
-	} // grcov-excl-stop
+	}
+
+	// grcov-excl-stop
 
 	// grcov-excl-start
 	pub fn size_bytes(&self) -> usize {
@@ -234,7 +244,9 @@ impl BlkType {
 			BlkType::Bool(_) => 4,
 			BlkType::Color { .. } => 4,
 		}
-	} // grcov-excl-stop
+	}
+
+	// grcov-excl-stop
 
 	pub const fn blk_type_name(&self) -> &'static str {
 		match self {
@@ -252,23 +264,19 @@ impl BlkType {
 			BlkType::Color { .. } => "c",
 		}
 	}
+
 	pub fn is_valid_type(t: &str) -> bool {
-		matches!(t,
-			"t"|
-			"i"|
-			"ip2"|
-			"ip3"|
-			"i64"|
-			"r"|
-			"p2"|
-			"p3"|
-			"p4"|
-			"m"|
-			"b"|
-			"c"
+		matches!(
+			t,
+			"t" | "i" | "ip2" | "ip3" | "i64" | "r" | "p2" | "p3" | "p4" | "m" | "b" | "c"
 		)
 	}
-	pub fn serialize_streaming(&self, w: &mut impl Write, ser: &mut PrettyFormatter) -> Result<(), Report> {
+
+	pub fn serialize_streaming(
+		&self,
+		w: &mut impl Write,
+		ser: &mut PrettyFormatter,
+	) -> Result<(), Report> {
 		#[inline(always)]
 		/// Writes float in format that std debug uses
 		fn std_num<'b, W: Write>(_: &mut PrettyFormatter<'b>, w: &mut W, v: f32) -> io::Result<()> {
@@ -281,22 +289,22 @@ impl BlkType {
 				// Escapes strings according to json spec
 				let mut ser = JsonSerializer::new(w);
 				ser.serialize_str(s.as_str())?;
-			}
+			},
 			BlkType::Int(s) => {
 				ser.write_i32(w, *s)?;
-			}
+			},
 			BlkType::Int2(s) => {
 				write_generic_array(PrettyFormatter::write_i32, s.iter(), w, ser)?;
-			}
+			},
 			BlkType::Int3(s) => {
 				write_generic_array(PrettyFormatter::write_i32, s.iter(), w, ser)?;
-			}
+			},
 			BlkType::Long(s) => {
 				ser.write_i64(w, *s)?;
-			}
+			},
 			BlkType::Float(s) => {
 				std_num(ser, w, *s)?;
-			}
+			},
 			BlkType::Float2(s) => write_generic_array(std_num, s.iter(), w, ser)?,
 			BlkType::Float3(s) => write_generic_array(std_num, s.iter(), w, ser)?,
 			BlkType::Float4(s) => write_generic_array(std_num, s.iter(), w, ser)?,
@@ -310,13 +318,13 @@ impl BlkType {
 					begin = false;
 				}
 				ser.end_array(w)?;
-			}
+			},
 			BlkType::Bool(s) => {
 				ser.write_bool(w, *s)?;
-			}
+			},
 			BlkType::Color { r, g, b, a } => {
 				write_generic_array(PrettyFormatter::write_u8, [*r, *g, *b, *a].iter(), w, ser)?
-			}
+			},
 		}
 		Ok(())
 	}
@@ -324,7 +332,7 @@ impl BlkType {
 
 fn write_generic_array<'a, 'b, T: 'a + Copy, W: Write>(
 	writer: impl FnOnce(&mut PrettyFormatter<'b>, &mut W, T) -> io::Result<()> + Copy,
-	mut input: impl Iterator<Item=&'a T>,
+	mut input: impl Iterator<Item = &'a T>,
 	w: &mut W,
 	ser: &mut PrettyFormatter<'b>,
 ) -> Result<(), Report> {
@@ -347,33 +355,33 @@ impl Display for BlkType {
 		let value = match self {
 			BlkType::Str(v) => {
 				format!("\"{}\"", v)
-			}
+			},
 			BlkType::Int(v) => v.to_string(),
 			BlkType::Int2(v) => {
 				format!("{}, {}", v[0], v[1])
-			}
+			},
 			BlkType::Int3(v) => {
 				format!("{}, {}, {}", v[0], v[1], v[2])
-			}
+			},
 			BlkType::Long(v) => v.to_string(),
 			BlkType::Float(v) => v.to_string(),
 			BlkType::Float2(v) => {
 				format!("{}, {}", v[0], v[1])
-			}
+			},
 			BlkType::Float3(v) => {
 				format!("{}, {}, {}", v[0], v[1], v[2])
-			}
+			},
 			BlkType::Float4(v) => {
 				format!("{}, {}, {}, {}", v[0], v[1], v[2], v[3])
-			}
+			},
 			BlkType::Float12(v) => {
 				format!("{:?}", *v)
-			}
+			},
 			BlkType::Bool(v) => v.to_string(),
 			// BGRA
 			BlkType::Color { r, g, b, a } => {
 				format!("{b}, {g}, {r}, {a}")
-			}
+			},
 		};
 
 		write!(f, "{} = {}", self.blk_type_name(), value)
@@ -382,8 +390,7 @@ impl Display for BlkType {
 
 #[cfg(test)]
 mod test {
-	use crate::blk::blk_type::BlkType;
-	use crate::blk::util::blk_str;
+	use crate::blk::{blk_type::BlkType, util::blk_str};
 
 	#[test]
 	fn test_string() {
@@ -398,6 +405,11 @@ mod test {
 
 	#[test]
 	fn test_valid_types() {
-		assert_eq!(["t", "i", "ip2", "ip3", "i64", "r", "p2", "p3", "p4", "m", "b", "c"].iter().all(|e| BlkType::is_valid_type(e)), true)
+		assert_eq!(
+			["t", "i", "ip2", "ip3", "i64", "r", "p2", "p3", "p4", "m", "b", "c"]
+				.iter()
+				.all(|e| BlkType::is_valid_type(e)),
+			true
+		)
 	}
 }

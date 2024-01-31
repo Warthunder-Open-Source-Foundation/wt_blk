@@ -1,21 +1,21 @@
 use std::ops::Index;
-use crate::blk::blk_decoder::BlkDecoderError::SeekingBackUnderflow;
-use crate::blk::error::ParseError;
-use crate::blk::leb128::uleb128;
+
+use crate::blk::{
+	blk_decoder::BlkDecoderError::SeekingBackUnderflow,
+	error::ParseError,
+	leb128::uleb128,
+};
 
 type BlkResult<T> = Result<T, ParseError>;
 
 pub struct BlkDecoder<'a> {
-	bytes: &'a [u8],
+	bytes:  &'a [u8],
 	cursor: usize,
 }
 
-impl <'a>BlkDecoder<'a> {
+impl<'a> BlkDecoder<'a> {
 	pub fn new(bytes: &'a [u8]) -> Self {
-		Self {
-			bytes,
-			cursor: 0,
-		}
+		Self { bytes, cursor: 0 }
 	}
 
 	/// Returns the next bytes at the current cursor
@@ -25,7 +25,7 @@ impl <'a>BlkDecoder<'a> {
 		} else {
 			Err(error_map(BlkDecoderError::CursorOutOfBounds {
 				buf_len: self.bytes.len(),
-				cursor: self.cursor,
+				cursor:  self.cursor,
 			}))
 		}
 	}
@@ -37,8 +37,13 @@ impl <'a>BlkDecoder<'a> {
 
 	/// Checked backwards-seeking operation
 	pub fn seek_back(&mut self, by: usize) -> BlkResult<()> {
-		self.cursor = self.cursor.checked_add(by)
-			.ok_or(SeekingBackUnderflow { cursor: self.cursor, seekback: by })
+		self.cursor = self
+			.cursor
+			.checked_add(by)
+			.ok_or(SeekingBackUnderflow {
+				cursor:   self.cursor,
+				seekback: by,
+			})
 			.map_err(error_map)?;
 		Ok(())
 	}
@@ -60,13 +65,9 @@ fn error_map(e: BlkDecoderError) -> ParseError {
 #[derive(Clone, thiserror::Error, Debug, PartialEq, Eq)]
 pub enum BlkDecoderError {
 	#[error("Cursor at position {cursor} is out of bounds for {buf_len}")]
-	CursorOutOfBounds {
-		buf_len: usize,
-		cursor: usize,
-	},
-	#[error("Failed to seek backwards because seekback {seekback} was greater than cursor {cursor}")]
-	SeekingBackUnderflow {
-		cursor: usize,
-		seekback: usize,
-	}
+	CursorOutOfBounds { buf_len: usize, cursor: usize },
+	#[error(
+		"Failed to seek backwards because seekback {seekback} was greater than cursor {cursor}"
+	)]
+	SeekingBackUnderflow { cursor: usize, seekback: usize },
 }

@@ -1,9 +1,12 @@
 use std::mem;
+
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
-use crate::blk::blk_type::{BlkString, BlkType};
-use crate::blk::util::blk_str;
+use crate::blk::{
+	blk_type::{BlkString, BlkType},
+	util::blk_str,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum BlkField {
@@ -33,10 +36,10 @@ impl BlkField {
 				moved_values.iter_mut().for_each(|v| v.apply_overrides());
 
 				// Left are overrides
-				let with_name: (Vec<_>, Vec<_>) = moved_values.into_iter()
+				let with_name: (Vec<_>, Vec<_>) = moved_values
+					.into_iter()
 					.map(|e| (e.get_name(), e))
 					.partition(|(name, _)| name.starts_with("override:"));
-
 
 				// Map of to-replace keys
 				let mut map: IndexMap<BlkString, BlkField> = IndexMap::from_iter(with_name.1);
@@ -49,9 +52,9 @@ impl BlkField {
 						*inner = value;
 					}
 				}
-				*values = map.into_iter().map(|e|e.1).collect();
-			}
-			_ => {}
+				*values = map.into_iter().map(|e| e.1).collect();
+			},
+			_ => {},
 		}
 	}
 
@@ -61,28 +64,24 @@ impl BlkField {
 			BlkField::Struct(_, fields) => {
 				fields.push(field);
 				Some(())
-			}
+			},
 			_ => None,
 		}
 	}
 
 	pub fn get_name(&self) -> BlkString {
 		match self {
-			BlkField::Value(name, _) |
-			BlkField::Struct(name, _) |
-			BlkField::Merged(name, _) => {
+			BlkField::Value(name, _) | BlkField::Struct(name, _) | BlkField::Merged(name, _) => {
 				name.clone()
-			}
+			},
 		}
 	}
 
 	pub fn set_name(&mut self, new: BlkString) {
 		match self {
-			BlkField::Value(name, _) |
-			BlkField::Struct(name, _) |
-			BlkField::Merged(name, _) => {
+			BlkField::Value(name, _) | BlkField::Struct(name, _) | BlkField::Merged(name, _) => {
 				*name = new;
-			}
+			},
 		}
 	}
 
@@ -115,13 +114,13 @@ impl BlkField {
 			BlkField::Value(key, value) => {
 				*total += key.len();
 				*total += value.size_bytes();
-			}
+			},
 			BlkField::Struct(key, fields) | BlkField::Merged(key, fields) => {
 				*total += key.len();
 				for field in fields {
 					field._estimate_size(total);
 				}
-			}
+			},
 		}
 	}
 }
@@ -133,19 +132,23 @@ pub enum BlkFieldError {
 
 #[cfg(test)]
 mod test {
-	use crate::blk::blk_structure::BlkField;
-	use crate::blk::blk_type::BlkType;
-	use crate::blk::util::blk_str;
+	use crate::blk::{blk_structure::BlkField, blk_type::BlkType, util::blk_str};
 
 	#[test]
 	fn should_override() {
 		let mut before = BlkField::new_root();
-		before.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(0))).unwrap();
-		before.insert_field(BlkField::Value(blk_str("override:value"), BlkType::Int(42))).unwrap();
+		before
+			.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(0)))
+			.unwrap();
+		before
+			.insert_field(BlkField::Value(blk_str("override:value"), BlkType::Int(42)))
+			.unwrap();
 		before.apply_overrides();
 
 		let mut expected = BlkField::new_root();
-		expected.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(42))).unwrap();
+		expected
+			.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(42)))
+			.unwrap();
 
 		assert_eq!(before, expected);
 	}
@@ -153,9 +156,18 @@ mod test {
 	#[test]
 	fn preserve_order() {
 		let mut after = BlkField::new_root();
-		after.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(0))).unwrap();
-		after.insert_field(BlkField::Value(blk_str("value3"), BlkType::Int(42))).unwrap();
-		after.insert_field(BlkField::Value(blk_str("value71q234"), BlkType::Int(213123))).unwrap();
+		after
+			.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(0)))
+			.unwrap();
+		after
+			.insert_field(BlkField::Value(blk_str("value3"), BlkType::Int(42)))
+			.unwrap();
+		after
+			.insert_field(BlkField::Value(
+				blk_str("value71q234"),
+				BlkType::Int(213123),
+			))
+			.unwrap();
 		let before = after.clone();
 		after.apply_overrides();
 

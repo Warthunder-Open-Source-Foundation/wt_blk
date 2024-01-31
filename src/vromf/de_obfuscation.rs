@@ -15,15 +15,14 @@ pub fn deobfuscate(input: &mut [u8]) {
 		0..=15 => return,
 		16..=31 => {
 			xor_at_with(input, 0, ZSTD_XOR_PATTERN);
-		}
+		},
 		32.. => {
 			xor_at_with(input, 0, ZSTD_XOR_PATTERN);
 			let at = (input.len() & 0x03FF_FFFC) - 16;
 			xor_at_with(input, at, ZSTD_XOR_PATTERN_REV);
-		}
+		},
 	}
 }
-
 
 // XORS sequence of 16 bytes from given starting point with 4x 32-bit u32
 fn xor_at_with(input: &mut [u8], at: usize, with: [u32; 4]) {

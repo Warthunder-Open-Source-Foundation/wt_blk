@@ -1,9 +1,9 @@
-use std::ffi::OsStr;
-use std::sync::Arc;
+use std::{ffi::OsStr, sync::Arc};
 
-use crate::blk::blk_type::BlkString;
-use crate::blk::file::FileType;
-use crate::vromf::File;
+use crate::{
+	blk::{blk_type::BlkString, file::FileType},
+	vromf::File,
+};
 
 #[inline(always)]
 pub(crate) fn bytes_to_offset(input: &[u8]) -> Option<usize> {

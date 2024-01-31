@@ -1,8 +1,8 @@
 use std::ops::Range;
 
 use thiserror::Error;
-use crate::blk::blk_block_hierarchy::BlkBlockBuilderError;
-use crate::blk::blk_decoder::BlkDecoderError;
+
+use crate::blk::{blk_block_hierarchy::BlkBlockBuilderError, blk_decoder::BlkDecoderError};
 
 #[derive(Debug, Error, Clone, Eq, PartialEq)]
 pub enum ParseError {

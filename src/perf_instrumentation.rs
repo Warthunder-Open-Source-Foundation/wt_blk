@@ -1,15 +1,14 @@
-use std::sync::Mutex;
-use std::time::{Duration};
+use std::{sync::Mutex, time::Duration};
 
-///! Call this example to print results
-///! #[cfg(feature = "performance_stamp")]
-///!	PerformanceStamp::print_results()
+/// ! Call this example to print results
+/// ! #[cfg(feature = "performance_stamp")]
+/// !	PerformanceStamp::print_results()
 
 pub static PERF: Mutex<Vec<PerformanceStamp>> = Mutex::new(vec![]);
 
 pub struct PerformanceStamp {
 	pub description: &'static str,
-	pub duration: Duration,
+	pub duration:    Duration,
 }
 
 impl PerformanceStamp {
@@ -25,11 +24,16 @@ impl PerformanceStamp {
 /// Creates a performance-timestamp measuring time from the last time this instant was created
 #[macro_export]
 macro_rules! stamp {
-    ($desc:expr, $time_var:ident) => {
+	($desc:expr, $time_var:ident) => {
 		#[cfg(feature = "performance_stamp")]
-			{
-				crate::perf_instrumentation::PERF.lock().unwrap().push(crate::perf_instrumentation::PerformanceStamp {description: $desc, duration: $time_var.elapsed()});
-				$time_var = Instant::now();
+		{
+			crate::perf_instrumentation::PERF.lock().unwrap().push(
+				crate::perf_instrumentation::PerformanceStamp {
+					description: $desc,
+					duration:    $time_var.elapsed(),
+				},
+			);
+			$time_var = Instant::now();
 		}
 	};
 }

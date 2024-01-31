@@ -6,9 +6,9 @@ use wt_version::Version;
 use crate::vromf::{
 	de_obfuscation::deobfuscate,
 	enums::{HeaderType, PlatformType},
+	header::Metadata,
 	util::{bytes_to_int, pack_type_from_aligned},
 };
-use crate::vromf::header::Metadata;
 
 pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<(Vec<u8>, Metadata), Report> {
 	let mut metadata = Metadata::default();
@@ -59,7 +59,12 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<(Vec<u8>, Metadata), Repor
 		let _flags = u16::from_le_bytes([s[2], s[3]]);
 		// The version is always reversed in order. It may never exceed 255
 		let version = [s[7], s[6], s[5], s[4]];
-		metadata.version = Some(Version::new(version[0] as u16, version[1] as u16, version[2] as u16, version[3] as u16));
+		metadata.version = Some(Version::new(
+			version[0] as u16,
+			version[1] as u16,
+			version[2] as u16,
+			version[3] as u16,
+		));
 
 		// Null length means the remaining bytes are used
 		if extended_header_size == 0 {
