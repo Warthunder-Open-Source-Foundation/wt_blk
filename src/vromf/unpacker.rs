@@ -183,7 +183,7 @@ impl VromfUnpacker<'_> {
 		match () {
 			_ if maybe_blk(&file) => {
 				if let Some(format) = unpack_blk_into {
-					let mut parsed = blk::unpack_blk(&mut file.1, self.dict.as_deref().map(Deref::deref), self.nm.clone())?;
+					let mut parsed = blk::unpack_blk(&mut file.1, self.dict(), self.nm.clone())?;
 					if apply_overrides {
 						parsed.apply_overrides();
 					}
@@ -210,7 +210,7 @@ impl VromfUnpacker<'_> {
 		match () {
 			_ if maybe_blk(&file) => {
 				if let Some(format) = unpack_blk_into {
-					let mut parsed = blk::unpack_blk(&mut file.1, self.dict.as_deref().map(Deref::deref), self.nm.clone())?;
+					let mut parsed = blk::unpack_blk(&mut file.1, self.dict(), self.nm.clone())?;
 
 					match format {
 
@@ -263,5 +263,9 @@ impl VromfUnpacker<'_> {
 		for (path,_) in &self.files {
 			println!("{}", path.to_string_lossy());
 		}
+	}
+
+	pub fn dict(&self) -> Option<&DecoderDictionary<'_>> {
+		self.dict.as_deref().map(Deref::deref)
 	}
 }
