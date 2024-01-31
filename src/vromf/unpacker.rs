@@ -2,7 +2,6 @@ use std::{ffi::OsStr, fmt::{Debug, Formatter}, mem, path::{Path, PathBuf}, sync:
 use std::io::{Cursor, Write};
 use std::ops::Deref;
 use std::str::FromStr;
-use std::time::Instant;
 
 use color_eyre::{eyre::ContextCompat, Help, Report};
 use color_eyre::eyre::eyre;
@@ -13,12 +12,8 @@ use zip::write::FileOptions;
 use zstd::dict::DecoderDictionary;
 
 use crate::{blk::{
-	blk_structure::BlkField,
-	file::FileType,
 	nm_file::NameMap,
-	parser::parse_blk,
-	zstd::decode_zstd,
-}, blk, stamp, vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf}};
+}, blk, vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf}};
 use crate::blk::util::maybe_blk;
 use crate::vromf::header::Metadata;
 
@@ -67,11 +62,8 @@ pub enum ZipFormat {
 
 impl VromfUnpacker<'_> {
 	pub fn from_file(file: File) -> Result<Self, Report> {
-		let mut start = Instant::now();
 		let (decoded, metadata) = decode_bin_vromf(&file.1)?;
-		stamp!("Vromf bin", start);
 		let inner = decode_inner_vromf(&decoded)?;
-		stamp!("Vromf inner", start);
 
 		let nm = inner
 			.iter()
@@ -79,13 +71,11 @@ impl VromfUnpacker<'_> {
 			.map(|elem| NameMap::from_encoded_file(&elem.1))
 			.transpose()?
 			.map(|elem| Arc::new(elem));
-		stamp!("Vromf name map", start);
 
 		let dict = inner
 			.iter()
 			.find(|elem| elem.0.extension() == Some(OsStr::new("dict")))
 			.map(|elem| Arc::new(DictWrapper(DecoderDictionary::copy(&elem.1))));
-		stamp!("Vromf dictionary", start);
 
 		Ok(Self {
 			files: inner,

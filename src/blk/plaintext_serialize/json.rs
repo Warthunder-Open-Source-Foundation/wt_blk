@@ -1,22 +1,13 @@
-use std::{collections::HashMap, mem, str::FromStr, sync::Arc};
+use std::{collections::HashMap, mem, sync::Arc};
 use std::io::Write;
 
 use color_eyre::Report;
-use serde_json::{json, Number, Value};
 use serde_json::ser::{Formatter, PrettyFormatter};
 
-use crate::blk::{blk_structure::BlkField, blk_type::BlkType};
+use crate::blk::{blk_structure::BlkField};
 use crate::blk::blk_type::BlkString;
 
 impl BlkField {
-	pub fn as_serde_obj(&mut self, should_override: bool) -> Value {
-		self.merge_fields();
-		if should_override {
-			self.apply_overrides();
-		}
-		self.as_serde_json(should_override).1
-	}
-
 	/// Merges duplicate keys in struct fields into the Merged array variant
 	pub fn merge_fields(&mut self) {
 		if let BlkField::Struct(_, fields) = self {
@@ -57,60 +48,16 @@ impl BlkField {
 		}
 	}
 
-	/// Returns key as string, and value as `serde_json::Value`
-	pub fn as_serde_json(&mut self, apply_overrides: bool) -> (String, Value) {
-		#[inline(always)]
-		fn std_num(num: f32) -> Value {
-			Value::Number(Number::from_str(&format!("{:?}", num)).expect("Infallible"))
-		}
+	pub fn as_serde_json(&self) -> Result<Vec<u8>, Report> {
+		let mut res = vec![];
+		self.as_serde_json_streaming(&mut res)?;
+		Ok(res)
+	}
 
-		match self {
-			BlkField::Value(k, v) => (
-				k.to_string(),
-				match v {
-					BlkType::Str(s) => {
-						json!(s)
-					}
-					BlkType::Int(s) => {
-						json!(s)
-					}
-					BlkType::Int2(s) => {
-						json!(s)
-					}
-					BlkType::Int3(s) => {
-						json!(s)
-					}
-					BlkType::Long(s) => {
-						json!(s)
-					}
-					BlkType::Float(s) => std_num(*s as f32),
-					BlkType::Float2(s) => Value::Array(s.iter().map(|e| std_num(*e)).collect()),
-					BlkType::Float3(s) => Value::Array(s.iter().map(|e| std_num(*e)).collect()),
-					BlkType::Float4(s) => Value::Array(s.iter().map(|e| std_num(*e)).collect()),
-					BlkType::Float12(s) => Value::Array(
-						s.array_chunks::<3>()
-							.map(|e| e.iter().map(|e| std_num(*e)).collect())
-							.collect(),
-					),
-					BlkType::Bool(s) => {
-						json!(s)
-					}
-					BlkType::Color { r, g, b, a } => {
-						json!([r, g, b, a])
-					}
-				},
-			),
-			BlkField::Struct(k, v) => (
-				k.to_string(),
-				Value::Object(serde_json::Map::from_iter(
-					v.iter_mut().map(|e| e.as_serde_json(apply_overrides)),
-				)),
-			),
-			BlkField::Merged(k, v) => (
-				k.to_string(),
-				Value::Array(v.iter_mut().map(|e| e.as_serde_obj(apply_overrides)).collect()),
-			),
-		}
+	pub fn as_serde_json_string(&self) -> Result<String, Report> {
+		let mut res = vec![];
+		self.as_serde_json_streaming(&mut res)?;
+		Ok(String::from_utf8(res)?)
 	}
 
 	pub fn as_serde_json_streaming(&self, w: &mut impl Write) -> Result<(), Report> {
@@ -192,148 +139,7 @@ impl BlkField {
 mod test {
 	use std::fs;
 
-	use serde_json::{Number, Value};
-
 	use crate::blk::{blk_structure::BlkField, blk_type::BlkType, make_strict_test, util::blk_str};
-
-	#[test]
-	fn dedup_arr() {
-		let mut blk = BlkField::Struct(
-			blk_str("root"),
-			vec![
-				BlkField::Value(blk_str("mass"), BlkType::Float2([69.0, 42.0])),
-				BlkField::Value(blk_str("mass"), BlkType::Float2([420.0, 360.0])),
-			],
-		);
-		let blk = blk.as_serde_obj(true);
-		let expected = Value::Object(serde_json::Map::from_iter(vec![(
-			"mass".into(),
-			Value::Array(vec![
-				Value::Array(vec![
-					Value::Number(Number::from_f64(69.0).unwrap()),
-					Value::Number(Number::from_f64(42.0).unwrap()),
-				]),
-				Value::Array(vec![
-					Value::Number(Number::from_f64(420.0).unwrap()),
-					Value::Number(Number::from_f64(360.0).unwrap()),
-				]),
-			]),
-		)]));
-		// println!("Found: {:#?}", blk);
-		// println!("Expected: {:#?}", expected);
-		assert_eq!(blk, expected);
-	}
-
-	#[test]
-	fn dedup_many() {
-		let blk = BlkField::Struct(
-			blk_str("root"),
-			vec![
-				BlkField::Value(blk_str("mass"), BlkType::Float(1.0)),
-				BlkField::Value(blk_str("mass"), BlkType::Float(2.0)),
-				BlkField::Value(blk_str("mass"), BlkType::Float(3.0)),
-				BlkField::Value(blk_str("mass"), BlkType::Float(4.0)),
-				BlkField::Value(blk_str("mass"), BlkType::Float(5.0)),
-				BlkField::Value(blk_str("mass"), BlkType::Float(6.0)),
-			],
-		)
-			.as_serde_obj(true);
-		let expected = Value::Object(serde_json::Map::from_iter(vec![(
-			"mass".into(),
-			Value::Array(vec![
-				Value::Number(Number::from_f64(1.0).unwrap()),
-				Value::Number(Number::from_f64(2.0).unwrap()),
-				Value::Number(Number::from_f64(3.0).unwrap()),
-				Value::Number(Number::from_f64(4.0).unwrap()),
-				Value::Number(Number::from_f64(5.0).unwrap()),
-				Value::Number(Number::from_f64(6.0).unwrap()),
-			]),
-		)]));
-		// println!("Found: {:#?}", blk);
-		// println!("Expected: {:#?}", expected);
-		assert_eq!(blk, expected);
-	}
-
-	#[test]
-	fn dedup_float() {
-		let mut blk = BlkField::Struct(
-			blk_str("root"),
-			vec![
-				BlkField::Value(blk_str("mass"), BlkType::Float(42.0)),
-				BlkField::Value(blk_str("mass"), BlkType::Float(69.0)),
-			],
-		);
-		let expected = Value::Object(serde_json::Map::from_iter(vec![(
-			"mass".into(),
-			Value::Array(vec![
-				Value::Number(Number::from_f64(42.0).unwrap()),
-				Value::Number(Number::from_f64(69.0).unwrap()),
-			]),
-		)]));
-		assert_eq!(blk.as_serde_obj(true), expected);
-	}
-
-	#[test]
-	fn not_everything_array() {
-		let mut blk = BlkField::Struct(
-			blk_str("root"),
-			vec![
-				BlkField::Value(blk_str("cheese"), BlkType::Float(42.0)),
-				BlkField::Value(blk_str("salad"), BlkType::Float(69.0)),
-			],
-		);
-		let expected = Value::Object(serde_json::Map::from_iter(vec![
-			(
-				"cheese".into(),
-				Value::Number(Number::from_f64(42.0).unwrap()),
-			),
-			(
-				"salad".into(),
-				Value::Number(Number::from_f64(69.0).unwrap()),
-			),
-		]));
-		// println!("Found: {:#?}", blk.as_serde_obj());
-		// println!("Expected: {:#?}", expected);
-		assert_eq!(blk.as_serde_obj(true), expected);
-	}
-
-	#[test]
-	fn int_without_dot() {
-		let mut blk = BlkField::Struct(
-			blk_str("root"),
-			vec![
-				BlkField::Value(blk_str("salad"), BlkType::Int(69)),
-			],
-		);
-		let expected = Value::Object(serde_json::Map::from_iter(vec![
-			(
-				"salad".into(),
-				Value::Number(Number::from_f64(69.0).unwrap()),
-			),
-		]));
-		// println!("Found: {:#?}", blk.as_serde_obj());
-		// println!("Expected: {:#?}", expected);
-		assert_ne!(blk.as_serde_obj(true), expected);
-	}
-
-	#[test]
-	fn int_array_without_dot() {
-		let mut blk = BlkField::Struct(
-			blk_str("root"),
-			vec![
-				BlkField::Value(blk_str("salad"), BlkType::Int2([69, 420])),
-			],
-		);
-		let expected = Value::Object(serde_json::Map::from_iter(vec![
-			(
-				"salad".into(),
-				Value::Array(vec![Value::Number(Number::from_f64(69.0).unwrap()), Value::Number(Number::from_f64(420.0).unwrap())]),
-			),
-		]));
-		// println!("Found: {:#?}", blk.as_serde_obj());
-		// println!("Expected: {:#?}", expected);
-		assert_ne!(blk.as_serde_obj(true), expected);
-	}
 
 	#[test]
 	fn streaming() {
@@ -365,8 +171,8 @@ mod test {
 
 	#[test]
 	fn consistency() {
-		let mut sample = make_strict_test();
-		let s = serde_json::to_string_pretty(&sample.as_serde_obj(true)).unwrap();
+		let sample = make_strict_test();
+		let s = sample.as_serde_json_string().unwrap();
 		assert_eq!(s, fs::read_to_string("./samples/expected.json").unwrap());
 	}
 }

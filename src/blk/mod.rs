@@ -108,29 +108,6 @@ pub fn unpack_blk(file: &mut Vec<u8>, dictionary: Option<&DecoderDictionary>, nm
 	Ok(parsed)
 }
 
-
-pub(crate) fn test_parse_file(
-	mut file: Vec<u8>,
-	fd: Arc<DecoderDictionary>,
-	shared_name_map: Option<Arc<NameMap>>,
-) -> Option<String> {
-	let mut offset = 0;
-	let file_type = FileType::from_byte(file[0]).ok()?;
-	if file_type.is_zstd() {
-		file = decode_zstd(file_type, &file, Some(fd.as_ref())).unwrap();
-	} else {
-		// uncompressed Slim and Fat files retain their initial magic bytes
-		offset = 1;
-	};
-
-	Some(
-		serde_json::to_string(
-			&parse_blk(&file[offset..], file_type.is_slim(), shared_name_map).ok()?,
-		)
-			.unwrap(),
-	)
-}
-
 pub fn make_strict_test() -> BlkField {
 	BlkField::Struct(blk_str("root"), vec![
 		BlkField::Value(blk_str("vec4f"), BlkType::Float4([1.25, 2.5, 5.0, 10.0])),

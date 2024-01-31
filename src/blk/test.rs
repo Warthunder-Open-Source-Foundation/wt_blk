@@ -1,13 +1,11 @@
 use std::{
 	fs,
-	fs::ReadDir,
-	sync::{atomic::AtomicUsize, Arc},
-	time::Instant,
+	sync::{Arc},
 };
 
 use zstd::dict::DecoderDictionary;
 
-use crate::blk::{file::FileType, make_strict_test, nm_file::NameMap, test_parse_file, parser::parse_blk, test_parse_dir, zstd::decode_zstd};
+use crate::blk::{file::FileType, make_strict_test, nm_file::NameMap, parser::parse_blk, zstd::decode_zstd};
 
 // #[test]
 // fn json_parity() {
@@ -81,31 +79,4 @@ fn slim_blk() {
 
 	let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
 	let _output = parse_blk(&file[1..], true, Some(Arc::new(shared_name_map))).unwrap();
-}
-
-/// Only run explicitly when required for testing, and do not run in CI because the test files it needs are not commited
-#[test]
-#[ignore]
-fn test_all() {
-	let start = Instant::now();
-	let nm = fs::read("./samples/vromfs/aces.vromfs.bin_u/nm").unwrap();
-	let dict = fs::read("./samples/vromfs/aces.vromfs.bin_u/ca35013aabca60792d5203b0137d0a8720d1dc151897eb856b12318891d08466.dict").unwrap();
-
-	let frame_decoder = DecoderDictionary::copy(&dict);
-
-	let dir: ReadDir = fs::read_dir("./samples/vromfs/aces.vromfs.bin_u").unwrap();
-	let total = AtomicUsize::new(0);
-
-	let mut pile = vec![];
-	test_parse_dir(&mut pile, dir, &total);
-	let shared_name_map = Some(Arc::new(NameMap::from_encoded_file(&nm).unwrap()));
-	let arced_fd = Arc::new(frame_decoder);
-	let out = pile
-		.into_iter()
-		.map(|file| test_parse_file(file.1, arced_fd.clone(), shared_name_map.clone()))
-		.filter_map(|x| x)
-		.collect::<Vec<_>>();
-
-	let stop = start.elapsed();
-	println!("Successfully parsed {} files! Thats all of them. The process took: {stop:?}", out.len());
 }
