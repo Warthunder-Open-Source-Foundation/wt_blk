@@ -239,36 +239,6 @@ impl VromfUnpacker<'_> {
 		Ok(())
 	}
 
-	// For debugging purposes
-	pub fn unpack_one_to_field(&self, path_name: &Path) -> Result<BlkField, Report> {
-		let mut file = self
-			.files
-			.iter()
-			.find(|e| e.0 == path_name)
-			.context("File {path_name} was not found in VROMF")
-			.suggestion("Validate file-name and ensure it was typed correctly")?
-			.to_owned();
-		match () {
-			_ if maybe_blk(&file) => {
-				let mut offset = 0;
-				let file_type = FileType::from_byte(file.1[0])?;
-				if file_type.is_zstd() {
-					file.1 = decode_zstd(file_type, &file.1, self.dict.as_ref().map(|e| &e.0))?;
-				} else {
-					// uncompressed Slim and Fat files retain their initial magic bytes
-					offset = 1;
-				};
-
-				Ok(parse_blk(
-					&file.1[offset..],
-					file_type.is_slim(),
-					self.nm.clone(),
-				)?)
-			}
-			_ => panic!("Not a blk"),
-		}
-	}
-
 	pub fn query_versions(&self) -> Result<Vec<Version>, Report> {
 		let mut versions = vec![];
 		if let Some(meta) = self.metadata.version {
