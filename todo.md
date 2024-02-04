@@ -1,7 +1,6 @@
-- [X] Impl custom writer that injects \r when \n is written (conditionally)
-- [X] Fix empty objects having newlines in them
-- [X] Fix regular text BLK showing up empty
-- [X] Re-Enable overrides
-- [X] Implement/Enable merging
-- [ ] (Feature): Investigate pat normalization and possibly resolve it 
-- [X] Re-Enable zip test
+- [ ] Add consistency tests to avoid breakage
+- [ ] Increase coverage and instrument primitives to be covered
+- [ ] Strip zip from this crate, and expose equivalent functional APIs to the caller
+- [ ] Re-Document new changes
+- [ ] Create flowchart/graph showcasing planned and WIP features
+- [ ] Add binary serialization and text deserialization 
