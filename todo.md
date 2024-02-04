@@ -1,4 +1,4 @@
-- [ ] Add consistency tests to avoid breakage
+- [X] Add consistency tests to avoid breakage
 - [ ] Increase coverage and instrument primitives to be covered
 - [ ] Strip zip from this crate, and expose equivalent functional APIs to the caller
 - [ ] Re-Document new changes
