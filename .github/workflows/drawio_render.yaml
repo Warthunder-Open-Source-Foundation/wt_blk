@@ -13,11 +13,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
       - name: Convert diagram to png
-        uses: Burnett01/actions-drawio@1.2
+        uses: severgroup-tt/actions-drawio-cli@v0.0.2
         with:
-          src: charts/blk_conversions.drawio
-          dest: blk_conversions.svg
+            source: charts/blk_conversions.drawio
+            destination: blk_conversions.svg
 
       - name: Upload image as artifact
         uses: actions/upload-artifact@v4
