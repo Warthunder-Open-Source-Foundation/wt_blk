@@ -20,8 +20,10 @@ jobs:
             source: charts/blk_conversions.drawio
             destination: blk_conversions.svg
 
-      - name: Upload image as artifact
-        uses: actions/upload-artifact@v4
+      - name: Push to assets branch
+        uses: Automattic/action-commit-to-branch@master
         with:
-          name: blk_conversions
-          path: blk_conversions.svg
+          branch: 'assets'
+          commit_message: 'Update drawio'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Required
