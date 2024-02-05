@@ -28,4 +28,5 @@ jobs:
         uses: actions-js/push@master
         with:
           branch: "assets"
+          force: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
