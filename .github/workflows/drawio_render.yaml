@@ -25,9 +25,7 @@ jobs:
             destination: blk_conversions.svg
 
       - name: Push to assets branch
-        uses: Automattic/action-commit-to-branch@master
+        uses: actions-js/push@master
         with:
-          branch: 'assets'
-          commit_message: 'Update drawio'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Required
+          branch: "assets"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
