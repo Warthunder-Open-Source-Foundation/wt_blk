@@ -2,5 +2,5 @@
 - [ ] Increase coverage and instrument primitives to be covered
 - [ ] Strip zip from this crate, and expose equivalent functional APIs to the caller
 - [ ] Re-Document new changes
-- [ ] Create flowchart/graph showcasing planned and WIP features
+- [X] Create flowchart/graph showcasing planned and WIP features
 - [ ] Add binary serialization and text deserialization 
