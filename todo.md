@@ -3,4 +3,5 @@
 - [ ] Strip zip from this crate, and expose equivalent functional APIs to the caller
 - [ ] Re-Document new changes
 - [X] Create flowchart/graph showcasing planned and WIP features
+  - And render with action
 - [ ] Add binary serialization and text deserialization 
