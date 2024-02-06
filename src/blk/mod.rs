@@ -16,10 +16,10 @@ use crate::blk::{
 	blk_type::BlkType,
 	file::FileType,
 	nm_file::NameMap,
-	parser::parse_blk,
 	util::blk_str,
 	zstd::decode_zstd,
 };
+use crate::blk::binary_deserialize::parser::parse_blk;
 
 /// Decodes flat map of fields into the corresponding nested datastructure
 mod blk_block_hierarchy;
@@ -44,9 +44,6 @@ pub mod leb128;
 /// Struct storing a shared map of strings that multiple BLK files reference
 pub mod nm_file;
 
-/// Exports core function for unpacking BLK file
-pub mod parser;
-
 cfg_if! {
 	if #[cfg(test)] {
 		/// Unit tests
@@ -57,19 +54,21 @@ cfg_if! {
 /// Collection of macros and functions used in all BLK modules
 pub mod util;
 
-mod repack;
 /// Zstandard unpacking functionality
 pub mod zstd;
 
-/// Implementations for serializing into human readable text formats
+/// Implementations for serializing into human readable text formats from internal representation
 pub mod plaintext_serialize;
 
-/// Implementations for deserializing into BLk binary format from BlkText
+/// Implementations for deserializing into internal representation format from text
 mod plaintext_deserialize;
 
 /// Utility struct which wraps
 #[allow(unused)]
 mod blk_decoder;
+
+/// Implementation for deserializing internal representation to binary form
+pub mod binary_deserialize;
 
 #[allow(dead_code)]
 fn test_parse_dir(
