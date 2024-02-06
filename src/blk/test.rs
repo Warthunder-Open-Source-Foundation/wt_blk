@@ -6,9 +6,9 @@ use crate::blk::{
 	file::FileType,
 	make_strict_test,
 	nm_file::NameMap,
-	parser::parse_blk,
 	zstd::decode_zstd,
 };
+use crate::blk::binary_deserialize::parser::parse_blk;
 
 // #[test]
 // fn json_parity() {
