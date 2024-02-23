@@ -3,8 +3,7 @@ use std::{io::Read, sync::Arc};
 use color_eyre::{eyre::ContextCompat, Report};
 use zstd::Decoder;
 
-use crate::blk::{blk_type::BlkString};
-use crate::blk::leb128::uleb128_offset;
+use crate::blk::{blk_type::BlkString, leb128::uleb128_offset};
 
 #[derive(Clone, Debug)]
 pub struct NameMap {
