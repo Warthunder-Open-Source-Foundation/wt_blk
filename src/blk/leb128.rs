@@ -32,6 +32,14 @@ pub fn uleb128(bytes: &[u8]) -> Result<(usize, usize), ParseError> {
 	}
 }
 
+/// Calls `uleb128` adding offset to buffer index
+#[inline]
+pub fn uleb128_offset(bytes: &[u8], buffer_idx: &mut usize) -> Result<usize, ParseError> {
+	let (offset, value) = uleb128(bytes)?;
+	*buffer_idx += offset;
+	return Ok(value);
+}
+
 #[cfg(test)]
 mod test {
 	use crate::blk::{error::ParseError, leb128::uleb128};

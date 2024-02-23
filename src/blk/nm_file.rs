@@ -3,7 +3,8 @@ use std::{io::Read, sync::Arc};
 use color_eyre::{eyre::ContextCompat, Report};
 use zstd::Decoder;
 
-use crate::blk::{blk_type::BlkString, leb128::uleb128};
+use crate::blk::{blk_type::BlkString};
+use crate::blk::leb128::uleb128_offset;
 
 #[derive(Clone, Debug)]
 pub struct NameMap {
@@ -57,11 +58,9 @@ impl NameMap {
 	pub fn parse_slim_nm(name_map: &[u8]) -> Vec<BlkString> {
 		let mut nm_ptr = 0;
 
-		let (offset, names_count) = uleb128(&name_map[nm_ptr..]).unwrap();
-		nm_ptr += offset;
+		let names_count = uleb128_offset(&name_map[nm_ptr..], &mut nm_ptr).unwrap();
 
-		let (offset, names_data_size) = uleb128(&name_map[nm_ptr..]).unwrap();
-		nm_ptr += offset;
+		let names_data_size = uleb128_offset(&name_map[nm_ptr..], &mut nm_ptr).unwrap();
 
 		let names = NameMap::parse_name_section(&name_map[nm_ptr..(nm_ptr + names_data_size)]);
 
