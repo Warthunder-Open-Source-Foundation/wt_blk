@@ -12,6 +12,7 @@ use cfg_if::cfg_if;
 use color_eyre::Report;
 
 use crate::blk::{
+	binary_deserialize::parser::parse_blk,
 	blk_structure::BlkField,
 	blk_type::BlkType,
 	file::FileType,
@@ -19,7 +20,6 @@ use crate::blk::{
 	util::blk_str,
 	zstd::decode_zstd,
 };
-use crate::blk::binary_deserialize::parser::parse_blk;
 
 /// Decodes flat map of fields into the corresponding nested datastructure
 mod blk_block_hierarchy;

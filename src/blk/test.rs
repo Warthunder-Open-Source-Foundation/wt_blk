@@ -3,12 +3,12 @@ use std::{fs, sync::Arc};
 use zstd::dict::DecoderDictionary;
 
 use crate::blk::{
+	binary_deserialize::parser::parse_blk,
 	file::FileType,
 	make_strict_test,
 	nm_file::NameMap,
 	zstd::decode_zstd,
 };
-use crate::blk::binary_deserialize::parser::parse_blk;
 
 // #[test]
 // fn json_parity() {
