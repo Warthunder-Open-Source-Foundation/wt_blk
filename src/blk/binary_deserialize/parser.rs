@@ -122,47 +122,44 @@ pub fn parse_blk(
 		results.push((name_id as usize, Some(field)));
 	}
 
-	let mut blocks = Vec::with_capacity(blocks_count);
-	{
-		let block_id_to_name = |id| {
-			if id == 0 {
-				blk_str("root")
-			} else {
-				(&names)[(id - 1) as usize].clone()
-			}
-		};
+	let mut block_ptr = 0;
+	let block_id_to_name = |id| {
+		if id == 0 {
+			blk_str("root")
+		} else {
+			(&names)[(id - 1) as usize].clone()
+		}
+	};
+	let blocks = {
+		(0..blocks_count).into_iter().map(|_| {
+			let (offset, name_id) = uleb128(&block_info[block_ptr..]).unwrap();
+			block_ptr += offset;
 
-		let mut ptr = 0;
-		for _ in 0..blocks_count {
-			let (offset, name_id) = uleb128(&block_info[ptr..]).unwrap();
-			ptr += offset;
+			let (offset, param_count) = uleb128(&block_info[block_ptr..]).unwrap();
+			block_ptr += offset;
 
-			let (offset, param_count) = uleb128(&block_info[ptr..]).unwrap();
-			ptr += offset;
-
-			let (offset, blocks_count) = uleb128(&block_info[ptr..]).unwrap();
-			ptr += offset;
+			let (offset, blocks_count) = uleb128(&block_info[block_ptr..]).unwrap();
+			block_ptr += offset;
 
 			let first_block_id = if blocks_count > 0 {
-				let (offset, first_block_id) = uleb128(&block_info[ptr..]).unwrap();
-				ptr += offset;
+				let (offset, first_block_id) = uleb128(&block_info[block_ptr..]).unwrap();
+				block_ptr += offset;
 				Some(first_block_id)
 			} else {
 				None
 			};
-
-			blocks.push((
-				block_id_to_name(name_id),
-				param_count,
-				blocks_count,
-				first_block_id,
-			));
 			// Name of the block
 			// Amount of non-block fields
 			// Amount of child-blocks
 			// If it has child-blocks, starting index of said block
-		}
-	}
+			(
+				block_id_to_name(name_id),
+				param_count,
+				blocks_count,
+				first_block_id,
+			)
+		})
+	};
 
 	// Create a flat hierarchy of all blocks including their non-block fields
 	// This ensures all values are actually assigned
