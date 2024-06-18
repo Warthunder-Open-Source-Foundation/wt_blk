@@ -1,6 +1,6 @@
 [package]
 name = "wt_blk"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
 description = "Parser and unpacker for the BLK file format"
@@ -11,13 +11,13 @@ description = "Parser and unpacker for the BLK file format"
 serde_json ={version = "^1", features = ["preserve_order", "float_roundtrip"]}
 serde = {version = "^1", features = ["serde_derive", "rc"]}
 thiserror = "^1"
-zstd = "0.12.3+zstd.1.5.2"
+zstd = "0.13.1"
 lazy_static = "^1.4.0"
 rayon = "1.6"
 tracing = "^0.1.37"
-memmap2 = "0.5.10"
+memmap2 = "0.9.4"
 color-eyre = "^0.6"
-strum = { version = "0.25.0", default-features = false, features = ["derive"] }
+strum = { version = "0.26.2", default-features = false, features = ["derive"] }
 indexmap = "2.0.0"
 cfg-if = "1.0.0"
 zip = { version = "0.6.6", features = ["deflate"], default-features = false}
