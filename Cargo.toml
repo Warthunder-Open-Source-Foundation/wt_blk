@@ -4,6 +4,9 @@ version = "0.2.0"
 edition = "2021"
 license = "MIT"
 description = "Parser and unpacker for the BLK file format"
+repository = "https://github.com/Warthunder-Open-Source-Foundation/wt_blk"
+homepage = "https://github.com/Warthunder-Open-Source-Foundation"
+documentation = "https://docs.rs/wt_blk"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
