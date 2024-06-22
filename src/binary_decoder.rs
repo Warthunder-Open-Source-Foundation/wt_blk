@@ -1,7 +1,7 @@
 use std::ops::Index;
+use crate::binary_decoder::BinaryDecoderError::SeekingBackUnderflow;
 
 use crate::blk::{
-	blk_decoder::BlkDecoderError::SeekingBackUnderflow,
 	error::ParseError,
 	leb128::uleb128,
 };
@@ -23,7 +23,7 @@ impl<'a> BlkDecoder<'a> {
 		if self.cursor < self.bytes.len() {
 			Ok(self.bytes.index(self.cursor..))
 		} else {
-			Err(error_map(BlkDecoderError::CursorOutOfBounds {
+			Err(error_map(BinaryDecoderError::CursorOutOfBounds {
 				buf_len: self.bytes.len(),
 				cursor:  self.cursor,
 			}))
@@ -58,12 +58,12 @@ impl<'a> BlkDecoder<'a> {
 }
 
 /// Translates module local error to crate parent-module ParseError
-fn error_map(e: BlkDecoderError) -> ParseError {
-	ParseError::BlkDecoderError(e)
+fn error_map(e: BinaryDecoderError) -> ParseError {
+	ParseError::BinaryDecoderError(e)
 }
 
 #[derive(Clone, thiserror::Error, Debug, PartialEq, Eq)]
-pub enum BlkDecoderError {
+pub enum BinaryDecoderError {
 	#[error("Cursor at position {cursor} is out of bounds for {buf_len}")]
 	CursorOutOfBounds { buf_len: usize, cursor: usize },
 	#[error(

@@ -63,10 +63,6 @@ pub mod plaintext_serialize;
 /// Implementations for deserializing into internal representation format from text
 mod plaintext_deserialize;
 
-/// Utility struct which wraps
-#[allow(unused)]
-mod blk_decoder;
-
 /// Implementation for deserializing internal representation to binary form
 pub mod binary_deserialize;
 
