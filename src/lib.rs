@@ -19,9 +19,9 @@ pub mod vromf;
 /// Experimental WRPL unpacking (WIP)
 mod wrpl;
 
-/// Performance instrumentation, using the stamp! macro
-#[allow(unused)]
-mod perf_instrumentation;
 /// Utility struct which wraps
 #[allow(unused)]
 mod binary_decoder;
+/// Performance instrumentation, using the stamp! macro
+#[allow(unused)]
+mod perf_instrumentation;
