@@ -1,5 +1,5 @@
 use std::{fs, sync::Arc};
-
+use std::time::Instant;
 use zstd::dict::DecoderDictionary;
 
 use crate::blk::{
@@ -84,5 +84,8 @@ fn slim_blk() {
 	let nm = fs::read("./samples/nm").unwrap();
 
 	let shared_name_map = NameMap::from_encoded_file(&nm).unwrap();
-	let _output = parse_blk(&file[1..], true, Some(Arc::new(shared_name_map))).unwrap();
+	let start = Instant::now();
+	let output = parse_blk(&file[1..], true, Some(Arc::new(shared_name_map))).unwrap();
+	println!("{:?}", start.elapsed());
+	println!("{:?}", output.estimate_size());
 }

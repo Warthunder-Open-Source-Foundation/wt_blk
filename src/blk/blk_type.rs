@@ -4,7 +4,6 @@ use std::{
 	io::Write,
 	sync::Arc,
 };
-
 use color_eyre::Report;
 use serde::{Deserialize, Serialize, Serializer};
 use serde_json::{
@@ -93,14 +92,14 @@ impl BlkType {
 					name_map[offset as usize].clone()
 				} else {
 					let data_region = &data_region[(offset as usize)..];
-					let mut buff = vec![];
-					for byte in data_region {
-						if *byte == 0 {
+					let mut buff = String::with_capacity(32);
+					for &byte in data_region {
+						if byte == 0 {
 							break;
 						}
-						buff.push(*byte)
+						buff.push(byte as char)
 					}
-					Arc::from(String::from_utf8(buff).ok()?)
+					Arc::from(buff)
 				};
 
 				Some(Self::Str(res))
