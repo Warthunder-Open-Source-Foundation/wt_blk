@@ -97,8 +97,6 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<(Vec<u8>, Metadata), Repor
 }
 
 pub(crate) fn encode_bin_vromf(input: &[u8], meta: Metadata) -> Result<Vec<u8>, Report> {
-
-
 	todo!()
 }
 

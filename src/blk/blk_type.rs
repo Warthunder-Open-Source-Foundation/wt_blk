@@ -4,6 +4,7 @@ use std::{
 	io::Write,
 	sync::Arc,
 };
+
 use color_eyre::Report;
 use serde::{Deserialize, Serialize, Serializer};
 use serde_json::{

@@ -1,5 +1,6 @@
 use std::{
 	any::{type_name, Any},
+	mem::size_of,
 	ops::Index,
 };
 
@@ -7,9 +8,12 @@ use color_eyre::Report;
 
 use crate::{
 	binary_decoder::BinaryDecoderError::SeekingBackUnderflow,
-	blk::{error::ParseError, leb128::uleb128, util::bytes_to_int},
+	blk::{
+		error::ParseError,
+		leb128::uleb128,
+		util::{bytes_to_int, bytes_to_uint},
+	},
 };
-use crate::blk::util::bytes_to_uint;
 
 type BinaryDecoderResult<T> = Result<T, ParseError>;
 

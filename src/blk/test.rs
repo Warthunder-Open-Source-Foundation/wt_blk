@@ -1,5 +1,5 @@
-use std::{fs, sync::Arc};
-use std::time::Instant;
+use std::{fs, sync::Arc, time::Instant};
+
 use zstd::dict::DecoderDictionary;
 
 use crate::blk::{
