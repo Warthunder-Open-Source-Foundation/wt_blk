@@ -96,17 +96,31 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<(Vec<u8>, Metadata), Repor
 	Ok((output, metadata))
 }
 
+pub(crate) fn encode_bin_vromf(input: &[u8], meta: Metadata) -> Result<Vec<u8>, Report> {
+
+
+	todo!()
+}
+
 #[cfg(test)]
 mod test {
 	use std::fs;
 
-	use crate::vromf::binary_container::decode_bin_vromf;
+	use crate::vromf::binary_container::{decode_bin_vromf, encode_bin_vromf};
 
 	#[test]
 	fn decode_compressed() {
 		let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
 		decode_bin_vromf(&f).unwrap();
 	}
+
+	// #[test]
+	// fn two_way() {
+	// 	let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
+	// 	let (decoded, meta) = decode_bin_vromf(&f).unwrap();
+	// 	let re_encoded = encode_bin_vromf(&decoded, meta).unwrap();
+	// 	assert_eq!(re_encoded, f);
+	// }
 
 	// #[test]
 	// fn test_regional() {

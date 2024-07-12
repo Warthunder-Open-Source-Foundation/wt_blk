@@ -24,6 +24,11 @@ pub fn deobfuscate(input: &mut [u8]) {
 	}
 }
 
+// XOR is inverse to itself, therefore this is perfectly fine
+pub fn obfuscate(input: &mut [u8]) {
+	deobfuscate(input);
+}
+
 // XORS sequence of 16 bytes from given starting point with 4x 32-bit u32
 fn xor_at_with(input: &mut [u8], at: usize, with: [u32; 4]) {
 	for (i, byte) in input[at..(at + 16)].iter_mut().enumerate() {
