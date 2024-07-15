@@ -34,13 +34,17 @@ pub mod blk_type_id {
 	pub const COLOR: u8 = 0x0A;
 }
 
+/// Asserts the size of BlkType is constant
 mod size {
 	use std::mem::size_of;
 
 	use crate::blk::blk_type::BlkType;
+	const EXPECTED: usize = 16;
 
-	const _GENERIC: usize = size_of::<BlkType>() - 24;
-	const _OPTIONAL: usize = size_of::<Option<BlkType>>() - 24;
+	const _GENERIC: usize = size_of::<BlkType>() - EXPECTED;
+	const __GENERIC: usize = EXPECTED - size_of::<BlkType>();
+	const _OPTIONAL: usize = size_of::<Option<BlkType>>() - EXPECTED;
+	const __OPTIONAL: usize = EXPECTED - size_of::<Option<BlkType>>();
 }
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
@@ -53,7 +57,7 @@ pub enum BlkType {
 	Float(f32),
 	Float2([f32; 2]),
 	Float3([f32; 3]),
-	Float4([f32; 4]),
+	Float4(Box<[f32; 4]>),
 	/// 3x4 Transformation matrix
 	Float12(Box<[f32; 12]>),
 	Bool(bool),
@@ -127,12 +131,12 @@ impl BlkType {
 			FLOAT4 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 16)];
-				Some(Self::Float4([
+				Some(Self::Float4(Box::new([
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 					bytes_to_float(&data_region[8..12])?,
 					bytes_to_float(&data_region[12..16])?,
-				]))
+				])))
 			},
 			INT2 => {
 				let offset = bytes_to_offset(field)?;

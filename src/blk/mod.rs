@@ -113,7 +113,7 @@ pub fn make_strict_test() -> BlkField {
 	BlkField::Struct(
 		blk_str("root"),
 		vec![
-			BlkField::Value(blk_str("vec4f"), BlkType::Float4([1.25, 2.5, 5.0, 10.0])),
+			BlkField::Value(blk_str("vec4f"), BlkType::Float4(Box::new([1.25, 2.5, 5.0, 10.0]))),
 			BlkField::Value(blk_str("int"), BlkType::Int(42)),
 			BlkField::Value(blk_str("long"), BlkType::Long(64)),
 			BlkField::Struct(
