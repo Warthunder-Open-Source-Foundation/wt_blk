@@ -79,10 +79,6 @@ impl BlkType {
 		data_region: &[u8],
 		name_map: Arc<Vec<BlkString>>,
 	) -> Option<Self> {
-		// Make sure the field is properly sized
-		if field.len() != 4 {
-			return None;
-		}
 
 		return match type_id {
 			STRING => {
