@@ -77,7 +77,7 @@ impl BlkType {
 		type_id: u8,
 		field: &[u8],
 		data_region: &[u8],
-		name_map: Arc<Vec<BlkString>>,
+		name_map: &[BlkString],
 	) -> Option<Self> {
 
 		return match type_id {

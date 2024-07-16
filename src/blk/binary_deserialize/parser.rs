@@ -102,19 +102,19 @@ pub fn parse_blk(
 				type_id,
 				data,
 				shared_name_map
-					.clone()
+					.as_deref()
 					.ok_or(ParseError::SlimBlkWithoutNm)?
 					.binary
 					.as_slice(),
 				shared_name_map
-					.clone()
+					.as_deref()
 					.ok_or(ParseError::SlimBlkWithoutNm)?
 					.parsed
-					.clone(),
+					.as_slice(),
 			)
 			.ok_or(BadBlkValue)?
 		} else {
-			BlkType::from_raw_param_info(type_id, data, params_data, names.clone())
+			BlkType::from_raw_param_info(type_id, data, params_data, names.as_slice())
 				.ok_or(BadBlkValue)?
 		};
 
