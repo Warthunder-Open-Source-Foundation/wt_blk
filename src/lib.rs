@@ -2,8 +2,6 @@
 #![feature(iter_array_chunks)]
 #![feature(coverage_attribute)]
 
-extern crate core;
-
 /// Low-level functions for BLK file format, for high level API use the [`vromf`] module
 pub mod blk;
 
