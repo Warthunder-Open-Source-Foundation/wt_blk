@@ -1,11 +1,11 @@
-use std::sync::Arc;
+use std::{borrow::Cow, sync::Arc};
 
 use tracing::error;
 
 use crate::blk::{
 	blk_block_hierarchy::FlatBlock,
 	blk_structure::BlkField,
-	blk_type::{blk_type_id::STRING, BlkType},
+	blk_type::{blk_type_id::STRING, BlkString, BlkType},
 	error::{
 		ParseError,
 		ParseError::{BadBlkValue, ResidualBlockBuffer},
@@ -48,11 +48,13 @@ pub fn parse_blk(
 
 	let names = if is_slim {
 		// TODO Figure out if names_count dictates the existence of a name map or if it may be 0 without requiring a name map
-		shared_name_map
-			.clone()
-			.ok_or(ParseError::SlimBlkWithoutNm)?
-			.parsed
-			.clone()
+		Cow::Borrowed(
+			shared_name_map
+				.as_deref()
+				.ok_or(ParseError::SlimBlkWithoutNm)?
+				.parsed
+				.as_ref(),
+		)
 	} else {
 		let names_data_size = next_uleb(&mut ptr)?;
 
@@ -60,7 +62,7 @@ pub fn parse_blk(
 		if names_count != names.len() {
 			error!("Name count mismatch, expected {names_count}, but found a len of {}. This might mean something is wrong.", names.len());
 		}
-		Arc::new(names)
+		Cow::Owned(names)
 	};
 
 	let blocks_count = next_uleb(&mut ptr)?;
@@ -114,7 +116,7 @@ pub fn parse_blk(
 			)
 			.ok_or(BadBlkValue)?
 		} else {
-			BlkType::from_raw_param_info(type_id, data, params_data, names.as_slice())
+			BlkType::from_raw_param_info(type_id, data, params_data, names.as_ref())
 				.ok_or(BadBlkValue)?
 		};
 
@@ -127,7 +129,7 @@ pub fn parse_blk(
 		if id == 0 {
 			blk_str("root")
 		} else {
-			(&names)[(id - 1) as usize].clone()
+			(names)[(id - 1) as usize].clone()
 		}
 	};
 	let blocks = {
