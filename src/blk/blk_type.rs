@@ -79,7 +79,6 @@ impl BlkType {
 		data_region: &[u8],
 		name_map: &[BlkString],
 	) -> Option<Self> {
-
 		return match type_id {
 			STRING => {
 				// Explanation:
