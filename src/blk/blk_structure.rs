@@ -1,5 +1,5 @@
 use std::mem;
-
+use std::sync::Arc;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
@@ -8,7 +8,7 @@ use crate::blk::{
 	util::blk_str,
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum BlkField {
 	// Name and field value
 	Value(BlkString, BlkType),
@@ -39,16 +39,16 @@ impl BlkField {
 				let with_name: (Vec<_>, Vec<_>) = moved_values
 					.into_iter()
 					.map(|e| (e.get_name(), e))
-					.partition(|(name, _)| name.starts_with("override:"));
+					.partition(|(name, _)| name.starts_with(b"override:"));
 
 				// Map of to-replace keys
 				let mut map: IndexMap<BlkString, BlkField> = IndexMap::from_iter(with_name.1);
 
 				// Replace all keys where
 				for (key, mut value) in with_name.0 {
-					let replaced = key.replace("override:", "");
+					let replaced = key.replace(b"override:", b"");
 					if let Some(inner) = map.get_mut(&replaced) {
-						value.set_name(blk_str(replaced.as_str()));
+						value.set_name(Arc::new(replaced));
 						*inner = value;
 					}
 				}

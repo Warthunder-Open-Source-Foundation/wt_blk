@@ -4,6 +4,7 @@ use color_eyre::{eyre::ContextCompat, Report};
 use zstd::Decoder;
 
 use crate::blk::{blk_type::BlkString, leb128::uleb128_offset};
+use crate::blk::blk_str::UnvalidatedString;
 
 #[derive(Clone, Debug)]
 pub struct NameMap {
@@ -46,7 +47,7 @@ impl NameMap {
 		for (i, val) in file.iter().enumerate() {
 			if *val == 0 {
 				names.push(Arc::from(
-					String::from_utf8_lossy(&file[start..i]).to_string(),
+					UnvalidatedString::from_bytes(&file[start..i]),
 				));
 				start = i + 1;
 			}

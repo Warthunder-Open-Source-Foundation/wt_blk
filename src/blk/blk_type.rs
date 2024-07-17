@@ -16,8 +16,9 @@ use crate::blk::{
 	blk_type::blk_type_id::*,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset, bytes_to_uint},
 };
+use crate::blk::blk_str::UnvalidatedString;
 
-pub type BlkString = Arc<String>;
+pub type BlkString = Arc<UnvalidatedString>;
 
 pub mod blk_type_id {
 	pub const STRING: u8 = 0x01;
@@ -47,7 +48,7 @@ mod size {
 	const __OPTIONAL: usize = EXPECTED - size_of::<Option<BlkType>>();
 }
 
-#[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialOrd, PartialEq, Clone)]
 pub enum BlkType {
 	Str(BlkString),
 	Int(i32),
@@ -92,12 +93,12 @@ impl BlkType {
 					name_map[offset as usize].clone()
 				} else {
 					let data_region = &data_region[(offset as usize)..];
-					let mut buff = String::with_capacity(32);
+					let mut buff = UnvalidatedString::with_capacity(32);
 					for &byte in data_region {
 						if byte == 0 {
 							break;
 						}
-						buff.push(byte as char)
+						buff.push(byte)
 					}
 					Arc::from(buff)
 				};
@@ -287,7 +288,7 @@ impl BlkType {
 			BlkType::Str(s) => {
 				// Escapes strings according to json spec
 				let mut ser = JsonSerializer::new(w);
-				ser.serialize_str(s.as_str())?;
+				s.write_escaped_with_quotes(w)?;
 			},
 			BlkType::Int(s) => {
 				ser.write_i32(w, *s)?;
