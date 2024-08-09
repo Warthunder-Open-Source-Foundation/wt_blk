@@ -15,7 +15,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: ./wt_blk_pybindings
+    working-directory: wt_blk_pybindings
 
 jobs:
   linux:
