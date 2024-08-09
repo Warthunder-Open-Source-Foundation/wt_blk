@@ -18,6 +18,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    working-directory: ./wt_blk_pybindings
+
 jobs:
   linux:
     runs-on: ${{ matrix.platform.runner }}
