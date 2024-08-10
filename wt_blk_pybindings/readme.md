@@ -1,5 +1,1 @@
-
-# Publish to pypy
-```shell
-maturin publish
-```
+If further methods are desired, open an issue so that i can add them.
