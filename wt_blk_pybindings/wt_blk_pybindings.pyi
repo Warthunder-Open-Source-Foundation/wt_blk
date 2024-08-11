@@ -1,3 +1,3 @@
 from typing import Optional, List
 class wt_blk_pybindings:
-    def binary_blk_to_json(blk: List[int], dict: Optional[List[int]] = None, nm: Optional[List[int]] = None) -> str: ...
+    def binary_blk_to_json(blk: bytes, dict: Optional[bytes] = None, nm: Optional[bytes] = None) -> str:
