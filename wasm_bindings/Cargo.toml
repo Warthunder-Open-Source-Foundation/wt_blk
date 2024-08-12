@@ -1,6 +1,11 @@
 [package]
-name = "wasm_bindings"
+name = "wt_blk"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
+wt_blk = { path = "../" }
+wasm-bindgen = "0.2.92"

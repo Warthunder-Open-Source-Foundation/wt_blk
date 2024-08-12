@@ -1,14 +1,17 @@
-pub fn add(left: u64, right: u64) -> u64 {
-	left + right
-}
+use std::sync::Arc;
+use wasm_bindgen::prelude::wasm_bindgen;
+use wt_blk::blk::DecoderDictionary;
+use wt_blk::blk::nm_file::NameMap;
 
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	#[test]
-	fn it_works() {
-		let result = add(2, 2);
-		assert_eq!(result, 4);
-	}
+/// Converts binary BLK into json string
+#[wasm_bindgen]
+pub fn blk_to_json(mut blk: Vec<u8>, dict: Option<Vec<u8>>, nm: Option<Vec<u8>>) -> String {
+	let dict = dict.map(|d|{
+		DecoderDictionary::copy(&d)
+	});
+	let nm = nm.map(|nm|{
+		NameMap::from_encoded_file(&nm).map(|e|Arc::new(e))
+	}).transpose().unwrap();
+	let blk = wt_blk::blk::unpack_blk(&mut blk, dict.as_ref(), nm).unwrap();
+	blk.as_serde_json_string().unwrap()
 }
