@@ -5,7 +5,7 @@ use tracing::error;
 use crate::blk::{
 	blk_block_hierarchy::FlatBlock,
 	blk_structure::BlkField,
-	blk_type::{blk_type_id::STRING, BlkString, BlkType},
+	blk_type::{blk_type_id::STRING, BlkType},
 	error::{
 		ParseError,
 		ParseError::{BadBlkValue, ResidualBlockBuffer},

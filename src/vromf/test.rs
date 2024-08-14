@@ -65,7 +65,7 @@ fn no_nm_vromf() {
 fn decode_simple() {
 	let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
 	let (decoded, _) = decode_bin_vromf(&f, true).unwrap();
-	let _ = decode_inner_vromf(&decoded).unwrap();
+	let _ = decode_inner_vromf(&decoded, true).unwrap();
 }
 
 #[test]

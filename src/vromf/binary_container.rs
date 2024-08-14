@@ -114,7 +114,7 @@ pub(crate) fn encode_bin_vromf(input: &[u8], meta: Metadata) -> Result<Vec<u8>, 
 mod test {
 	use std::fs;
 
-	use crate::vromf::binary_container::{decode_bin_vromf, encode_bin_vromf};
+	use crate::vromf::binary_container::{decode_bin_vromf};
 
 	#[test]
 	fn decode_compressed() {

@@ -1,13 +1,14 @@
 use std::{mem::size_of, path::PathBuf};
-
 use color_eyre::{
 	eyre::{bail, Context},
 	Report,
 };
-use fallible_iterator::{convert, FallibleIterator, IntoFallibleIterator};
+use color_eyre::eyre::ContextCompat;
+use fallible_iterator::{convert, FallibleIterator};
+use sha1_smol::Sha1;
 use crate::vromf::util::{bytes_to_int, bytes_to_usize};
 
-pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, Report> {
+pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<(PathBuf, Vec<u8>)>, Report> {
 	// Returns slice offset from file, incrementing the ptr by offset
 	let idx_file_offset = |ptr: &mut usize, offset: usize| {
 		if let Some(res) = file.get(*ptr..(*ptr + offset)) {
@@ -42,11 +43,16 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, Report
 	let data_info_count = bytes_to_int(idx_file_offset(&mut ptr, size_of::<u32>())?)? as usize;
 	ptr += size_of::<u32>() * 2; // Padding to 16 byte alignment
 
-	if has_digest {
+	let mut digest_data = if has_digest {
 		let digest_end = bytes_to_usize(idx_file_offset(&mut ptr, size_of::<u64>())?)?;
 		let digest_begin = bytes_to_usize(idx_file_offset(&mut ptr, size_of::<u64>())?)?;
-		let _digest_data = &file[digest_begin..digest_end];
-	}
+		let digest_data = &file[digest_begin..digest_end];
+		let chunks = digest_data.chunks_exact(20);
+		if validate && chunks.remainder().len() != 0 {
+			bail!("Digest does not align to multiple of 20 bytes");
+		}
+		Some(chunks)
+	} else { None };
 
 	// Names info is a set of u64s, pointing at each name
 	let names_info_len = names_count * size_of::<u64>();
@@ -99,9 +105,21 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, Report
 				u32::from_le_bytes(*x[1]) as usize,
 			)
 		})
-		.map(|(offset, size)| file[offset..(offset + size)].to_vec());
+		.map(|(offset, size)| file[offset..(offset + size)].to_vec())
+		.map(|e|{
+			// Check digest only if the file should have one
+			if validate && has_digest {
+				let digest = digest_data.as_mut().map(|e|e.next()).context("Digest missing")?.context("Too few digest elements")?;
+				let mut h =  Sha1::new();
+				h.update(&e);
+				if digest != &h.digest().bytes() {
+					bail!("Fuck");
+				}
+			}
+			Ok(e)
+		});
 
-	Ok(convert(file_names).zip(convert(data.map(|e|Ok(e)))).collect()?)
+	Ok(convert(file_names).zip(convert(data)).collect()?)
 }
 
 #[cfg(test)]
@@ -114,26 +132,26 @@ mod test {
 	fn test_uncompressed() {
 		let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
 		let (decoded, _) = decode_bin_vromf(&f, true).unwrap();
-		let _inner = decode_inner_vromf(&decoded).unwrap();
+		let _inner = decode_inner_vromf(&decoded, true).unwrap();
 	}
 
 	#[test]
 	fn test_compressed() {
 		let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
 		let (decoded, _) = decode_bin_vromf(&f, true).unwrap();
-		let _inner = decode_inner_vromf(&decoded).unwrap();
+		let _inner = decode_inner_vromf(&decoded, true).unwrap();
 	}
 
 	#[test]
 	fn test_checked() {
 		let f = fs::read("./samples/checked.vromfs").unwrap();
-		let _inner = decode_inner_vromf(&f).unwrap();
+		let _inner = decode_inner_vromf(&f, true).unwrap();
 	}
 
 	#[test]
 	fn test_aces() {
 		let f = fs::read("./samples/aces.vromfs.bin").unwrap();
 		let (decoded, _) = decode_bin_vromf(&f, true).unwrap();
-		let _inner = decode_inner_vromf(&decoded).unwrap();
+		let _inner = decode_inner_vromf(&decoded, true).unwrap();
 	}
 }
