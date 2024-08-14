@@ -28,6 +28,7 @@ zip = { version = "0.6.6", features = ["deflate"], default-features = false}
 wt_version = "0.1.0"
 ryu = "1.0"
 md5 = "0.7.0"
+fallible-iterator = {version = "0.3.0", features = ["std"] }
 
 [profile.test]
 opt-level = 3

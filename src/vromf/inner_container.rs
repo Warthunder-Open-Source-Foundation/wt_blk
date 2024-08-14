@@ -4,7 +4,7 @@ use color_eyre::{
 	eyre::{bail, Context},
 	Report,
 };
-
+use fallible_iterator::{convert, FallibleIterator, IntoFallibleIterator};
 use crate::vromf::util::{bytes_to_int, bytes_to_usize};
 
 pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, Report> {
@@ -56,10 +56,10 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, Report
 		.into_iter()
 		.map(|x| bytes_to_usize(x))
 		.collect::<Result<_, Report>>()?;
-	let file_names: Vec<_> = parsed_names_offsets
+	let file_names = parsed_names_offsets
 		.into_iter()
 		.map(|start| {
-			let mut buff = vec![];
+			let mut buff = Vec::with_capacity(32);
 			for byte in &file[start..] {
 				if *byte == 0 {
 					break;
@@ -74,11 +74,11 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, Report
 					buff = b"nm".to_vec();
 				}
 			}
-			String::from_utf8(buff)
+			let s = String::from_utf8(buff)
 				.map(|res| PathBuf::from(res))
-				.context(format!("Invalid UTF-8 sequence"))
-		})
-		.collect::<Result<_, Report>>()?;
+				.context("Invalid UTF-8 sequence".to_string())?;
+			Ok::<PathBuf, Report>(s)
+		});
 
 	// FYI:
 	// Each data-info-block consists of 4x u32
@@ -99,10 +99,9 @@ pub fn decode_inner_vromf(file: &[u8]) -> Result<Vec<(PathBuf, Vec<u8>)>, Report
 				u32::from_le_bytes(*x[1]) as usize,
 			)
 		})
-		.map(|(offset, size)| file[offset..(offset + size)].to_vec())
-		.collect::<Vec<_>>();
+		.map(|(offset, size)| file[offset..(offset + size)].to_vec());
 
-	return Ok(file_names.into_iter().zip(data.into_iter()).collect());
+	Ok(convert(file_names).zip(convert(data.map(|e|Ok(e)))).collect()?)
 }
 
 #[cfg(test)]
