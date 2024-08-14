@@ -1,6 +1,7 @@
 use std::mem::size_of;
 
 use color_eyre::{Report, Section};
+use color_eyre::eyre::bail;
 use wt_version::Version;
 
 use crate::vromf::{
@@ -10,7 +11,7 @@ use crate::vromf::{
 	util::{bytes_to_int, pack_type_from_aligned},
 };
 
-pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<(Vec<u8>, Metadata), Report> {
+pub(crate) fn decode_bin_vromf(file: &[u8], validate: bool) -> Result<(Vec<u8>, Metadata), Report> {
 	let mut metadata = Metadata::default();
 
 	let mut ptr = 0_usize;
@@ -93,6 +94,15 @@ pub(crate) fn decode_bin_vromf(file: &[u8]) -> Result<(Vec<u8>, Metadata), Repor
 			.note("This most likely occurred because of improper computation of the frame-size")?;
 	}
 
+
+	if pack_type.has_hash() && validate {
+		let expected = idx_file_offset(&mut ptr, 16)?;
+		let computed_hash = md5::compute(&output);
+		if expected != &computed_hash.0 {
+			bail!("Hash missmatch! Expected {:x} but found {computed_hash:x}", u128::from_le_bytes(expected.try_into()?));
+		}
+	}
+
 	Ok((output, metadata))
 }
 
@@ -109,7 +119,7 @@ mod test {
 	#[test]
 	fn decode_compressed() {
 		let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
-		decode_bin_vromf(&f).unwrap();
+		decode_bin_vromf(&f, true).unwrap();
 	}
 
 	// #[test]

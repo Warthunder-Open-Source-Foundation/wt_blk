@@ -114,6 +114,14 @@ impl Packing {
 		}
 	}
 
+	pub fn has_hash(&self) -> bool {
+		match self {
+			Packing::ZSTD_OBFS_NOCHECK => {false}
+			Packing::PLAIN => {true}
+			Packing::ZSTD_OBFS => {true}
+		}
+	}
+
 	pub fn is_compressed(&self) -> bool {
 		match self {
 			Packing::ZSTD_OBFS_NOCHECK => true,

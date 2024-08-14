@@ -1,6 +1,6 @@
 [package]
 name = "wt_blk"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 license = "MIT"
 description = "Parser and unpacker for the BLK file format"
@@ -27,6 +27,7 @@ cfg-if = "1.0.0"
 zip = { version = "0.6.6", features = ["deflate"], default-features = false}
 wt_version = "0.1.0"
 ryu = "1.0"
+md5 = "0.7.0"
 
 [profile.test]
 opt-level = 3

@@ -12,7 +12,7 @@ use crate::vromf::{
 fn grp_vromf() {
 	let p = PathBuf::from_str("./samples/grp_hdr.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
-	let out = VromfUnpacker::from_file((p, file)).unwrap();
+	let out = VromfUnpacker::from_file((p, file), true).unwrap();
 	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true).unwrap();
 	assert_eq!(2322, unpacked.len())
 }
@@ -21,7 +21,7 @@ fn grp_vromf() {
 fn write_to_zip() {
 	let p = PathBuf::from_str("./samples/aces.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
-	let out = VromfUnpacker::from_file((p, file)).unwrap();
+	let out = VromfUnpacker::from_file((p, file), true).unwrap();
 	let unpacked = out
 		.unpack_all_to_zip(ZipFormat::Compressed(1), Some(BlkOutputFormat::Json), true)
 		.unwrap();
@@ -32,7 +32,7 @@ fn write_to_zip() {
 fn regular_vromf() {
 	let p = PathBuf::from_str("./samples/aces.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
-	let out = VromfUnpacker::from_file((p, file)).unwrap();
+	let out = VromfUnpacker::from_file((p, file), true).unwrap();
 	let unpacked = out.unpack_all(None, true).unwrap();
 	assert_eq!(15632, unpacked.len())
 }
@@ -42,7 +42,7 @@ fn regular_vromf() {
 fn regional() {
 	let p = PathBuf::from_str("./samples/regional.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
-	let out = VromfUnpacker::from_file((p, file)).unwrap();
+	let out = VromfUnpacker::from_file((p, file), true).unwrap();
 	let _unpacked = out
 		.unpack_one(
 			&PathBuf::from_str("dldata/downloadable_decals.blk").unwrap(),
@@ -56,7 +56,7 @@ fn regional() {
 fn no_nm_vromf() {
 	let p = PathBuf::from_str("./samples/atlases.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
-	let out = VromfUnpacker::from_file((p, file)).unwrap();
+	let out = VromfUnpacker::from_file((p, file), true).unwrap();
 	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true).unwrap();
 	assert_eq!(8924, unpacked.len())
 }
@@ -64,7 +64,7 @@ fn no_nm_vromf() {
 #[test]
 fn decode_simple() {
 	let f = fs::read("./samples/checked_simple_uncompressed_checked.vromfs.bin").unwrap();
-	let (decoded, _) = decode_bin_vromf(&f).unwrap();
+	let (decoded, _) = decode_bin_vromf(&f, true).unwrap();
 	let _ = decode_inner_vromf(&decoded).unwrap();
 }
 
@@ -72,7 +72,7 @@ fn decode_simple() {
 fn version() {
 	let p = PathBuf::from_str("./samples/aces.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
-	let out = VromfUnpacker::from_file((p, file)).unwrap();
+	let out = VromfUnpacker::from_file((p, file), true).unwrap();
 	assert_eq!(
 		vec![
 			Version::from_str("2.25.1.39").unwrap(),
@@ -87,7 +87,7 @@ fn version() {
 fn new_format() {
 	let p = PathBuf::from_str("./samples/2_30_vromfs/aces.vromfs.bin").unwrap();
 	let file = fs::read(&p).unwrap();
-	let out = VromfUnpacker::from_file((p, file)).unwrap();
+	let out = VromfUnpacker::from_file((p, file), true).unwrap();
 	let _unpacked = out.unpack_all(None, false).unwrap();
 	println!("{}", _unpacked.len());
 }
