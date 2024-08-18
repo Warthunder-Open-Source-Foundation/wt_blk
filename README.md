@@ -11,8 +11,8 @@ Licensed under the [Apache 2.0](https://github.com/Warthunder-Open-Source-Founda
 ### Python
 Bindings are located in `wt_blk_pybindings` and published to [pypi](https://pypi.org/manage/project/wt-blk-pybindings/releases/)
 
-### Javascript
-WIP
+### WASM
+Located in `wasm_bindings` and published to [npm](https://www.npmjs.com/package/wt_blk)
 
 ## For the end-user
 For high-level consumption, please visit [the reference implementation](https://github.com/Warthunder-Open-Source-Foundation/wt_ext_cli).
