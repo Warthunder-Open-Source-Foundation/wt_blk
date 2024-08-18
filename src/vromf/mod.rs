@@ -7,13 +7,13 @@ mod util;
 /// It is generally expected to directly call into the public interfaces from this module, ignoring the inner lower-level functions
 mod binary_container;
 
+pub(crate) mod file;
 mod header;
 /// Unpacks the contents after binary unpacking
 mod inner_container;
 #[cfg(test)]
 mod test;
 mod unpacker;
-pub (crate)mod file;
 
-pub use unpacker::{BlkOutputFormat, VromfUnpacker};
 pub use file::File;
+pub use unpacker::{BlkOutputFormat, VromfUnpacker};

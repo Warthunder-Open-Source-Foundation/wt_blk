@@ -6,8 +6,14 @@ use color_eyre::{
 };
 use fallible_iterator::{convert, FallibleIterator};
 use sha1_smol::Sha1;
-use crate::vromf::File;
-use crate::vromf::util::{bytes_to_int, bytes_to_usize};
+
+use crate::{
+	util::join_hex,
+	vromf::{
+		util::{bytes_to_int, bytes_to_usize},
+		File,
+	},
+};
 
 pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<File>, Report> {
 	// Returns slice offset from file, incrementing the ptr by offset
@@ -115,16 +121,22 @@ pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<File>, Repo
 					.map(|e| e.next())
 					.context("Digest missing")?
 					.context("Too few digest elements")?;
-				let mut h = Sha1::new();
-				h.update(&e);
-				if digest != &h.digest().bytes() {
-					bail!("Fuck");
+				let h = Sha1::from(&e).digest().bytes();
+				if digest != &h {
+					bail!(
+						"Hash missmatch: expected: {} but found {}",
+						join_hex(&e),
+						join_hex(&h)
+					);
 				}
 			}
 			Ok(e)
 		});
 
-	Ok(convert(file_names).zip(convert(data)).map(|(p, f)|Ok(File::from_raw(p, f))).collect()?)
+	Ok(convert(file_names)
+		.zip(convert(data))
+		.map(|(p, f)| Ok(File::from_raw(p, f)))
+		.collect()?)
 }
 
 #[cfg(test)]

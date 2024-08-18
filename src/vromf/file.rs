@@ -1,6 +1,7 @@
-use std::fs;
-use std::path::{Path, PathBuf};
-
+use std::{
+	fs,
+	path::{Path, PathBuf},
+};
 
 #[derive(Debug, Clone)]
 pub struct File {
@@ -18,20 +19,17 @@ impl File {
 	}
 
 	pub fn from_raw(path: PathBuf, file: Vec<u8>) -> Self {
-		Self {
-			path,
-			file,
-		}
+		Self { path, file }
 	}
 
 	pub fn split(self) -> (PathBuf, Vec<u8>) {
 		(self.path, self.file)
 	}
 
-
 	pub fn path(&self) -> &Path {
 		self.path.as_path()
 	}
+
 	pub fn buf(&self) -> &[u8] {
 		self.file.as_slice()
 	}
@@ -44,4 +42,3 @@ impl File {
 		(self.path(), self.buf())
 	}
 }
-

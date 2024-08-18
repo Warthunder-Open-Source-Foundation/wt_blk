@@ -9,6 +9,7 @@ macro_rules! time {
 	}};
 }
 
+use itertools::Itertools;
 #[allow(unused)]
 pub(crate) use time;
 
@@ -16,6 +17,12 @@ pub(crate) use time;
 #[coverage(off)]
 pub(crate) fn format_hex(hex: &[u8]) -> Vec<String> {
 	hex.iter().map(|x| format!("0x{x:X}")).collect::<Vec<_>>()
+}
+
+#[allow(unused)]
+#[coverage(off)]
+pub(crate) fn join_hex(hex: &[u8]) -> String {
+	hex.iter().map(|x| format!("{x:x}")).join("")
 }
 
 #[allow(unused)]

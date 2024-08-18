@@ -4,7 +4,7 @@ use std::{
 	io::{Cursor, Write},
 	mem,
 	ops::Deref,
-	path::{Path},
+	path::Path,
 	str::FromStr,
 	sync::Arc,
 };
@@ -26,9 +26,9 @@ use crate::{
 		binary_container::decode_bin_vromf,
 		header::Metadata,
 		inner_container::decode_inner_vromf,
+		File,
 	},
 };
-use crate::vromf::File;
 
 #[derive()]
 struct DictWrapper<'a>(DecoderDictionary<'a>);
@@ -241,7 +241,10 @@ impl VromfUnpacker<'_> {
 			versions.push(meta);
 		};
 
-		if let Ok((_, version_file)) = self.unpack_one(Path::new("version"), None, false).map(|e|e.split()) {
+		if let Ok((_, version_file)) = self
+			.unpack_one(Path::new("version"), None, false)
+			.map(|e| e.split())
+		{
 			let s = String::from_utf8(version_file)?;
 			versions.push(
 				Version::from_str(&s).map_err(|_| eyre!("Invalid version file contents: {s}"))?,
