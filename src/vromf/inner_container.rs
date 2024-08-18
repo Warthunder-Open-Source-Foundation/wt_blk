@@ -1,11 +1,12 @@
 use std::{mem::size_of, path::PathBuf};
+
 use color_eyre::{
-	eyre::{bail, Context},
+	eyre::{bail, Context, ContextCompat},
 	Report,
 };
-use color_eyre::eyre::ContextCompat;
 use fallible_iterator::{convert, FallibleIterator};
 use sha1_smol::Sha1;
+
 use crate::vromf::util::{bytes_to_int, bytes_to_usize};
 
 pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<(PathBuf, Vec<u8>)>, Report> {
@@ -52,7 +53,9 @@ pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<(PathBuf, V
 			bail!("Digest does not align to multiple of 20 bytes");
 		}
 		Some(chunks)
-	} else { None };
+	} else {
+		None
+	};
 
 	// Names info is a set of u64s, pointing at each name
 	let names_info_len = names_count * size_of::<u64>();
@@ -62,29 +65,27 @@ pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<(PathBuf, V
 		.into_iter()
 		.map(|x| bytes_to_usize(x))
 		.collect::<Result<_, Report>>()?;
-	let file_names = parsed_names_offsets
-		.into_iter()
-		.map(|start| {
-			let mut buff = Vec::with_capacity(32);
-			for byte in &file[start..] {
-				if *byte == 0 {
-					break;
-				} else {
-					buff.push(*byte)
-				}
+	let file_names = parsed_names_offsets.into_iter().map(|start| {
+		let mut buff = Vec::with_capacity(32);
+		for byte in &file[start..] {
+			if *byte == 0 {
+				break;
+			} else {
+				buff.push(*byte)
 			}
-			// The nm file has a special case, where it has additional "garbage" bytes leading in-front of it
-			const NM_BYTE_ID: &[u8] = b"\xff\x3fnm";
-			if let Some(leading_bytes) = buff.get(..4) {
-				if leading_bytes == NM_BYTE_ID {
-					buff = b"nm".to_vec();
-				}
+		}
+		// The nm file has a special case, where it has additional "garbage" bytes leading in-front of it
+		const NM_BYTE_ID: &[u8] = b"\xff\x3fnm";
+		if let Some(leading_bytes) = buff.get(..4) {
+			if leading_bytes == NM_BYTE_ID {
+				buff = b"nm".to_vec();
 			}
-			let s = String::from_utf8(buff)
-				.map(|res| PathBuf::from(res))
-				.context("Invalid UTF-8 sequence".to_string())?;
-			Ok::<PathBuf, Report>(s)
-		});
+		}
+		let s = String::from_utf8(buff)
+			.map(|res| PathBuf::from(res))
+			.context("Invalid UTF-8 sequence".to_string())?;
+		Ok::<PathBuf, Report>(s)
+	});
 
 	// FYI:
 	// Each data-info-block consists of 4x u32
@@ -106,11 +107,15 @@ pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<(PathBuf, V
 			)
 		})
 		.map(|(offset, size)| file[offset..(offset + size)].to_vec())
-		.map(|e|{
+		.map(|e| {
 			// Check digest only if the file should have one
 			if validate && has_digest {
-				let digest = digest_data.as_mut().map(|e|e.next()).context("Digest missing")?.context("Too few digest elements")?;
-				let mut h =  Sha1::new();
+				let digest = digest_data
+					.as_mut()
+					.map(|e| e.next())
+					.context("Digest missing")?
+					.context("Too few digest elements")?;
+				let mut h = Sha1::new();
 				h.update(&e);
 				if digest != &h.digest().bytes() {
 					bail!("Fuck");

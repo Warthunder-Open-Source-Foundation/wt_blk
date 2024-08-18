@@ -16,7 +16,7 @@ use color_eyre::{
 };
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use wt_version::Version;
-use zip::{write::FileOptions, CompressionMethod, ZipWriter};
+use zip::{write::SimpleFileOptions, CompressionMethod, ZipWriter};
 use zstd::dict::DecoderDictionary;
 
 use crate::{
@@ -158,8 +158,8 @@ impl VromfUnpacker<'_> {
 		for (path, data) in unpacked.into_iter() {
 			writer.start_file(
 				path.to_string_lossy(),
-				FileOptions::default()
-					.compression_level(Some(compression_level as i32))
+				SimpleFileOptions::default()
+					.compression_level(Some(compression_level as _))
 					.compression_method(compression_method),
 			)?;
 			writer.write_all(&data)?;

@@ -24,7 +24,7 @@ color-eyre = "^0.6"
 strum = { version = "0.26.2", default-features = false, features = ["derive"] }
 indexmap = "2.0.0"
 cfg-if = "1.0.0"
-zip = { version = "0.6.6", features = ["deflate"], default-features = false}
+zip = { version = "2.1.6", features = ["deflate"], default-features = false}
 wt_version = "0.1.0"
 ryu = "1.0"
 md5 = "0.7.0"

@@ -39,12 +39,12 @@ mod size {
 	use std::mem::size_of;
 
 	use crate::blk::blk_type::BlkType;
-	const EXPECTED: usize = 16;
+	const __EXPECTED: usize = 16;
 
-	const _GENERIC: usize = size_of::<BlkType>() - EXPECTED;
-	const __GENERIC: usize = EXPECTED - size_of::<BlkType>();
-	const _OPTIONAL: usize = size_of::<Option<BlkType>>() - EXPECTED;
-	const __OPTIONAL: usize = EXPECTED - size_of::<Option<BlkType>>();
+	const _GENERIC: usize = size_of::<BlkType>() - __EXPECTED;
+	const __GENERIC: usize = __EXPECTED - size_of::<BlkType>();
+	const _OPTIONAL: usize = size_of::<Option<BlkType>>() - __EXPECTED;
+	const __OPTIONAL: usize = __EXPECTED - size_of::<Option<BlkType>>();
 }
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
