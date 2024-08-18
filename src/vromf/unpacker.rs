@@ -4,7 +4,7 @@ use std::{
 	io::{Cursor, Write},
 	mem,
 	ops::Deref,
-	path::{Path, PathBuf},
+	path::{Path},
 	str::FromStr,
 	sync::Arc,
 };
@@ -28,9 +28,7 @@ use crate::{
 		inner_container::decode_inner_vromf,
 	},
 };
-
-/// Simple type alias for (Path, Data) pair
-pub type File = (PathBuf, Vec<u8>);
+use crate::vromf::File;
 
 #[derive()]
 struct DictWrapper<'a>(DecoderDictionary<'a>);
@@ -73,20 +71,20 @@ pub enum ZipFormat {
 
 impl VromfUnpacker<'_> {
 	pub fn from_file(file: File, validate: bool) -> Result<Self, Report> {
-		let (decoded, metadata) = decode_bin_vromf(&file.1, validate)?;
+		let (decoded, metadata) = decode_bin_vromf(file.buf(), validate)?;
 		let inner = decode_inner_vromf(&decoded, validate)?;
 
 		let nm = inner
 			.iter()
-			.find(|elem| elem.0.file_name() == Some(OsStr::new("nm")))
-			.map(|elem| NameMap::from_encoded_file(&elem.1))
+			.find(|elem| elem.path().file_name() == Some(OsStr::new("nm")))
+			.map(|elem| NameMap::from_encoded_file(&elem.buf()))
 			.transpose()?
 			.map(|elem| Arc::new(elem));
 
 		let dict = inner
 			.iter()
-			.find(|elem| elem.0.extension() == Some(OsStr::new("dict")))
-			.map(|elem| Arc::new(DictWrapper(DecoderDictionary::copy(&elem.1))));
+			.find(|elem| elem.path().extension() == Some(OsStr::new("dict")))
+			.map(|elem| Arc::new(DictWrapper(DecoderDictionary::copy(&elem.buf()))));
 
 		Ok(Self {
 			files: inner,
@@ -126,7 +124,7 @@ impl VromfUnpacker<'_> {
 			.panic_fuse()
 			.map(|mut file| {
 				let mut w = writer(&mut file)?;
-				self.unpack_file_with_writer(file, unpack_blk_into, apply_overrides, &mut w)?;
+				self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut w)?;
 				Ok(())
 			})
 			.collect::<Result<(), Report>>()
@@ -155,14 +153,14 @@ impl VromfUnpacker<'_> {
 			ZipFormat::Compressed(level) => (level, CompressionMethod::DEFLATE),
 		};
 
-		for (path, data) in unpacked.into_iter() {
+		for f in unpacked.into_iter() {
 			writer.start_file(
-				path.to_string_lossy(),
+				f.path().to_string_lossy(),
 				SimpleFileOptions::default()
 					.compression_level(Some(compression_level as _))
 					.compression_method(compression_method),
 			)?;
-			writer.write_all(&data)?;
+			writer.write_all(f.buf())?;
 		}
 
 		let buf = mem::replace(writer.finish()?, Default::default());
@@ -178,7 +176,7 @@ impl VromfUnpacker<'_> {
 		let file = self
 			.files
 			.iter()
-			.find(|e| e.0 == path_name)
+			.find(|e| e.path() == path_name)
 			.context(format!(
 				"File {} was not found in VROMF",
 				path_name.to_string_lossy()
@@ -194,35 +192,14 @@ impl VromfUnpacker<'_> {
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
 	) -> Result<File, Report> {
-		match () {
-			_ if maybe_blk(&file) => {
-				if let Some(format) = unpack_blk_into {
-					let mut parsed = blk::unpack_blk(&mut file.1, self.dict(), self.nm.clone())?;
-					if apply_overrides {
-						parsed.apply_overrides();
-					}
-
-					match format {
-						BlkOutputFormat::BlkText => {
-							file.1 = parsed.as_blk_text()?.into_bytes();
-						},
-						BlkOutputFormat::Json => {
-							parsed.merge_fields();
-							parsed.as_serde_json_streaming(&mut file.1)?;
-						},
-					}
-				}
-				Ok(file)
-			},
-
-			// Default to the raw file
-			_ => Ok(file),
-		}
+		let mut buf = Cursor::new(Vec::with_capacity(4096));
+		self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut buf)?;
+		Ok(file)
 	}
 
 	pub fn unpack_file_with_writer(
 		&self,
-		mut file: File,
+		file: &mut File,
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
 		mut writer: impl Write,
@@ -230,7 +207,7 @@ impl VromfUnpacker<'_> {
 		match () {
 			_ if maybe_blk(&file) => {
 				if let Some(format) = unpack_blk_into {
-					let mut parsed = blk::unpack_blk(&mut file.1, self.dict(), self.nm.clone())?;
+					let mut parsed = blk::unpack_blk(file.buf_mut(), self.dict(), self.nm.clone())?;
 
 					match format {
 						BlkOutputFormat::BlkText => {
@@ -251,7 +228,7 @@ impl VromfUnpacker<'_> {
 			},
 			// Default to the raw file
 			_ => {
-				writer.write_all(&file.1)?;
+				writer.write_all(file.buf())?;
 			},
 		}
 		writer.flush()?;
@@ -264,7 +241,7 @@ impl VromfUnpacker<'_> {
 			versions.push(meta);
 		};
 
-		if let Ok((_, version_file)) = self.unpack_one(Path::new("version"), None, false) {
+		if let Ok((_, version_file)) = self.unpack_one(Path::new("version"), None, false).map(|e|e.split()) {
 			let s = String::from_utf8(version_file)?;
 			versions.push(
 				Version::from_str(&s).map_err(|_| eyre!("Invalid version file contents: {s}"))?,
@@ -281,8 +258,8 @@ impl VromfUnpacker<'_> {
 	}
 
 	pub fn list_files(&self) {
-		for (path, _) in &self.files {
-			println!("{}", path.to_string_lossy());
+		for f in &self.files {
+			println!("{}", f.path().to_string_lossy());
 		}
 	}
 

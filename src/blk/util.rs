@@ -2,8 +2,8 @@ use std::{ffi::OsStr, sync::Arc};
 
 use crate::{
 	blk::{blk_type::BlkString, file::FileType},
-	vromf::File,
 };
+use crate::vromf::File;
 
 #[inline(always)]
 pub(crate) fn bytes_to_offset(input: &[u8]) -> Option<usize> {
@@ -59,7 +59,7 @@ pub fn blk_str(s: &str) -> BlkString {
 
 /// Simple check to differentiate plaintext BLK from binary one
 pub fn maybe_blk(file: &File) -> bool {
-	file.0.extension() == Some(OsStr::new("blk"))
-		&& file.1.len() > 0
-		&& FileType::from_byte(file.1[0]).is_ok()
+	file.path().extension() == Some(OsStr::new("blk"))
+		&& file.buf().len() > 0
+		&& FileType::from_byte(file.buf()[0]).is_ok()
 }

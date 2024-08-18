@@ -6,10 +6,10 @@ use color_eyre::{
 };
 use fallible_iterator::{convert, FallibleIterator};
 use sha1_smol::Sha1;
-
+use crate::vromf::File;
 use crate::vromf::util::{bytes_to_int, bytes_to_usize};
 
-pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<(PathBuf, Vec<u8>)>, Report> {
+pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<File>, Report> {
 	// Returns slice offset from file, incrementing the ptr by offset
 	let idx_file_offset = |ptr: &mut usize, offset: usize| {
 		if let Some(res) = file.get(*ptr..(*ptr + offset)) {
@@ -124,7 +124,7 @@ pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<(PathBuf, V
 			Ok(e)
 		});
 
-	Ok(convert(file_names).zip(convert(data)).collect()?)
+	Ok(convert(file_names).zip(convert(data)).map(|(p, f)|Ok(File::from_raw(p, f))).collect()?)
 }
 
 #[cfg(test)]

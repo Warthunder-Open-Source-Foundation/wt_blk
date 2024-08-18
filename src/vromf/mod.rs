@@ -13,5 +13,7 @@ mod inner_container;
 #[cfg(test)]
 mod test;
 mod unpacker;
+pub (crate)mod file;
 
-pub use unpacker::{BlkOutputFormat, File, VromfUnpacker};
+pub use unpacker::{BlkOutputFormat, VromfUnpacker};
+pub use file::File;
