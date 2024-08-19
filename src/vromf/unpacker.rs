@@ -70,7 +70,7 @@ pub enum ZipFormat {
 }
 
 impl VromfUnpacker<'_> {
-	pub fn from_file(file: File, validate: bool) -> Result<Self, Report> {
+	pub fn from_file(file: &File, validate: bool) -> Result<Self, Report> {
 		let (decoded, metadata) = decode_bin_vromf(file.buf(), validate)?;
 		let inner = decode_inner_vromf(&decoded, validate)?;
 
