@@ -30,6 +30,10 @@ impl File {
 		self.path.as_path()
 	}
 
+	pub fn path_mut(&mut self) -> &mut PathBuf {
+		&mut self.path
+	}
+
 	pub fn buf(&self) -> &[u8] {
 		self.file.as_slice()
 	}
