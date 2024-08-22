@@ -79,7 +79,7 @@ impl BlkType {
 		data_region: &[u8],
 		name_map: &[BlkString],
 	) -> Option<Self> {
-		return match type_id {
+		match type_id {
 			STRING => {
 				// Explanation:
 				// Strings have their offset encoded as a LE integer constructed from 31 bits
@@ -184,7 +184,7 @@ impl BlkType {
 				Some(Self::Long(bytes_to_long(data_region)?))
 			},
 			_ => None,
-		};
+		}
 	}
 
 	// grcov-excl-start
