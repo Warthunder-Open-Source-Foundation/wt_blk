@@ -1,5 +1,6 @@
-use std::mem;
-
+use std::{fmt::Debug, iter::Peekable, mem};
+use color_eyre::eyre::bail;
+use color_eyre::Report;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
@@ -85,22 +86,47 @@ impl BlkField {
 		}
 	}
 
-	// TODO: Fully implement this
-	/// A string formatted as such `struct_name_a/struct_name_c/field_name`
-	/// Only takes relative path from current object
-	/// If the current variant is not a struct, it will return an error `NoSuchField`
-	pub fn pointer(&self, ptr: impl ToString) -> Result<Self, BlkFieldError> {
-		let commands = ptr.to_string().split("/").map(|x| x.to_string()).collect();
-		self.pointer_internal(commands, &mut 0_usize)
+	pub fn value(&self) -> Option<&BlkType> {
+		match self {
+			BlkField::Value(_, v)  => {
+				Some(v)
+			},
+			_ => {panic!("Field is not a value")}
+		}
 	}
 
-	fn pointer_internal(
+	pub fn pointer(&self, ptr: &str) -> Result<BlkField, Report> {
+		let commands = ptr.split("/");
+		self.pointer_internal(ptr, &mut commands.into_iter().peekable())
+	}
+
+	fn pointer_internal<'a>(
 		&self,
-		pointers: Vec<String>,
-		at: &mut usize,
-	) -> Result<Self, BlkFieldError> {
-		let _current_search = pointers.get(*at);
-		unimplemented!();
+		ptr: &str,
+		pointers: &mut Peekable<impl Iterator<Item = &'a str>>,
+	) -> Result<BlkField, Report> {
+		let current_search = pointers.next();
+		match self {
+			BlkField::Value(_k, _v) => {
+				if let Some(_) = current_search {
+					bail!("Did not expect end but ended up in value")
+				} else {
+					Ok(self.clone())
+				}
+			},
+			BlkField::Struct(_k, v) | BlkField::Merged(_k, v) => {
+				if let Some(search) = current_search {
+					for value in v {
+						if value.get_name().as_str() == search {
+							return value.pointer_internal(ptr, pointers);
+						}
+					}
+					bail!("Substructure not in struct")
+				} else {
+					bail!("Search ended before finding target")
+				}
+			},
+		}
 	}
 
 	pub fn estimate_size(&self) -> usize {
@@ -123,11 +149,6 @@ impl BlkField {
 			},
 		}
 	}
-}
-
-pub enum BlkFieldError {
-	// First is full pointer, 2nd is offending / missing string
-	NoSuchField(String, String),
 }
 
 #[cfg(test)]

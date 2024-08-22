@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::{ops::Range, string::FromUtf8Error};
 
 use thiserror::Error;
 
@@ -40,6 +40,9 @@ pub enum ParseError {
 
 	#[error(transparent)]
 	BlkBlockBuilderError(BlkBlockBuilderError),
+
+	#[error(transparent)]
+	Utf8Error(#[from] FromUtf8Error),
 
 	#[error("Custom: {0}")]
 	Custom(String),

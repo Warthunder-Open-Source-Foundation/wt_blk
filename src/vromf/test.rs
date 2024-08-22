@@ -11,8 +11,8 @@ use crate::vromf::{
 
 #[test]
 fn grp_vromf() {
-	let out =
-		VromfUnpacker::from_file(&File::new("./samples/grp_hdr.vromfs.bin").unwrap(), true).unwrap();
+	let out = VromfUnpacker::from_file(&File::new("./samples/grp_hdr.vromfs.bin").unwrap(), true)
+		.unwrap();
 	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true).unwrap();
 	assert_eq!(2322, unpacked.len())
 }
@@ -51,8 +51,8 @@ fn regional() {
 
 #[test]
 fn no_nm_vromf() {
-	let out =
-		VromfUnpacker::from_file(&File::new("./samples/atlases.vromfs.bin").unwrap(), true).unwrap();
+	let out = VromfUnpacker::from_file(&File::new("./samples/atlases.vromfs.bin").unwrap(), true)
+		.unwrap();
 	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true).unwrap();
 	assert_eq!(8924, unpacked.len())
 }

@@ -3,7 +3,7 @@ use std::{io::Read, sync::Arc};
 use color_eyre::{eyre::ContextCompat, Report};
 use zstd::Decoder;
 
-use crate::blk::{blk_type::BlkString, leb128::uleb128_offset};
+use crate::blk::{blk_type::BlkString, error::ParseError, leb128::uleb128_offset};
 
 #[derive(Clone, Debug)]
 pub struct NameMap {
@@ -19,7 +19,7 @@ impl NameMap {
 	pub fn from_encoded_file(file: &[u8]) -> Result<Self, Report> {
 		let decoded = Self::decode_nm_file(file)?;
 
-		let names = Self::parse_slim_nm(&decoded);
+		let names = Self::parse_slim_nm(&decoded)?;
 
 		Ok(Self {
 			parsed: Arc::new(names),
@@ -40,34 +40,32 @@ impl NameMap {
 		Ok(out)
 	}
 
-	pub fn parse_name_section(file: &[u8]) -> Vec<BlkString> {
+	pub fn parse_name_section(file: &[u8]) -> Result<Vec<BlkString>, ParseError> {
 		let mut start = 0_usize;
 		let mut names = vec![];
 		for (i, val) in file.iter().enumerate() {
 			if *val == 0 {
-				names.push(Arc::from(
-					String::from_utf8_lossy(&file[start..i]).to_string(),
-				));
+				names.push(Arc::from(String::from_utf8_lossy(&file[start..i].to_owned()).to_string()));
 				start = i + 1;
 			}
 		}
-		names
+		Ok(names)
 	}
 
-	pub fn parse_slim_nm(name_map: &[u8]) -> Vec<BlkString> {
+	pub fn parse_slim_nm(name_map: &[u8]) -> color_eyre::Result<Vec<BlkString>> {
 		let mut nm_ptr = 0;
 
-		let names_count = uleb128_offset(&name_map[nm_ptr..], &mut nm_ptr).unwrap();
+		let names_count = uleb128_offset(&name_map[nm_ptr..], &mut nm_ptr)?;
 
-		let names_data_size = uleb128_offset(&name_map[nm_ptr..], &mut nm_ptr).unwrap();
+		let names_data_size = uleb128_offset(&name_map[nm_ptr..], &mut nm_ptr)?;
 
-		let names = NameMap::parse_name_section(&name_map[nm_ptr..(nm_ptr + names_data_size)]);
+		let names = NameMap::parse_name_section(&name_map[nm_ptr..(nm_ptr + names_data_size)])?;
 
 		if names_count != names.len() {
 			panic!("Should be equal"); // TODO: Change to result when fn signature allows for it
 		}
 
-		names
+		Ok(names)
 	}
 }
 
@@ -79,7 +77,7 @@ mod test {
 
 	#[test]
 	fn test_any_stream() {
-		let decoded = NameMap::parse_name_section("a\0b\0c\0".as_bytes());
+		let decoded = NameMap::parse_name_section("a\0b\0c\0".as_bytes()).unwrap();
 		assert_eq!(
 			vec!["a", "b", "c"],
 			decoded
