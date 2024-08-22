@@ -37,6 +37,13 @@ fn fat_blk() {
 }
 
 #[test]
+fn netfile() {
+	let file = fs::read("./samples/encoded_11.blk").unwrap();
+	let output = parse_blk(&file[1..], false, None).unwrap();
+	assert_eq!(output.pointer("slogan").unwrap().value().unwrap().to_string(), "t = \"○ Warriors at the gate ○\"")
+}
+
+#[test]
 fn fat_blk_router_probe() {
 	let file = fs::read("./samples/route_prober.blk").unwrap();
 	let _output = parse_blk(&file, false, None).unwrap();

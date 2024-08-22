@@ -92,14 +92,14 @@ impl BlkType {
 					name_map[offset as usize].clone()
 				} else {
 					let data_region = &data_region[(offset as usize)..];
-					let mut buff = String::with_capacity(32);
+					let mut buff = Vec::with_capacity(32);
 					for &byte in data_region {
 						if byte == 0 {
 							break;
 						}
-						buff.push(byte as char)
+						buff.push(byte)
 					}
-					Arc::from(buff)
+					Arc::from(String::from_utf8_lossy(&buff).to_string())
 				};
 
 				Some(Self::Str(res))
