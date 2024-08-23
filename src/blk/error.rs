@@ -44,6 +44,9 @@ pub enum ParseError {
 	#[error(transparent)]
 	Utf8Error(#[from] FromUtf8Error),
 
+	#[error("Unexpected EOF in namemap")]
+	EOF,
+
 	#[error("Custom: {0}")]
 	Custom(String),
 }

@@ -1,6 +1,7 @@
 use std::{io::Read, sync::Arc};
 
 use color_eyre::{eyre::ContextCompat, Report};
+use memchr::memchr;
 use zstd::Decoder;
 
 use crate::blk::{blk_type::BlkString, error::ParseError, leb128::uleb128_offset};
@@ -40,14 +41,14 @@ impl NameMap {
 		Ok(out)
 	}
 
-	pub fn parse_name_section(file: &[u8]) -> Result<Vec<BlkString>, ParseError> {
+	pub fn parse_name_section(file: &[u8], count: usize) -> Result<Vec<BlkString>, ParseError> {
 		let mut start = 0_usize;
-		let mut names = vec![];
-		for (i, val) in file.iter().enumerate() {
-			if *val == 0 {
-				names.push(Arc::from(String::from_utf8_lossy(&file[start..i].to_owned()).to_string()));
-				start = i + 1;
-			}
+		let mut names = Vec::with_capacity(count);
+		for _ in 0..count {
+			let next = memchr(0, &file[start..]).ok_or(ParseError::EOF)?;
+			println!("{start}..{}", next + start);
+			names.push(Arc::from(String::from_utf8_lossy(&file[start..(next + start)]).to_string()));
+			start += next + 1;
 		}
 		Ok(names)
 	}
@@ -59,7 +60,7 @@ impl NameMap {
 
 		let names_data_size = uleb128_offset(&name_map[nm_ptr..], &mut nm_ptr)?;
 
-		let names = NameMap::parse_name_section(&name_map[nm_ptr..(nm_ptr + names_data_size)])?;
+		let names = NameMap::parse_name_section(&name_map[nm_ptr..(nm_ptr + names_data_size)], names_count)?;
 
 		if names_count != names.len() {
 			panic!("Should be equal"); // TODO: Change to result when fn signature allows for it
@@ -77,7 +78,7 @@ mod test {
 
 	#[test]
 	fn test_any_stream() {
-		let decoded = NameMap::parse_name_section("a\0b\0c\0".as_bytes()).unwrap();
+		let decoded = NameMap::parse_name_section("a\0b\0c\0".as_bytes(), 3).unwrap();
 		assert_eq!(
 			vec!["a", "b", "c"],
 			decoded

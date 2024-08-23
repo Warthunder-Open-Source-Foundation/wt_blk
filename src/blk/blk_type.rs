@@ -6,6 +6,7 @@ use std::{
 };
 
 use color_eyre::Report;
+use memchr::memchr;
 use serde::{Deserialize, Serialize, Serializer};
 use serde_json::{
 	ser::{Formatter, PrettyFormatter},
@@ -92,14 +93,8 @@ impl BlkType {
 					name_map[offset as usize].clone()
 				} else {
 					let data_region = &data_region[(offset as usize)..];
-					let mut buff = Vec::with_capacity(32);
-					for &byte in data_region {
-						if byte == 0 {
-							break;
-						}
-						buff.push(byte)
-					}
-					Arc::from(String::from_utf8_lossy(&buff).to_string())
+					let end = memchr(0, &data_region)?;
+					Arc::from(String::from_utf8_lossy(&data_region[..end]).into_owned())
 				};
 
 				Some(Self::Str(res))
