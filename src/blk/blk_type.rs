@@ -14,8 +14,8 @@ use serde_json::{
 
 use crate::blk::{
 	blk_type::blk_type_id::*,
-	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset, bytes_to_uint},
 };
+use crate::blk::error::BlkError;
 
 pub type BlkString = Arc<String>;
 
@@ -78,7 +78,7 @@ impl BlkType {
 		field: &[u8],
 		data_region: &[u8],
 		name_map: &[BlkString],
-	) -> Option<Self> {
+	) -> Result<Self, BlkError> {
 		match type_id {
 			STRING => {
 				// Explanation:
@@ -102,14 +102,14 @@ impl BlkType {
 					Arc::from(String::from_utf8_lossy(&buff).to_string())
 				};
 
-				Some(Self::Str(res))
+				Ok(Self::Str(res))
 			},
-			INT => Some(Self::Int(bytes_to_int(field)?)),
-			FLOAT => Some(Self::Float(bytes_to_float(field)?)),
+			INT => Ok(Self::Int(bytes_to_int(field)?)),
+			FLOAT => Ok(Self::Float(bytes_to_float(field)?)),
 			FLOAT2 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
-				Some(Self::Float2([
+				Ok(Self::Float2([
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 				]))
@@ -117,7 +117,7 @@ impl BlkType {
 			FLOAT3 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 12)];
-				Some(Self::Float3([
+				Ok(Self::Float3([
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 					bytes_to_float(&data_region[8..12])?,
@@ -126,7 +126,7 @@ impl BlkType {
 			FLOAT4 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 16)];
-				Some(Self::Float4(Box::new([
+				Ok(Self::Float4(Box::new([
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 					bytes_to_float(&data_region[8..12])?,
@@ -136,7 +136,7 @@ impl BlkType {
 			INT2 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
-				Some(Self::Int2([
+				Ok(Self::Int2([
 					bytes_to_int(&data_region[0..4])?,
 					bytes_to_int(&data_region[4..8])?,
 				]))
@@ -144,16 +144,16 @@ impl BlkType {
 			INT3 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 12)];
-				Some(Self::Int3([
+				Ok(Self::Int3([
 					bytes_to_int(&data_region[0..4])?,
 					bytes_to_int(&data_region[4..8])?,
 					bytes_to_int(&data_region[8..12])?,
 				]))
 			},
-			BOOL => Some(Self::Bool(field[0] != 0)),
+			BOOL => Ok(Self::Bool(field[0] != 0)),
 			COLOR => {
 				// Game stores them in BGRA order
-				Some(Self::Color {
+				Ok(Self::Color {
 					r: field[0],
 					g: field[1],
 					b: field[2],
@@ -163,7 +163,7 @@ impl BlkType {
 			FLOAT12 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 48)];
-				Some(Self::Float12(Box::new([
+				Ok(Self::Float12(Box::new([
 					bytes_to_float(&data_region[0..4])?,
 					bytes_to_float(&data_region[4..8])?,
 					bytes_to_float(&data_region[8..12])?,
@@ -181,9 +181,9 @@ impl BlkType {
 			LONG => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
-				Some(Self::Long(bytes_to_long(data_region)?))
+				Ok(Self::Long(bytes_to_long(data_region)?))
 			},
-			_ => None,
+			_ => Err("Unknown type id"),
 		}
 	}
 
@@ -385,6 +385,55 @@ impl Display for BlkType {
 
 		write!(f, "{} = {}", self.blk_type_name(), value)
 	}
+}
+
+// BIG TODO: Deduplicate these, but for IEX testing these need to be seperate
+
+#[inline(always)]
+pub(crate) fn bytes_to_offset(input: &[u8]) -> Result<usize,BlkError> {
+	if input.len() != 4 {
+		return Err("Buffer missmatches value length");
+	}
+
+	Ok(u32::from_le_bytes([input[0], input[1], input[2], input[3]]) as usize)
+}
+
+#[inline(always)]
+pub(crate) fn bytes_to_float(input: &[u8]) -> Result<f32,BlkError>{
+	if input.len() != 4 {
+		return Err("Buffer missmatches value length");
+	}
+
+	Ok(f32::from_le_bytes([input[0], input[1], input[2], input[3]]))
+}
+
+#[inline(always)]
+pub(crate) fn bytes_to_int(input: &[u8]) -> Result<i32,BlkError> {
+	if input.len() != 4 {
+		return Err("Buffer missmatches value length");
+	}
+
+	Ok(i32::from_le_bytes([input[0], input[1], input[2], input[3]]))
+}
+
+#[inline(always)]
+pub(crate) fn bytes_to_uint(input: &[u8]) -> Result<u32,BlkError>{
+	if input.len() != 4 {
+		return Err("Buffer missmatches value length");
+	}
+
+	Ok(u32::from_le_bytes([input[0], input[1], input[2], input[3]]))
+}
+
+#[inline(always)]
+pub(crate) fn bytes_to_long(input: &[u8]) -> Result<i64,BlkError> {
+	if input.len() != 8 {
+		return Err("Buffer missmatches value length");
+	}
+
+	Ok(i64::from_le_bytes([
+		input[0], input[1], input[2], input[3], input[4], input[5], input[6], input[7],
+	]))
 }
 
 #[cfg(test)]

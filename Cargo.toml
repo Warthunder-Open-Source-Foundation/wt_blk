@@ -31,6 +31,7 @@ md5 = "0.7.0"
 fallible-iterator = {version = "0.3.0", features = ["std"] }
 sha1_smol = {version = "1.0.1", features = ["std"]}
 itertools = "0.13.0"
+iex = "0.2.0"
 
 
 [profile.test]

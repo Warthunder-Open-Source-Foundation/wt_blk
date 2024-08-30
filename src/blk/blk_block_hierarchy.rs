@@ -1,25 +1,7 @@
 use std::ops::Range;
-
-#[allow(unused_imports)] // Debug only imports make release output noisy
-use crate::blk::blk_block_hierarchy::BlkBlockBuilderError::{
-	InitialElementMissing,
-	InsertingIntoNonStruct,
-	TakenElementMissing,
-	UnclaimedElements,
-};
+use iex::iex;
 use crate::blk::{blk_structure::BlkField, blk_type::BlkString};
-
-#[derive(Debug, Clone, thiserror::Error, Eq, PartialEq)]
-pub enum BlkBlockBuilderError {
-	#[error("Element(s) in flat blocks already taken when it was allocated to current block")]
-	TakenElementMissing,
-	#[error("Attempted to push elements on non-struct field")]
-	InsertingIntoNonStruct,
-	#[error("Unclaimed elements")]
-	UnclaimedElements,
-	#[error("Initial element missing from flat blocks (length 0)")]
-	InitialElementMissing,
-}
+use crate::blk::error::BlkError;
 
 #[derive(Debug, Clone)]
 pub struct FlatBlock {
@@ -36,24 +18,26 @@ impl FlatBlock {
 }
 
 impl BlkField {
+	#[iex]
 	pub fn from_flat_blocks(
 		flat_blocks: &mut Vec<Option<FlatBlock>>,
-	) -> Result<Self, BlkBlockBuilderError> {
-		let cloned = flat_blocks[0].take().ok_or(InitialElementMissing)?;
+	) -> Result<Self, BlkError> {
+		let cloned = flat_blocks[0].take().ok_or("Initial element missing for block map")?;
 		let ret = Self::from_flat_blocks_with_parent(flat_blocks, cloned)?;
 
 		#[cfg(debug_assertions)]
 		if flat_blocks.into_iter().all(|e| e.is_none()) == false {
-			return Err(UnclaimedElements);
+			return Err("Unclaimed elements remain in block hierarchy");
 		}
 
 		Ok(ret)
 	}
 
+	#[iex]
 	fn from_flat_blocks_with_parent(
 		flat_blocks: &mut Vec<Option<FlatBlock>>,
 		parent: FlatBlock,
-	) -> Result<Self, BlkBlockBuilderError> {
+	) -> Result<Self, BlkError> {
 		let range = parent.location_range();
 		let mut block = BlkField::Struct(parent.name, parent.fields);
 
@@ -61,12 +45,12 @@ impl BlkField {
 			.iter_mut()
 			.map(|e| e.take())
 			.collect::<Option<Vec<FlatBlock>>>()
-			.ok_or(TakenElementMissing)?;
+			.ok_or("taken element missing")?;
 
 		for flat_block in block_range {
 			block
 				.insert_field(Self::from_flat_blocks_with_parent(flat_blocks, flat_block)?)
-				.ok_or(InsertingIntoNonStruct)?;
+				.ok_or("inserting into non-struct")?;
 		}
 
 		Ok(block)

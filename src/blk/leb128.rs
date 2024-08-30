@@ -1,9 +1,10 @@
-use crate::blk::error::ParseError;
+use iex::iex;
+use crate::blk::error::{BlkError};
 
 /// Yields length in buffer and value
 /// ULEB variable length integer format: `https://en.wikipedia.org/wiki/LEB128`
 #[inline]
-pub fn uleb128(bytes: &[u8]) -> Result<(usize, usize), ParseError> {
+pub fn uleb128(bytes: &[u8]) -> Result<(usize, usize), BlkError> {
 	let mut result = 0_usize;
 	const MASK: u8 = 1 << 7;
 
@@ -26,15 +27,15 @@ pub fn uleb128(bytes: &[u8]) -> Result<(usize, usize), ParseError> {
 	// After the loop has finished, without yielding to the caller, it means something broke
 	// In most cases this is due to the caller passing an invalid buffer that either ended too early, or was simply empty
 	if bytes.len() == 0 {
-		Err(ParseError::ZeroSizedUleb)
+		Err("uleb buffer was zero bytes long")
 	} else {
-		Err(ParseError::UnexpectedEndOfBufferUleb)
+		Err("uleb buffer ended before the integer was fully parsed")
 	}
 }
 
 /// Calls `uleb128` adding offset to buffer index
-#[inline]
-pub fn uleb128_offset(bytes: &[u8], buffer_idx: &mut usize) -> Result<usize, ParseError> {
+#[iex]
+pub fn uleb128_offset(bytes: &[u8], buffer_idx: &mut usize) -> Result<usize, BlkError> {
 	let (offset, value) = uleb128(bytes)?;
 	*buffer_idx += offset;
 	return Ok(value);
@@ -42,18 +43,18 @@ pub fn uleb128_offset(bytes: &[u8], buffer_idx: &mut usize) -> Result<usize, Par
 
 #[cfg(test)]
 mod test {
-	use crate::blk::{error::ParseError, leb128::uleb128};
+	use crate::blk::{leb128::uleb128};
 
 	#[test]
 	fn empty() {
-		assert_eq!(uleb128(&[]), Err(ParseError::ZeroSizedUleb))
+		assert_eq!(uleb128(&[]), Err("uleb buffer was zero bytes long"))
 	}
 
 	#[test]
 	fn unexpected_termination() {
 		assert_eq!(
 			uleb128(&[u8::MAX]),
-			Err(ParseError::UnexpectedEndOfBufferUleb)
+			Err("uleb buffer ended before the integer was fully parse")
 		)
 	}
 

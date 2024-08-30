@@ -1,9 +1,13 @@
 use std::{io::Read, sync::Arc};
 
 use color_eyre::{eyre::ContextCompat, Report};
+use iex::iex;
+use iex::Outcome;
 use zstd::Decoder;
 
-use crate::blk::{blk_type::BlkString, error::ParseError, leb128::uleb128_offset};
+
+use crate::blk::{blk_type::BlkString, leb128::uleb128_offset};
+use crate::blk::error::IexToEyre;
 
 #[derive(Clone, Debug)]
 pub struct NameMap {
@@ -40,7 +44,8 @@ impl NameMap {
 		Ok(out)
 	}
 
-	pub fn parse_name_section(file: &[u8]) -> Result<Vec<BlkString>, ParseError> {
+	#[iex]
+	pub fn parse_name_section(file: &[u8]) -> Result<Vec<BlkString>, &'static str> {
 		let mut start = 0_usize;
 		let mut names = vec![];
 		for (i, val) in file.iter().enumerate() {
@@ -55,7 +60,7 @@ impl NameMap {
 	pub fn parse_slim_nm(name_map: &[u8]) -> color_eyre::Result<Vec<BlkString>> {
 		let mut nm_ptr = 0;
 
-		let names_count = uleb128_offset(&name_map[nm_ptr..], &mut nm_ptr)?;
+		let names_count = uleb128_offset(&name_map[nm_ptr..], &mut nm_ptr).into_result().into_eyre()?;
 
 		let names_data_size = uleb128_offset(&name_map[nm_ptr..], &mut nm_ptr)?;
 

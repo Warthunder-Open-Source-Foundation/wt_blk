@@ -9,13 +9,13 @@ use color_eyre::Report;
 use crate::{
 	binary_decoder::BinaryDecoderError::SeekingBackUnderflow,
 	blk::{
-		error::ParseError,
 		leb128::uleb128,
 		util::{bytes_to_int, bytes_to_uint},
 	},
 };
+use crate::blk::error::BlkError;
 
-type BinaryDecoderResult<T> = Result<T, ParseError>;
+type BinaryDecoderResult<T> = Result<T, BlkError>;
 
 pub struct BinaryDecoder<'a> {
 	bytes:  &'a [u8],
@@ -49,11 +49,7 @@ impl<'a> BinaryDecoder<'a> {
 		self.cursor = self
 			.cursor
 			.checked_add(by)
-			.ok_or(SeekingBackUnderflow {
-				cursor:   self.cursor,
-				seekback: by,
-			})
-			.map_err(error_map)?;
+			.ok_or("Failed to add to cursor")?;
 		Ok(())
 	}
 
@@ -69,27 +65,10 @@ impl<'a> BinaryDecoder<'a> {
 		let bytes = self
 			.bytes
 			.get(self.cursor..(self.cursor + size_of::<u32>()))
-			.ok_or(BinaryDecoderError::CursorOutOfBounds {
-				buf_len: self.bytes.len(),
-				cursor:  self.cursor,
-			})
-			.map_err(error_map)?;
+			.ok_or("integer out of bounds for next u32")?;
 		self.cursor += size_of::<u32>();
-		Ok(bytes_to_uint(bytes).ok_or(integer_err::<u32>(bytes))?)
+		Ok(bytes_to_uint(bytes)?)
 	}
-}
-
-/// Translates module local error to crate parent-module ParseError
-fn error_map(e: BinaryDecoderError) -> ParseError {
-	ParseError::BinaryDecoderError(e)
-}
-
-/// Builds error from invalid buffer and type
-fn integer_err<T: Any>(buf: &[u8]) -> ParseError {
-	ParseError::BinaryDecoderError(BinaryDecoderError::BadIntegerValue {
-		buffer:    buf.to_vec(),
-		type_name: type_name::<T>(),
-	})
 }
 
 #[derive(Clone, thiserror::Error, Debug, PartialEq, Eq)]

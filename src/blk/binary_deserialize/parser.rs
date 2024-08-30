@@ -1,26 +1,24 @@
 use std::{borrow::Cow, sync::Arc};
-
+use iex::iex;
 use tracing::error;
 
 use crate::blk::{
 	blk_block_hierarchy::FlatBlock,
 	blk_structure::BlkField,
 	blk_type::{blk_type_id::STRING, BlkType},
-	error::{
-		ParseError,
-		ParseError::{BadBlkValue, ResidualBlockBuffer},
-	},
 	leb128::uleb128,
 	nm_file::NameMap,
 	util::blk_str,
 };
+use crate::blk::error::BlkError;
 
 /// Lowest-level function which unpacks BLK to [`crate::blk::blk_structure::BlkField`]
+#[iex]
 pub fn parse_blk(
 	file: &[u8],
 	is_slim: bool,
 	shared_name_map: Option<Arc<NameMap>>,
-) -> Result<BlkField, ParseError> {
+) -> Result<BlkField, BlkError> {
 	let mut ptr = 0;
 
 	// Globally increments ptr and returns next uleb integer from file
@@ -39,7 +37,7 @@ pub fn parse_blk(
 	let idx_file_offset = |ptr: &mut usize, offset: usize| {
 		let res = file
 			.get(*ptr..(*ptr + offset))
-			.ok_or(ParseError::DataRegionBoundsExceeded(*ptr..(*ptr + offset)));
+			.ok_or("Index out of range");
 		*ptr += offset;
 		res
 	};
@@ -51,7 +49,7 @@ pub fn parse_blk(
 		Cow::Borrowed(
 			shared_name_map
 				.as_deref()
-				.ok_or(ParseError::SlimBlkWithoutNm)?
+				.ok_or("Slim BLK without NM was passed")?
 				.parsed
 				.as_ref(),
 		)
@@ -75,7 +73,7 @@ pub fn parse_blk(
 
 	let params_info = idx_file_offset(&mut ptr, params_count * 8)?;
 
-	let block_info = &file.get(ptr..).ok_or(ResidualBlockBuffer)?;
+	let block_info = file.get(ptr..).ok_or("Block info missing")?;
 
 	let _ptr = (); // Shadowing ptr causes it to become unusable, especially on accident
 
@@ -92,11 +90,7 @@ pub fn parse_blk(
 		let data = &chunk[4..];
 		let name = names
 			.get(name_id as usize)
-			.ok_or(ParseError::Custom(format!(
-				"Name index {} out of bounds for name map of length {}",
-				name_id,
-				names.len()
-			)))?
+			.ok_or("Name index out of bounds")?
 			.clone();
 
 		let parsed = if is_slim && type_id == STRING {
@@ -105,19 +99,17 @@ pub fn parse_blk(
 				data,
 				shared_name_map
 					.as_deref()
-					.ok_or(ParseError::SlimBlkWithoutNm)?
+					.ok_or("Slim BLK without NM")?
 					.binary
 					.as_slice(),
 				shared_name_map
 					.as_deref()
-					.ok_or(ParseError::SlimBlkWithoutNm)?
+					.ok_or("Slim BLK without NM")?
 					.parsed
 					.as_slice(),
-			)
-			.ok_or(BadBlkValue)?
+			)?
 		} else {
-			BlkType::from_raw_param_info(type_id, data, params_data, names.as_ref())
-				.ok_or(BadBlkValue)?
+			BlkType::from_raw_param_info(type_id, data, params_data, names.as_ref())?
 		};
 
 		let field = BlkField::Value(name, parsed);
@@ -192,7 +184,6 @@ pub fn parse_blk(
 		"unused values in results"
 	);
 
-	let out = BlkField::from_flat_blocks(&mut flat_map)
-		.map_err(|e| ParseError::BlkBlockBuilderError(e))?;
+	let out = BlkField::from_flat_blocks(&mut flat_map)?;
 	Ok(out)
 }
