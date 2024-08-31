@@ -224,6 +224,9 @@ impl VromfUnpacker<'_> {
 							parsed.as_serde_json_streaming(&mut writer)?;
 						},
 					}
+				} else {
+					// Default to the raw file
+					writer.write_all(file.buf())?;
 				}
 			},
 			// Default to the raw file
