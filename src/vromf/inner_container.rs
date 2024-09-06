@@ -1,10 +1,13 @@
 use std::{mem::size_of, path::PathBuf};
-
+use std::io::{Cursor, Write};
+use std::ops::Range;
+use std::path::Path;
 use color_eyre::{
 	eyre::{bail, Context, ContextCompat},
 	Report,
 };
-use fallible_iterator::{convert, FallibleIterator};
+use color_eyre::eyre::ensure;
+use fallible_iterator::{convert, FallibleIterator, IteratorExt};
 use sha1_smol::Sha1;
 
 use crate::{
@@ -55,9 +58,6 @@ pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<File>, Repo
 		let digest_begin = bytes_to_usize(idx_file_offset(&mut ptr, size_of::<u64>())?)?;
 		let digest_data = &file[digest_begin..digest_end];
 		let chunks = digest_data.chunks_exact(20);
-		if validate && chunks.remainder().len() != 0 {
-			bail!("Digest does not align to multiple of 20 bytes");
-		}
 		Some(chunks)
 	} else {
 		None
@@ -139,11 +139,204 @@ pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<File>, Repo
 		.collect()?)
 }
 
+pub struct Buffer {
+	inner: Cursor<Vec<u8>>
+}
+
+impl Buffer {
+	pub fn u32(&mut self) -> Result<RefRange<4, u32>, Report> {
+		let start = self.inner.position() as _;
+		self.inner.write_all(&[0; 4])?;
+		Ok(RefRange {
+			value: None,
+			serializer: |t| u32::to_le_bytes(t),
+			range: start..start + 4,
+			written: false,
+		})
+	}
+
+	pub fn u64(&mut self) -> Result<RefRange<8, u64>, Report> {
+		let start = self.inner.position() as _;
+		self.inner.write_all(&[0; 8])?;
+		Ok(RefRange {
+			value: None,
+			serializer: |t| u64::to_le_bytes(t),
+			range: start..start + 8,
+			written: false,
+		})
+	}
+
+	pub fn pad_zeroes<const N: usize>(&mut self) -> Result<(), Report> {
+		self.inner.write_all(&[0; N])?;
+		Ok(())
+	}
+
+	pub fn align_to_multiple_of_16(&mut self) -> Result<(), Report> {
+		let pos = self.inner.position();
+		let target = (pos + 15) & !15;
+		for _ in pos..target {
+			self.inner.write(&[0; 1])?;
+		}
+		Ok(())
+	}
+}
+
+
+#[must_use]
+pub struct RefRange<const N: usize, T> {
+	value: Option<T>,
+	serializer: fn(T) -> [u8; N],
+	range: Range<usize>,
+	written: bool,
+}
+
+impl <const N: usize, T: Copy>RefRange<N, T> {
+	pub fn write_to(mut self, buf: &mut Buffer) -> Result<(), Report> {
+		let ser = (self.serializer)(self.value.context("T was not initialized")?);
+		ensure!(ser.len() == self.range.len(), "Serialized length mismatches with assigned range");
+		buf.inner.get_mut().get_mut(self.range.clone()).context("todo")?.copy_from_slice(&ser);
+		self.written = true;
+		Ok(())
+	}
+
+	pub fn from(value: T, range: Range<usize>, serializer: fn(T) -> [u8; N]) -> Self {
+		Self {
+			value: Some(value),
+			serializer,
+			range,
+			written: false,
+		}
+	}
+
+	pub fn set(&mut self, v: T) {
+		self.value = Some(v);
+	}
+
+	pub fn set_write(mut self, t: T, dst: &mut Buffer) -> Result<(), Report> {
+		self.set(t);
+		self.write_to(dst)?;
+		Ok(())
+	}
+
+	pub fn after<const X: usize, Y>(mut self, other: &RefRange<X, Y>) -> Self {
+		self.range.start = other.range.end;
+		self.range.end = self.range.start + N;
+		self
+	}
+
+	pub fn value_mut(&mut self) -> Option<&mut T> {
+		self.value.as_mut()
+	}
+}
+
+impl<const N: usize, T> Drop for RefRange<N, T> {
+	fn drop(&mut self) {
+		assert!(self.written, "Dropped RefRange without writing it")
+	}
+}
+
+pub fn encode_inner_vromf(files: Vec<File>, digest_header: u8) -> Result<Vec<u8>, Report> {
+	let has_digest = match digest_header {
+		0x20 => false,
+		0x30 => true,
+		_ => {
+			bail!("Unknown digest header {:X}", digest_header)
+		},
+	};
+
+	let mut buf = Buffer{ inner: Default::default() };
+
+	// **Names header**
+	let mut names_offset = buf.u32()?;
+	names_offset.set_write(digest_header as _, &mut buf)?;
+	let mut names_count = buf.u32()?;
+	names_count.set_write(files.len().try_into()?, &mut buf)?;
+	buf.align_to_multiple_of_16()?;
+
+
+	// **Data header**
+	let data_info_offset = buf.u32()?;
+	let data_info_count = buf.u32()?;
+	data_info_count.set_write(files.len().try_into()?, &mut buf)?;
+	buf.align_to_multiple_of_16()?;
+
+
+	// **Digest header**
+	let digest_data = if has_digest {
+		let digest_end = buf.u64()?;
+		let digest_begin = buf.u64()?;
+		Some((digest_begin, digest_end))
+	} else {
+		None
+	};
+	buf.align_to_multiple_of_16()?;
+
+	// **Names Info**
+	let mut names_offsets = Vec::with_capacity(files.len());
+	for _ in &files {
+		let offs = buf.u64()?;
+		names_offsets.push(offs);
+	}
+	buf.align_to_multiple_of_16()?;
+
+	// **names data**
+	for (file, index) in files.iter().zip(names_offsets.into_iter()) {
+		let start = buf.inner.position();
+		if file.path() == Path::new("nm") {
+			buf.inner.write_all(b"\xff\x3fnm")?;
+		} else {
+			buf.inner.write_all(file.path().to_str().unwrap().as_ref())?;
+		}
+		buf.inner.write_all(&[0; 1])?;
+		index.set_write(start, &mut buf)?;
+	}
+	buf.align_to_multiple_of_16()?;
+
+
+	// **Data Info**
+	let mut data_offsets = Vec::with_capacity(files.len());
+	data_info_offset.set_write(buf.inner.position().try_into()?, &mut buf)?;
+	for _ in &files {
+		let offs = buf.u32()?;
+		let size = buf.u32()?;
+		buf.pad_zeroes::<{size_of::<u32>() * 2}>()?;
+		data_offsets.push((offs, size));
+	}
+	buf.align_to_multiple_of_16()?;
+
+	// **Digest data**
+
+	if has_digest {
+		let (start, end) = digest_data.expect("Infallible");
+		start.set_write(buf.inner.position().try_into()?, &mut buf)?;
+		for file in &files {
+			let h = Sha1::from(file.buf()).digest().bytes();
+			buf.inner.write_all(&h)?
+		}
+		end.set_write(buf.inner.position().try_into()?, &mut buf)?;
+		buf.align_to_multiple_of_16()?;
+	}
+
+	// **Data**
+	for (file, (offset, size)) in files.iter().zip(data_offsets.into_iter()) {
+		let start = buf.inner.position();
+		buf.inner.write_all(file.buf())?;
+		offset.set_write(start.try_into()?, &mut buf)?;
+		size.set_write(file.buf().len().try_into()?, &mut buf)?;
+		buf.align_to_multiple_of_16()?;
+	}
+
+
+	Ok(buf.inner.into_inner())
+}
+
+
 #[cfg(test)]
 mod test {
 	use std::fs;
 
 	use crate::vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf};
+	use crate::vromf::inner_container::encode_inner_vromf;
 
 	#[test]
 	fn test_uncompressed() {
@@ -170,5 +363,26 @@ mod test {
 		let f = fs::read("./samples/aces.vromfs.bin").unwrap();
 		let (decoded, _) = decode_bin_vromf(&f, true).unwrap();
 		let _inner = decode_inner_vromf(&decoded, true).unwrap();
+	}
+
+	#[test]
+	fn test_aces_repack() {
+		let f = fs::read("./samples/aces.vromfs.bin").unwrap();
+		let (decoded, _) = decode_bin_vromf(&f, true).unwrap();
+		let inner = decode_inner_vromf(&decoded, true).unwrap();
+		let re_encoded = encode_inner_vromf(inner, decoded[0]).unwrap();
+
+		assert_eq!(re_encoded.len(), decoded.len());
+		assert_eq!(re_encoded, decoded);
+	}
+
+	#[test]
+	fn test_checked_repack() {
+		let f = fs::read("./samples/checked.vromfs").unwrap();
+		let inner = decode_inner_vromf(&f, true).unwrap();
+		let re_encoded = encode_inner_vromf(inner.clone(), f[0]).unwrap();
+
+		assert_eq!(re_encoded.len(), f.len());
+		assert_eq!(re_encoded, f);
 	}
 }
