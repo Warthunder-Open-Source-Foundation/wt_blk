@@ -23,3 +23,4 @@ mod binary_decoder;
 /// Performance instrumentation, using the stamp! macro
 #[allow(unused)]
 mod perf_instrumentation;
+mod repacker_util;
