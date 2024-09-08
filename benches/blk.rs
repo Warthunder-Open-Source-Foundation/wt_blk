@@ -1,33 +1,27 @@
+use std::fs;
 use divan::black_box;
-use wt_blk::blk::{make_strict_test, parser::parse_blk};
+use wt_blk::blk::{make_strict_test};
+use wt_blk::blk::blk_structure::BlkField;
+use wt_blk::blk::blk_type::BlkType;
+use wt_blk::blk::util::blk_str;
 
 fn main() {
 	// Run registered benchmarks.
 	divan::main();
 }
 
-const FILE: &[u8] = include_bytes!("../samples/section_fat.blk");
+static EXPECTED: &[u8] = include_bytes!("../samples/expected_merged.json");
 
 #[divan::bench]
-fn to_string_bench() {
-	let mut sample = make_strict_test();
-	let mut out = String::new();
-	for _ in 0..100_000 {
-		out = serde_json::to_string_pretty(black_box(&sample.as_serde_obj(true))).unwrap();
-	}
-	if out.len() == 0 {
-		panic!("infallible benchmark harness");
-	}
-}
-
-#[divan::bench]
-fn streaming_bench() {
-	let sample = make_strict_test();
-	let mut out = vec![];
-	for _ in 0..100_000 {
-		sample.as_serde_json_streaming(&mut out, false).unwrap();
-	}
-	if out.len() == 0 {
-		panic!("infallible benchmark harness");
-	}
+fn streaming_merge() {
+	let mut blk = make_strict_test();
+	blk.insert_field(BlkField::Value(blk_str("int"), BlkType::Int(420)))
+		.unwrap();
+	blk.merge_fields();
+	let mut buf = vec![];
+	blk.as_serde_json_streaming(&mut buf).unwrap();
+	assert_eq!(
+		buf,
+		EXPECTED,
+	);
 }
