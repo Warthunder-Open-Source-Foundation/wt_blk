@@ -62,14 +62,14 @@ impl <const N: usize, T: Copy>RefRange<N, T> {
 		Ok(())
 	}
 
-	pub fn from(value: T, range: Range<usize>, serializer: fn(T) -> [u8; N]) -> Self {
-		Self {
-			value: Some(value),
-			serializer,
-			range,
-			written: false,
-		}
-	}
+	// pub fn from(value: T, range: Range<usize>, serializer: fn(T) -> [u8; N]) -> Self {
+	// 	Self {
+	// 		value: Some(value),
+	// 		serializer,
+	// 		range,
+	// 		written: false,
+	// 	}
+	// }
 
 	pub fn set(&mut self, v: T) {
 		self.value = Some(v);
@@ -81,15 +81,15 @@ impl <const N: usize, T: Copy>RefRange<N, T> {
 		Ok(())
 	}
 
-	pub fn after<const X: usize, Y>(mut self, other: &RefRange<X, Y>) -> Self {
-		self.range.start = other.range.end;
-		self.range.end = self.range.start + N;
-		self
-	}
+	// pub fn after<const X: usize, Y>(mut self, other: &RefRange<X, Y>) -> Self {
+	// 	self.range.start = other.range.end;
+	// 	self.range.end = self.range.start + N;
+	// 	self
+	// }
 
-	pub fn value_mut(&mut self) -> Option<&mut T> {
-		self.value.as_mut()
-	}
+	// pub fn value_mut(&mut self) -> Option<&mut T> {
+	// 	self.value.as_mut()
+	// }
 }
 
 impl<const N: usize, T> Drop for RefRange<N, T> {

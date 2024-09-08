@@ -50,7 +50,7 @@ impl BlkField {
 
 
 				// Unmerged fields cannot use hashmap to find overrides, a linear search is required instead
-				let map: Box<dyn Iterator<Item = _>> = if already_merged_fields {
+				let map: &mut dyn Iterator<Item = _> = if already_merged_fields {
 					// Map of to-replace keys
 					let mut map: IndexMap<BlkString, BlkField> = IndexMap::from_iter(with_name.1);
 					for (key, mut value) in with_name.0 {
@@ -60,7 +60,7 @@ impl BlkField {
 							*inner = value;
 						}
 					}
-					Box::new(map.into_iter())
+					&mut map.into_iter()
 				} else {
 					let mut map = with_name.1;
 					for (key, mut value) in with_name.0 {
@@ -73,11 +73,11 @@ impl BlkField {
 							}
 						}
 					}
-					Box::new(map.into_iter())
+					&mut map.into_iter()
 				};
 
 
-				*values = map.map(|e| e.1).collect();
+				*values = map.into_iter().map(|e| e.1).collect();
 			},
 			_ => {},
 		}
