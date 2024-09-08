@@ -5,7 +5,7 @@ use color_eyre::{
 	eyre::{bail, Context, ContextCompat},
 	Report,
 };
-use fallible_iterator::{convert, FallibleIterator, IteratorExt};
+use fallible_iterator::{convert, FallibleIterator};
 use sha1_smol::Sha1;
 
 use crate::{
@@ -151,9 +151,9 @@ pub fn encode_inner_vromf(files: Vec<File>, digest_header: u8) -> Result<Vec<u8>
 	let mut buf = Buffer{ inner: Default::default() };
 
 	// **Names header**
-	let mut names_offset = buf.u32()?;
+	let names_offset = buf.u32()?;
 	names_offset.set_write(digest_header as _, &mut buf)?;
-	let mut names_count = buf.u32()?;
+	let names_count = buf.u32()?;
 	names_count.set_write(files.len().try_into()?, &mut buf)?;
 	buf.align_to_multiple_of_16()?;
 

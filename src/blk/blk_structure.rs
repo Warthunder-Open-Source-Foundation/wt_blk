@@ -28,13 +28,19 @@ impl BlkField {
 		BlkField::Struct(name, vec![])
 	}
 
-	pub fn apply_overrides(&mut self) {
+	pub fn apply_overrides(&mut self, already_merged_fields: bool) {
 		match self {
 			BlkField::Struct(_, values) => {
 				// Move values out of struct, we will return it later
 				let mut moved_values = mem::replace(values, vec![]);
 
-				moved_values.iter_mut().for_each(|v| v.apply_overrides());
+				moved_values.iter_mut().for_each(|v| v.apply_overrides(already_merged_fields));
+
+				// Non-overriding fastpath
+				if !moved_values.iter().any(|e|e.get_name().starts_with("override:")) {
+					*values = moved_values;
+					return;
+				}
 
 				// Left are overrides
 				let with_name: (Vec<_>, Vec<_>) = moved_values
@@ -42,18 +48,36 @@ impl BlkField {
 					.map(|e| (e.get_name(), e))
 					.partition(|(name, _)| name.starts_with("override:"));
 
-				// Map of to-replace keys
-				let mut map: IndexMap<BlkString, BlkField> = IndexMap::from_iter(with_name.1);
 
-				// Replace all keys where
-				for (key, mut value) in with_name.0 {
-					let replaced = key.replace("override:", "");
-					if let Some(inner) = map.get_mut(&replaced) {
-						value.set_name(blk_str(replaced.as_str()));
-						*inner = value;
+				// Unmerged fields cannot use hashmap to find overrides, a linear search is required instead
+				let map: Box<dyn Iterator<Item = _>> = if already_merged_fields {
+					// Map of to-replace keys
+					let mut map: IndexMap<BlkString, BlkField> = IndexMap::from_iter(with_name.1);
+					for (key, mut value) in with_name.0 {
+						let replaced = key.replace("override:", "");
+						if let Some(inner) = map.get_mut(&replaced) {
+							value.set_name(blk_str(replaced.as_str()));
+							*inner = value;
+						}
 					}
-				}
-				*values = map.into_iter().map(|e| e.1).collect();
+					Box::new(map.into_iter())
+				} else {
+					let mut map = with_name.1;
+					for (key, mut value) in with_name.0 {
+						let replaced = key.replace("override:", "");
+
+						for (_, inner) in map.iter_mut() {
+							if inner.get_name().as_str() == &replaced {
+								value.set_name(blk_str(replaced.as_str()));
+								*inner = value.clone();
+							}
+						}
+					}
+					Box::new(map.into_iter())
+				};
+
+
+				*values = map.map(|e| e.1).collect();
 			},
 			_ => {},
 		}
@@ -164,7 +188,7 @@ mod test {
 		before
 			.insert_field(BlkField::Value(blk_str("override:value"), BlkType::Int(42)))
 			.unwrap();
-		before.apply_overrides();
+		before.apply_overrides(true);
 
 		let mut expected = BlkField::new_root();
 		expected
@@ -190,8 +214,64 @@ mod test {
 			))
 			.unwrap();
 		let before = after.clone();
-		after.apply_overrides();
+		after.apply_overrides(true);
 
 		assert_eq!(after, before);
+	}
+
+	#[test]
+	fn keep_dupe_fields() {
+		let mut after = BlkField::new_root();
+		after
+			.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(0)))
+			.unwrap();
+		after
+			.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(42)))
+			.unwrap();
+		after
+			.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(123)))
+			.unwrap();
+		let before = after.clone();
+		after.apply_overrides(false);
+
+		assert_eq!(after, before);
+	}
+
+	#[test]
+	fn keep_dupe_fields_override() {
+		let mut before = BlkField::new_root();
+		before
+			.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(0)))
+			.unwrap();
+		before
+			.insert_field(BlkField::Value(blk_str("override:cheese"), BlkType::Int(69)))
+			.unwrap();
+		before
+			.insert_field(BlkField::Value(blk_str("cheese"), BlkType::Int(690)))
+			.unwrap();
+		before
+			.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(42)))
+			.unwrap();
+		before
+			.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(123)))
+			.unwrap();
+		let mut expected = BlkField::new_root();
+
+		expected
+			.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(0)))
+			.unwrap();
+		expected
+			.insert_field(BlkField::Value(blk_str("cheese"), BlkType::Int(69)))
+			.unwrap();
+		expected
+			.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(42)))
+			.unwrap();
+		expected
+			.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(123)))
+			.unwrap();
+
+		before.apply_overrides(false);
+
+		assert_eq!(before, expected);
 	}
 }

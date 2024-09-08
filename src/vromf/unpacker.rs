@@ -212,14 +212,14 @@ impl VromfUnpacker<'_> {
 					match format {
 						BlkOutputFormat::BlkText => {
 							if apply_overrides {
-								parsed.apply_overrides();
+								parsed.apply_overrides(false);
 							}
 							writer.write_all(parsed.as_blk_text()?.as_bytes())?;
 						},
 						BlkOutputFormat::Json => {
 							parsed.merge_fields();
 							if apply_overrides {
-								parsed.apply_overrides();
+								parsed.apply_overrides(true);
 							}
 							parsed.as_serde_json_streaming(&mut writer)?;
 						},
