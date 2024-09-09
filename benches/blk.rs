@@ -1,9 +1,13 @@
 use std::fs;
-use divan::black_box;
-use wt_blk::blk::{make_strict_test};
+use std::ops::Deref;
+use std::path::Path;
+use std::time::Duration;
+use divan::{black_box, Bencher};
+use wt_blk::blk::{make_strict_test, unpack_blk};
 use wt_blk::blk::blk_structure::BlkField;
 use wt_blk::blk::blk_type::BlkType;
 use wt_blk::blk::util::blk_str;
+use wt_blk::vromf::{File, VromfUnpacker};
 
 fn main() {
 	// Run registered benchmarks.
@@ -12,16 +16,16 @@ fn main() {
 
 static EXPECTED: &[u8] = include_bytes!("../samples/expected_merged.json");
 
-#[divan::bench]
-fn streaming_merge() {
-	let mut blk = make_strict_test();
-	blk.insert_field(BlkField::Value(blk_str("int"), BlkType::Int(420)))
-		.unwrap();
-	blk.merge_fields();
-	let mut buf = vec![];
-	blk.as_serde_json_streaming(&mut buf).unwrap();
-	assert_eq!(
-		buf,
-		EXPECTED,
-	);
+#[divan::bench(
+min_time = Duration::from_secs(3),
+)]
+fn streaming_merge(bencher: Bencher) {
+	let unpacker = VromfUnpacker::from_file(&File::new("samples/aces.vromfs.bin").unwrap(), false).unwrap();
+	let mut raw_blk = unpacker.unpack_one(Path::new("gamedata/units/tankmodels/germ_leopard_2a4.blk"), None, false).unwrap();
+	let mut blk = unpack_blk(&mut raw_blk.buf_mut(), unpacker.dict(), unpacker.nm()).unwrap();
+
+	bencher.bench_local(move || {
+		black_box(&mut blk).merge_fields();
+	});
+
 }

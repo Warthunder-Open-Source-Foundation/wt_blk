@@ -272,4 +272,7 @@ impl VromfUnpacker<'_> {
 	pub fn dict(&self) -> Option<&DecoderDictionary<'_>> {
 		self.dict.as_deref().map(Deref::deref)
 	}
+	pub fn nm(&self) -> Option<Arc<NameMap>> {
+		self.nm.clone()
+	}
 }
