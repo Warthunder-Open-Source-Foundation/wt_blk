@@ -30,17 +30,19 @@ use crate::{
 	},
 };
 
+// TODO: Check if this leaks, or if the FFI drops the contents appropriately
+// TODO: Implement https://docs.rs/zstd/latest/zstd/dict/struct.DecoderDictionary.html#method.new once it is no longer experimental
 #[derive()]
-struct DictWrapper<'a>(DecoderDictionary<'a>);
+struct DictWrapper(DecoderDictionary<'static>);
 
-impl Debug for DictWrapper<'_> {
+impl Debug for DictWrapper {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		write!(f, "DecoderDictionary {{...}}")
 	}
 }
 
-impl<'a> Deref for DictWrapper<'a> {
-	type Target = DecoderDictionary<'a>;
+impl<'a> Deref for DictWrapper {
+	type Target = DecoderDictionary<'static>;
 
 	fn deref(&self) -> &Self::Target {
 		&self.0
@@ -49,9 +51,9 @@ impl<'a> Deref for DictWrapper<'a> {
 
 /// Unpacks vromf image into all internal files, optionally formatting binary BLK files
 #[derive(Debug)]
-pub struct VromfUnpacker<'a> {
+pub struct VromfUnpacker{
 	files:    Vec<File>,
-	dict:     Option<Arc<DictWrapper<'a>>>,
+	dict:     Option<Arc<DictWrapper>>,
 	nm:       Option<Arc<NameMap>>,
 	metadata: Metadata,
 }
@@ -69,7 +71,7 @@ pub enum ZipFormat {
 	Compressed(u8),
 }
 
-impl VromfUnpacker<'_> {
+impl VromfUnpacker {
 	pub fn from_file(file: &File, validate: bool) -> Result<Self, Report> {
 		let (decoded, metadata) = decode_bin_vromf(file.buf(), validate)?;
 		let inner = decode_inner_vromf(&decoded, validate)?;
