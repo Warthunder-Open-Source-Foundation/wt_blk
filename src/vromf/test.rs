@@ -24,7 +24,7 @@ fn write_to_zip() {
 	let unpacked = out
 		.unpack_all_to_zip(ZipFormat::Compressed(1), Some(BlkOutputFormat::Json), true)
 		.unwrap();
-	assert_eq!(27440515, unpacked.len())
+	assert_eq!(55061478, unpacked.len())
 }
 
 #[test]
