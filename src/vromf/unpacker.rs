@@ -196,6 +196,7 @@ impl VromfUnpacker {
 	) -> Result<File, Report> {
 		let mut buf = Cursor::new(Vec::with_capacity(4096));
 		self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut buf)?;
+		*file.buf_mut() = buf.into_inner();
 		Ok(file)
 	}
 
