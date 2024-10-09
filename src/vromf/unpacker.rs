@@ -8,7 +8,7 @@ use std::{
 	str::FromStr,
 	sync::Arc,
 };
-
+use std::ops::RangeFrom;
 use color_eyre::{
 	eyre::{eyre, ContextCompat},
 	Help,
@@ -50,7 +50,7 @@ impl<'a> Deref for DictWrapper {
 }
 
 /// Unpacks vromf image into all internal files, optionally formatting binary BLK files
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VromfUnpacker{
 	files:    Vec<File>,
 	dict:     Option<Arc<DictWrapper>>,
@@ -132,8 +132,12 @@ impl VromfUnpacker {
 			.collect::<Result<(), Report>>()
 	}
 
-	pub fn unpack_all_to_zip(
+	pub fn unpack_subfolder_to_zip(
 		mut self,
+		subfolder: &str,
+		// removes subfolder from start of path
+		// replacing for example `/gamedata/foo/bar` to `/foo/bar` when requesting `/gamedata`
+		remove_root: bool,
 		zip_format: ZipFormat,
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
@@ -144,6 +148,7 @@ impl VromfUnpacker {
 		let unpacked = files
 			.into_par_iter()
 			.panic_fuse()
+			.filter(|f|f.path().starts_with(subfolder))
 			.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides))
 			.collect::<Result<Vec<File>, Report>>()?;
 
@@ -157,7 +162,7 @@ impl VromfUnpacker {
 
 		for f in unpacked.into_iter() {
 			writer.start_file(
-				f.path().to_string_lossy(),
+				&f.path().to_string_lossy()[if remove_root { subfolder.len().. } else { 0.. }],
 				SimpleFileOptions::default()
 					.compression_level(Some(compression_level as _))
 					.compression_method(compression_method),
@@ -167,6 +172,15 @@ impl VromfUnpacker {
 
 		let buf = mem::replace(writer.finish()?, Default::default());
 		Ok(buf.into_inner())
+	}
+
+	pub fn unpack_all_to_zip(
+		self,
+		zip_format: ZipFormat,
+		unpack_blk_into: Option<BlkOutputFormat>,
+		apply_overrides: bool,
+	) -> Result<Vec<u8>, Report> {
+		self.unpack_subfolder_to_zip("", false, zip_format, unpack_blk_into, apply_overrides)
 	}
 
 	pub fn unpack_one(

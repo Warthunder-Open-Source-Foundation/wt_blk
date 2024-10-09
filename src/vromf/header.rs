@@ -2,7 +2,7 @@ use wt_version::Version;
 
 use crate::vromf::enums::{HeaderType, Packing, PlatformType};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Metadata {
 	pub header_type: Option<HeaderType>,
 	pub platform:    Option<PlatformType>,

@@ -16,4 +16,4 @@ mod test;
 mod unpacker;
 
 pub use file::File;
-pub use unpacker::{BlkOutputFormat, VromfUnpacker};
+pub use unpacker::{BlkOutputFormat, VromfUnpacker, ZipFormat};
