@@ -13,6 +13,7 @@ use color_eyre::{
 	Help,
 	Report,
 };
+use fallible_iterator::IteratorExt;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use wt_version::Version;
 use zip::{write::SimpleFileOptions, CompressionMethod, ZipWriter};
@@ -150,7 +151,7 @@ impl VromfUnpacker {
 	}
 
 	pub fn unpack_subfolder_to_zip(
-		mut self,
+		&self,
 		subfolder: &str,
 		// removes subfolder from start of path
 		// replacing for example `/gamedata/foo/bar` to `/foo/bar` when requesting `/gamedata`
@@ -163,23 +164,22 @@ impl VromfUnpacker {
 		// but slower when individual calls are performed
 		threaded: bool,
 	) -> Result<Vec<u8>, Report> {
-		// Important: We own self here, so "destroying" the files vector isn't an issue
-		// Due to partial moving rules this is necessary
-		let files = mem::replace(&mut self.files, Default::default());
-
 		// TODO: Figure out some way to deduplicate this
 		// ParIter and Iter are obv. incompatible so this might need macro magic of sorts
+		let files = &self.files;
 		let unpacked = if threaded {
 			files
 				.into_par_iter()
 				.panic_fuse()
 				.filter(|f|f.path().starts_with(subfolder))
+				.cloned()
 				.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides))
 				.collect::<Result<Vec<File>, Report>>()?
 		} else {
 			files
-				.into_iter()
+				.iter()
 				.filter(|f|f.path().starts_with(subfolder))
+				.cloned()
 				.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides))
 				.collect::<Result<Vec<File>, Report>>()?
 		};
@@ -207,7 +207,7 @@ impl VromfUnpacker {
 	}
 
 	pub fn unpack_all_to_zip(
-		self,
+		&self,
 		zip_format: ZipFormat,
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
