@@ -8,7 +8,6 @@ use std::{
 	str::FromStr,
 	sync::Arc,
 };
-use std::ops::RangeFrom;
 use color_eyre::{
 	eyre::{eyre, ContextCompat},
 	Help,
@@ -117,19 +116,35 @@ impl VromfUnpacker {
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
 		writer: impl FnOnce(&mut File) -> Result<W, Report> + Sync + Send + Copy,
+		// Runs unpacking in the global rayon threadpool if true, otherwise its single threaded
+		threaded: bool,
 	) -> Result<(), Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
 		// Due to partial moving rules this is necessary
 		let files = mem::replace(&mut self.files, vec![]);
-		files
-			.into_par_iter()
-			.panic_fuse()
-			.map(|mut file| {
-				let mut w = writer(&mut file)?;
-				self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut w)?;
-				Ok(())
-			})
-			.collect::<Result<(), Report>>()
+
+		// TODO: Figure out some way to deduplicate this
+		// ParIter and Iter are obv. incompatible so this might need macro magic of sorts
+		if threaded {
+			files
+				.into_par_iter()
+				.panic_fuse()
+				.map(|mut file| {
+					let mut w = writer(&mut file)?;
+					self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut w)?;
+					Ok(())
+				})
+				.collect::<Result<(), Report>>()
+		} else {
+			files
+				.into_iter()
+				.map(|mut file| {
+					let mut w = writer(&mut file)?;
+					self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut w)?;
+					Ok(())
+				})
+				.collect::<Result<(), Report>>()
+		}
 	}
 
 	pub fn unpack_subfolder_to_zip(
@@ -141,16 +156,29 @@ impl VromfUnpacker {
 		zip_format: ZipFormat,
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
+		// Runs unpacking in the global rayon threadpool if true, otherwise its single threaded
+		threaded: bool,
 	) -> Result<Vec<u8>, Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
 		// Due to partial moving rules this is necessary
 		let files = mem::replace(&mut self.files, Default::default());
-		let unpacked = files
-			.into_par_iter()
-			.panic_fuse()
-			.filter(|f|f.path().starts_with(subfolder))
-			.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides))
-			.collect::<Result<Vec<File>, Report>>()?;
+
+		// TODO: Figure out some way to deduplicate this
+		// ParIter and Iter are obv. incompatible so this might need macro magic of sorts
+		let unpacked = if threaded {
+			files
+				.into_par_iter()
+				.panic_fuse()
+				.filter(|f|f.path().starts_with(subfolder))
+				.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides))
+				.collect::<Result<Vec<File>, Report>>()?
+		} else {
+			files
+				.into_iter()
+				.filter(|f|f.path().starts_with(subfolder))
+				.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides))
+				.collect::<Result<Vec<File>, Report>>()?
+		};
 
 		let mut buf = Cursor::new(Vec::with_capacity(4096));
 		let mut writer = ZipWriter::new(&mut buf);
@@ -179,8 +207,10 @@ impl VromfUnpacker {
 		zip_format: ZipFormat,
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
+		// Runs unpacking in the global rayon threadpool if true, otherwise its single threaded
+		threaded: bool,
 	) -> Result<Vec<u8>, Report> {
-		self.unpack_subfolder_to_zip("", false, zip_format, unpack_blk_into, apply_overrides)
+		self.unpack_subfolder_to_zip("", false, zip_format, unpack_blk_into, apply_overrides, threaded)
 	}
 
 	pub fn unpack_one(

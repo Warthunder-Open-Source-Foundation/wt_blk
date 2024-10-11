@@ -22,7 +22,7 @@ fn write_to_zip() {
 	let out =
 		VromfUnpacker::from_file(&File::new("./samples/aces.vromfs.bin").unwrap(), true).unwrap();
 	let unpacked = out
-		.unpack_all_to_zip(ZipFormat::Compressed(1), Some(BlkOutputFormat::Json), true)
+		.unpack_all_to_zip(ZipFormat::Compressed(1), Some(BlkOutputFormat::Json), true, true)
 		.unwrap();
 	assert_eq!(55061478, unpacked.len())
 }
