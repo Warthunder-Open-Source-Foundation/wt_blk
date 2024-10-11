@@ -117,6 +117,8 @@ impl VromfUnpacker {
 		apply_overrides: bool,
 		writer: impl FnOnce(&mut File) -> Result<W, Report> + Sync + Send + Copy,
 		// Runs unpacking in the global rayon threadpool if true, otherwise its single threaded
+		// false increases global throughput when executed from a threadpool,
+		// but slower when individual calls are performed
 		threaded: bool,
 	) -> Result<(), Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
@@ -157,6 +159,8 @@ impl VromfUnpacker {
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
 		// Runs unpacking in the global rayon threadpool if true, otherwise its single threaded
+		// false increases global throughput when executed from a threadpool,
+		// but slower when individual calls are performed
 		threaded: bool,
 	) -> Result<Vec<u8>, Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
