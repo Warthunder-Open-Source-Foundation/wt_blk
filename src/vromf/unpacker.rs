@@ -188,15 +188,15 @@ impl VromfUnpacker {
 		let mut writer = ZipWriter::new(&mut buf);
 
 		let (compression_level, compression_method) = match zip_format {
-			ZipFormat::Uncompressed => (0, CompressionMethod::STORE),
-			ZipFormat::Compressed(level) => (level, CompressionMethod::DEFLATE),
+			ZipFormat::Uncompressed => (None, CompressionMethod::STORE),
+			ZipFormat::Compressed(level) => (Some(level as i64), CompressionMethod::DEFLATE),
 		};
 
 		for f in unpacked.into_iter() {
 			writer.start_file(
 				&f.path().to_string_lossy()[if remove_root { subfolder.len().. } else { 0.. }],
 				SimpleFileOptions::default()
-					.compression_level(Some(compression_level as _))
+					.compression_level(compression_level)
 					.compression_method(compression_method),
 			)?;
 			writer.write_all(f.buf())?;
