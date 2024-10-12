@@ -59,13 +59,13 @@ pub struct VromfUnpacker{
 }
 
 /// Defines plaintext format should be exported to
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum BlkOutputFormat {
 	Json,
 	BlkText,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum ZipFormat {
 	Uncompressed,
 	Compressed(u8),
