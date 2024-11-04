@@ -13,7 +13,6 @@ use color_eyre::{
 	Help,
 	Report,
 };
-use fallible_iterator::IteratorExt;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use wt_version::Version;
 use zip::{write::SimpleFileOptions, CompressionMethod, ZipWriter};

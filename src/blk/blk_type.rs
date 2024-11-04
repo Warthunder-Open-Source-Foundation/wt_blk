@@ -351,39 +351,48 @@ fn write_generic_array<'a, 'b, T: 'a + Copy, W: Write>(
 
 impl Display for BlkType {
 	fn fmt(&self, f: &mut StdFormatter<'_>) -> std::fmt::Result {
-		let value = match self {
+		write!(f, "{} = ", self.blk_type_name())?;
+		match self {
 			BlkType::Str(v) => {
-				format!("\"{}\"", v)
+				write!(f, "\"{}\"", v)
 			},
-			BlkType::Int(v) => v.to_string(),
+			BlkType::Int(v) => write!(f, "{v}"),
 			BlkType::Int2(v) => {
-				format!("{}, {}", v[0], v[1])
+				write!(f, "{}, {}", v[0], v[1])
 			},
 			BlkType::Int3(v) => {
-				format!("{}, {}, {}", v[0], v[1], v[2])
+				write!(f, "{}, {}, {}", v[0], v[1], v[2])
 			},
-			BlkType::Long(v) => v.to_string(),
-			BlkType::Float(v) => v.to_string(),
+			BlkType::Long(v) => write!(f, "{v}"),
+			BlkType::Float(v) => write!(f, "{v}"),
 			BlkType::Float2(v) => {
-				format!("{}, {}", v[0], v[1])
+				write!(f, "{}, {}", v[0], v[1])
 			},
 			BlkType::Float3(v) => {
-				format!("{}, {}, {}", v[0], v[1], v[2])
+				write!(f, "{}, {}, {}", v[0], v[1], v[2])
 			},
 			BlkType::Float4(v) => {
-				format!("{}, {}, {}, {}", v[0], v[1], v[2], v[3])
+				write!(f, "{}, {}, {}, {}", v[0], v[1], v[2], v[3])
 			},
 			BlkType::Float12(v) => {
-				format!("{:?}", *v)
+				let chunks = v.array_chunks::<3>();
+				let len = chunks.len();
+				write!(f, "[")?;
+				for (i, chunk) in chunks.enumerate() {
+					if (1..len).contains(&i) {
+						write!(f, ", ")?;
+					}
+					write!(f, "{chunk:?}")?;
+				}
+				write!(f, "]")?;
+				Ok(())
 			},
-			BlkType::Bool(v) => v.to_string(),
+			BlkType::Bool(v) => write!(f, "{v}"),
 			// BGRA
 			BlkType::Color { r, g, b, a } => {
-				format!("{b}, {g}, {r}, {a}")
+				write!(f, "{b}, {g}, {r}, {a}")
 			},
-		};
-
-		write!(f, "{} = {}", self.blk_type_name(), value)
+		}
 	}
 }
 
@@ -410,5 +419,20 @@ mod test {
 				.all(|e| BlkType::is_valid_type(e)),
 			true
 		)
+	}
+
+	#[test]
+	fn test_matrix() {
+		let t = BlkType::Float12(Box::new([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]));
+		assert_eq!(t.to_string(), "m = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0], [10.0, 11.0, 12.0]]")
+	}
+
+	#[test]
+	fn test_float() {
+		let t = BlkType::Float(42.0);
+		assert_eq!(t.to_string(), "r = 42");
+
+		let t = BlkType::Float(42.69);
+		assert_eq!(t.to_string(), "r = 42.69");
 	}
 }
