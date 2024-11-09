@@ -154,9 +154,9 @@ impl BlkType {
 			COLOR => {
 				// Game stores them in BGRA order
 				Some(Self::Color {
-					r: field[0],
+					b: field[0],
 					g: field[1],
-					b: field[2],
+					r: field[2],
 					a: field[3],
 				})
 			},
@@ -388,9 +388,8 @@ impl Display for BlkType {
 				Ok(())
 			},
 			BlkType::Bool(v) => write!(f, "{v}"),
-			// BGRA
 			BlkType::Color { r, g, b, a } => {
-				write!(f, "{b}, {g}, {r}, {a}")
+				write!(f, "{r}, {g}, {b}, {a}")
 			},
 		}
 	}
