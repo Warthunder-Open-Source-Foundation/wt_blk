@@ -9,7 +9,7 @@ Licensed under the [Apache 2.0](https://github.com/Warthunder-Open-Source-Founda
 # Bindings
 
 ### Python
-Bindings are located in `wt_blk_pybindings` and published to [pypi](https://pypi.org/manage/project/wt-blk-pybindings/releases/)
+Bindings are located in `wt_blk_pybindings` and published to [pypi](https://pypi.org/project/wt-blk-pybindings)
 
 ### WASM
 Located in `wasm_bindings` and published to [npm](https://www.npmjs.com/package/wt_blk)

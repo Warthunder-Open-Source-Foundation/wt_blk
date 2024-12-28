@@ -152,7 +152,6 @@ impl BlkType {
 			},
 			BOOL => Some(Self::Bool(field[0] != 0)),
 			COLOR => {
-				// Game stores them in BGRA order
 				Some(Self::Color {
 					r: field[0],
 					g: field[1],
@@ -380,7 +379,7 @@ impl Display for BlkType {
 				write!(f, "[")?;
 				for (i, chunk) in chunks.enumerate() {
 					if (1..len).contains(&i) {
-						write!(f, ", ")?;
+						write!(f, " ")?;
 					}
 					write!(f, "{chunk:?}")?;
 				}
@@ -388,9 +387,8 @@ impl Display for BlkType {
 				Ok(())
 			},
 			BlkType::Bool(v) => write!(f, "{v}"),
-			// BGRA
 			BlkType::Color { r, g, b, a } => {
-				write!(f, "{b}, {g}, {r}, {a}")
+				write!(f, "{r}, {g}, {b}, {a}")
 			},
 		}
 	}
@@ -424,7 +422,7 @@ mod test {
 	#[test]
 	fn test_matrix() {
 		let t = BlkType::Float12(Box::new([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]));
-		assert_eq!(t.to_string(), "m = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0], [10.0, 11.0, 12.0]]")
+		assert_eq!(t.to_string(), "m = [[1.0, 2.0, 3.0] [4.0, 5.0, 6.0] [7.0, 8.0, 9.0] [10.0, 11.0, 12.0]]")
 	}
 
 	#[test]
