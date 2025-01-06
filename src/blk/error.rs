@@ -2,7 +2,7 @@ use std::{ops::Range, string::FromUtf8Error};
 
 use thiserror::Error;
 
-use crate::{binary_decoder::BinaryDecoderError, blk::blk_block_hierarchy::BlkBlockBuilderError};
+use crate::{blk::blk_block_hierarchy::BlkBlockBuilderError};
 
 #[derive(Debug, Error, Clone, Eq, PartialEq)]
 pub enum ParseError {
@@ -34,9 +34,6 @@ pub enum ParseError {
 
 	#[error("Missing dictionary")]
 	MissingDict {},
-
-	#[error(transparent)]
-	BinaryDecoderError(BinaryDecoderError),
 
 	#[error(transparent)]
 	BlkBlockBuilderError(BlkBlockBuilderError),
