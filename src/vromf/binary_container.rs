@@ -2,7 +2,6 @@ use std::mem::size_of;
 use bytes::{Buf, Bytes};
 use color_eyre::{eyre::bail, Report, Section};
 use wt_version::Version;
-
 use crate::vromf::{
 	de_obfuscation::deobfuscate,
 	enums::{HeaderType, PlatformType},
@@ -64,15 +63,15 @@ pub(crate) fn decode_bin_vromf(file: &[u8], validate: bool) -> Result<(Vec<u8>, 
 
 		// Null length means the remaining bytes are used
 		if extended_header_size == 0 {
-			&file[ptr..]
+			extended_header
 		} else {
-			idx_file_offset(&mut ptr, extended_header_size as usize)?
+			extended_header.split_to(extended_header_size as usize)
 		}
 	} else {
 		if pack_type.is_compressed() {
-			idx_file_offset(&mut ptr, extended_header_size as usize)?
+			file.split_to(extended_header_size as usize)
 		} else {
-			idx_file_offset(&mut ptr, size as usize)?
+			file.split_to(size as usize)
 		}
 	};
 
@@ -90,12 +89,12 @@ pub(crate) fn decode_bin_vromf(file: &[u8], validate: bool) -> Result<(Vec<u8>, 
 	}
 
 	if pack_type.has_hash() && validate {
-		let expected = idx_file_offset(&mut ptr, 16)?;
+		let expected = file.split_to(16);
 		let computed_hash = md5::compute(&output);
-		if expected != &computed_hash.0 {
+		if *expected != computed_hash.0 {
 			bail!(
 				"Hash missmatch! Expected {:x} but found {computed_hash:x}",
-				u128::from_le_bytes(expected.try_into()?)
+				u128::from_le_bytes(expected.as_ref().try_into()?)
 			);
 		}
 	}
