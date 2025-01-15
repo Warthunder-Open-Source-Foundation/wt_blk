@@ -14,26 +14,22 @@ use itertools::Itertools;
 pub(crate) use time;
 
 #[allow(unused)]
-#[coverage(off)]
 pub(crate) fn format_hex(hex: &[u8]) -> Vec<String> {
 	hex.iter().map(|x| format!("0x{x:X}")).collect::<Vec<_>>()
 }
 
 #[allow(unused)]
-#[coverage(off)]
 pub(crate) fn join_hex(hex: &[u8]) -> String {
 	hex.iter().map(|x| format!("{x:x}")).join("")
 }
 
 #[allow(unused)]
-#[coverage(off)]
 pub(crate) fn debug_hex(hex: &[u8]) {
 	eprintln!("{:?}", format_hex(hex));
 }
 
 #[allow(unused)]
 #[cfg(test)]
-#[coverage(off)]
 pub(crate) fn load_eyre() {
 	std::env::set_var("RUST_BACKTRACE", "full");
 	color_eyre::install().unwrap();
