@@ -123,7 +123,7 @@ pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<File>, Repo
 				let h = Sha1::from(&e).digest().bytes();
 				if digest != &h {
 					bail!(
-						"Hash missmatch: expected: {} but found {}",
+						"Hash mismatch: expected: {} but found {}",
 						join_hex(&e),
 						join_hex(&h)
 					);
