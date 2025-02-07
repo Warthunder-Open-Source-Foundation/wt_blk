@@ -2,8 +2,8 @@ name: Render drawio
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
+    paths:
+      - "charts"
     branches: [ "master" ]
 
 permissions:
