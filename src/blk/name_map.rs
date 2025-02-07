@@ -5,6 +5,8 @@ use zstd::Decoder;
 
 use crate::blk::{blk_type::BlkString, error::ParseError, leb128::uleb128_offset};
 
+/// A name map is a collection of shared strings across an entire VROMF file
+/// Its usually in the top-level directory and called `nm` or in the binary vromf : `0xff 0x3f nm` (prefixed with a pair of seemingly random bytes)
 #[derive(Clone, Debug)]
 pub struct NameMap {
 	pub binary: Vec<u8>,
@@ -73,7 +75,7 @@ impl NameMap {
 mod test {
 	use std::fs;
 
-	use crate::blk::{leb128::uleb128, nm_file::NameMap};
+	use crate::blk::{leb128::uleb128, name_map::NameMap};
 
 	#[test]
 	fn test_any_stream() {

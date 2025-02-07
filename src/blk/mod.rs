@@ -16,7 +16,7 @@ use crate::blk::{
 	blk_structure::BlkField,
 	blk_type::BlkType,
 	file::FileType,
-	nm_file::NameMap,
+	name_map::NameMap,
 	util::blk_str,
 	zstd::decode_zstd,
 };
@@ -42,7 +42,7 @@ pub mod file;
 pub mod leb128;
 
 /// Struct storing a shared map of strings that multiple BLK files reference
-pub mod nm_file;
+pub mod name_map;
 
 cfg_if! {
 	if #[cfg(test)] {

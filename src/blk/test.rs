@@ -6,7 +6,7 @@ use crate::blk::{
 	binary_deserialize::parser::parse_blk,
 	file::FileType,
 	make_strict_test,
-	nm_file::NameMap,
+	name_map::NameMap,
 	zstd::decode_zstd,
 };
 

@@ -11,7 +11,7 @@ use crate::blk::{
 		ParseError::{BadBlkValue, ResidualBlockBuffer},
 	},
 	leb128::uleb128,
-	nm_file::NameMap,
+	name_map::NameMap,
 	util::blk_str,
 };
 

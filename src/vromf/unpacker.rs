@@ -20,7 +20,7 @@ use zstd::dict::DecoderDictionary;
 
 use crate::{
 	blk,
-	blk::{nm_file::NameMap, util::maybe_blk},
+	blk::{name_map::NameMap, util::maybe_blk},
 	vromf::{
 		binary_container::decode_bin_vromf,
 		header::Metadata,
