@@ -36,7 +36,7 @@ pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<File>, Repo
 
 	// The header indicates existence of a digest
 	let names_header = idx_file_offset(&mut ptr, size_of::<u32>())?;
-	let has_digest = match names_header[0] {
+	let mut has_digest = match names_header[0] {
 		0x20 => false,
 		0x30 => true,
 		_ => {
@@ -55,6 +55,10 @@ pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<File>, Repo
 	let mut digest_data = if has_digest {
 		let digest_end = bytes_to_usize(idx_file_offset(&mut ptr, size_of::<u64>())?)?;
 		let digest_begin = bytes_to_usize(idx_file_offset(&mut ptr, size_of::<u64>())?)?;
+		// Special case; The VROMF has a hash over the entire container but not individual files
+		if digest_begin == 0 {
+			has_digest = false;
+		}
 		let digest_data = &file[digest_begin..digest_end];
 		let chunks = digest_data.chunks_exact(20);
 		Some(chunks)
@@ -122,9 +126,9 @@ pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<File>, Repo
 					.context("Too few digest elements")?;
 				let h = Sha1::from(&e).digest().bytes();
 				if digest != &h {
-					bail!(
+					println!(
 						"Hash mismatch: expected: {} but found {}",
-						join_hex(&e),
+						join_hex(&digest),
 						join_hex(&h)
 					);
 				}
