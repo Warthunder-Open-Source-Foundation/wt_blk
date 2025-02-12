@@ -1,0 +1,88 @@
+<mxfile host="drawio-plugin" modified="2025-02-12T13:35:07.205Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" etag="Uw816LldavxKm1abpsE0" version="22.1.22" type="embed">
+  <diagram name="Page-1" id="F5joY2BmOa0gcvGcmGx3">
+    <mxGraphModel dx="1010" dy="379" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-1" value="Binary container" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;labelPosition=center;verticalLabelPosition=middle;align=right;verticalAlign=bottom;horizontal=1;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="60" y="60" width="660" height="460" as="geometry" />
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-3" value="Base Header" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;labelPosition=center;verticalLabelPosition=middle;align=right;verticalAlign=bottom;" parent="1" vertex="1">
+          <mxGeometry x="80" y="80" width="610" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-4" value="Payload" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+          <mxGeometry x="80" y="260" width="260" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-5" value="Checksum" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;fillColor=#f8cecc;strokeColor=#b85450;dashed=1;" parent="1" vertex="1">
+          <mxGeometry x="80" y="400" width="260" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-6" value="Additional unknown data" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;dashed=1;" parent="1" vertex="1">
+          <mxGeometry x="80" y="460" width="260" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-7" value="Header Type" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="100" y="100" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-9" value="Platform" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="260" y="100" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-10" value="Size" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="340" y="100" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-11" value="Compression.type" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="420" y="100" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-12" value="Compr.Size" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="550" y="100" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-14" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" parent="1" source="f_PoJI_ZIrE83fsZ3AQF-10" target="f_PoJI_ZIrE83fsZ3AQF-4" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="420" y="570" as="sourcePoint" />
+            <mxPoint x="470" y="520" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="380" y="290" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-15" value="" style="endArrow=classic;html=1;rounded=0;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="f_PoJI_ZIrE83fsZ3AQF-11" target="f_PoJI_ZIrE83fsZ3AQF-4" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="280" y="350" as="sourcePoint" />
+            <mxPoint x="330" y="300" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="485" y="320" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-16" value="" style="endArrow=classic;html=1;rounded=0;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" parent="1" source="f_PoJI_ZIrE83fsZ3AQF-12" target="f_PoJI_ZIrE83fsZ3AQF-4" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="450" y="350" as="sourcePoint" />
+            <mxPoint x="500" y="300" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="595" y="350" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-17" value="" style="endArrow=classic;html=1;rounded=0;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="f_PoJI_ZIrE83fsZ3AQF-12" target="f_PoJI_ZIrE83fsZ3AQF-5" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="430" y="390" as="sourcePoint" />
+            <mxPoint x="480" y="340" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="595" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-18" value="Header Extension" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=right;verticalAlign=bottom;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="80" y="160" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-20" value="Flags" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="180" y="180" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-21" value="Size = 8" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="100" y="180" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="f_PoJI_ZIrE83fsZ3AQF-22" value="Version" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="260" y="180" width="80" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
