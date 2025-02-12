@@ -55,7 +55,9 @@ pub(crate) fn decode_bin_vromf(file: &[u8], validate: bool) -> Result<(Vec<u8>, 
 		let s = extended_header; // Copying ptr such that indexing below is less verbose
 
 		// Unused header elements, for now
-		let _header_size = u16::from_le_bytes([s[0], s[1]]);
+		let header_size = u16::from_le_bytes([s[0], s[1]]);
+		// No known case where the header is not 8 bytes.
+		assert_eq!(header_size, 8, "Extended header size should be 8 bytes long");
 		let _flags = u16::from_le_bytes([s[2], s[3]]);
 		// The version is always reversed in order. It may never exceed 255
 		let version = [s[7], s[6], s[5], s[4]];
