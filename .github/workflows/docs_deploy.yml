@@ -1,0 +1,33 @@
+name: Deploy Rust Docs
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write  # Required for GitHub Pages deployment
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Documentation
+        run: cargo doc --no-deps --document-private-items
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Documentation Artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: target/doc
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v2
