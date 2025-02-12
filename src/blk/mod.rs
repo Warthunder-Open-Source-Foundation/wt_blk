@@ -87,7 +87,7 @@ fn test_parse_dir(
 	}
 }
 
-/// Highest-level function for unpacking one BLK explicitly, for direct low level control call [`parser::parse_blk`]
+/// Highest-level function for unpacking one BLK explicitly, for direct low level control call [`binary_deserialize::parser::parse_blk`]
 pub fn unpack_blk(
 	file: &mut Vec<u8>,
 	dictionary: Option<&DecoderDictionary>,
