@@ -1,3 +1,65 @@
+//! # Inner container
+//! This module describes the inner container and all of its know features and flags.
+//! > ⚠ **Warning: Unless stated otherwise, all integers are Little-endian**
+//!
+//! ## Terminology
+//! For ease of writing and reading, there are a few terms i will establish for this chapter
+//! - "Names" refers to the strings used for the absolute path in the VROMF image
+//! - "Data" refers to the payload of each file
+//!
+//! In combination, Names and data creates the file that you normally find in a folder once unpacked
+//!
+//! - u32 -> 32-bit unsigned integer
+//! - u64 -> 64-bit unsigned integer
+//! - offset -> absolute offset from 0 in the inner container
+//!
+//! ## Header fields and their purpose
+//!
+//! #### Names header `128 bits`
+//! Offset points to the start of the [names info array](#names-info), count defines how many elements there are<br/>
+//! The first byte also indicates the following:
+//! - 0x20 -> no individual file checksums
+//! - 0x30 -> individual file checksums **and the checksum `Begin` is not 0x00**¹
+//!
+//! |Offset |Count  |Padding |
+//! |-|-|-|
+//! |u32|u32|u64|
+//!
+//! ¹[checksum header](#checksum-header-128-bits)
+//! ---
+//!
+//! #### Data header `128 bits`
+//! Offset points to the start of the [data info array](#names-info), count defines how many elements there are
+//! |Offset |Count |Padding |
+//! |-|-|-|
+//! |u32|u32|u64|
+//! ---
+//!
+//! #### Checksum header `128 bits`
+//! Marks the start and ending region of the checksums, one checksum for each payload.
+//!
+//! 20 byte long sha1 hashes, where each N-th multiple of 20 corresponds to the N-th data block<br/>
+//! ⚠ **Warning: When the `Begin` field is 0x00, it means only the binary container has a checksum, not each individual file though**
+//! |End |Begin |
+//! |-|-|
+//! |u64|u64|
+//! ---
+//!
+//! #### Names Info
+//! An array of offsets to the start of the N-th Name, with their end being a null byte
+//! |Offset |
+//! |-|
+//! |u32|
+//! ---
+//!
+//! #### Data Info
+//! An array of offsets and length pairs pointing to the start of the N-th payload
+//! |Offset |Length |Padding |
+//! |-|-|-|
+//! |u32|u32|u64|
+//! ---
+
+
 use std::{mem::size_of, path::PathBuf};
 use std::io::Write;
 use std::path::Path;

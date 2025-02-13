@@ -11,6 +11,7 @@
 //! |---------|--------------|------|--------|
 //! |0x73465256|`VRFs`       |VRFS  |File has a simple header|
 //! |0x78465256|`VRFx`       |VRFX  |File has an extended header|
+//! ---
 //!
 //!	### Platform type `32 bits`
 //! Describes the platform the file is intended for, appears to serve no significant purpose.
@@ -19,6 +20,7 @@
 //! |0x43500000 |`\0\0PC`     |PC        |
 //! |0x534f6600 |`\0iOS`      |IOS       |
 //! |0x646e06100|`\0and`      |Android   |
+//! ---
 //!
 //!	### Compression format `6 bits`
 //! Defines the format of the inner payload.
@@ -27,6 +29,7 @@
 //! |0x30   |`ZSTD_OBFS`        |ZSTD compressed with obfuscation applied |
 //! |0x10   |`ZSTD_OBFS_NOCHECK`|Same as `ZSTD_OBFS` without checksum     |
 //! |0x20   |`PLAIN`            |Uncompressed                             |
+//! ---
 //!
 //! ### Compression info `32 bits`
 //! The first 6 bits are the [Compression format](#compression-format-6-bits), the trailing bits are the size of the decompressed payload in bytes.
@@ -34,13 +37,15 @@
 //! | Compression format| Size  |
 //! |-------------------|-------|
 //! |31..26             | 25..0 |
+//! ---
 //!
-//! ## Composition of the base header `128 bits - 16 bytes`
+//! ### Composition of the base header `128 bits - 16 bytes`
 //!
 //! |[Header type](#header-type-32-bits)| [Platform](#platform-type-32-bits) | Size of the payload in bytes | [Compression info](#compression-info-32-bits) |
 //! |-|-|-|-|
+//! ---
 //!
-//! ## Composition of the extended header `64 bits - 8 bytes`
+//! ### Composition of the extended header `64 bits - 8 bytes`
 //!
 //! |Size of the extended header in bytes|Flags |Game version|
 //! |-|-|-|
@@ -48,6 +53,7 @@
 //! |2 bytes|2 bytes|4 bytes|
 //!
 //! The version 1.2.3.4 would be encoded as `0x04 0x03 0x02 0x01`
+//! ---
 //!
 //! ## Checksum
 //! The vromf may also contain a 16 byte checksum as indicated by the [Compression format](#compression-format-6-bits).

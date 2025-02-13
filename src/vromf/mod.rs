@@ -17,7 +17,6 @@ pub(crate) mod binary_container;
 
 pub(crate) mod file;
 mod header;
-/// Unpacks the contents after binary unpacking
 pub(crate) mod inner_container;
 #[cfg(test)]
 mod test;
