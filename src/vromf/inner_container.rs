@@ -58,6 +58,9 @@
 //! |-|-|-|
 //! |u32|u32|u64|
 //! ---
+//!
+//! # Illustration of the inner container
+//! ![Illustration](https://raw.githubusercontent.com/Warthunder-Open-Source-Foundation/wt_blk/refs/heads/master/charts/rendered/inner_container.png)
 
 
 use std::{mem::size_of, path::PathBuf};
