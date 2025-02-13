@@ -6,12 +6,18 @@
 //! For ease of writing and reading, there are a few terms i will establish for this chapter
 //! - "Names" refers to the strings used for the absolute path in the VROMF image
 //! - "Data" refers to the payload of each file
-//!
-//! In combination, Names and data creates the file that you normally find in a folder once unpacked
-//!
 //! - u32 -> 32-bit unsigned integer
 //! - u64 -> 64-bit unsigned integer
 //! - offset -> absolute offset from 0 in the inner container
+//!
+//! In combination, Names and data creates the file that you normally find in a folder once unpacked.<br/>
+//! It should be noted, that shared prefixes in names represent a directory.<br/>
+//! Imagine file `A` is in the root, file `B` in a folder called `dir` and directory `C` also in a folder called `dir`<br/>
+//! The corresponding paths would be:
+//! - `A`: `/A`
+//! - `B`: `/dir/B`
+//! - `C`: `/dir/C/`
+//! ---
 //!
 //! ## Header fields and their purpose
 //!
