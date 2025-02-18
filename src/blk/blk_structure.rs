@@ -52,7 +52,7 @@ impl BlkField {
 					// Map of to-replace keys
 					let mut map: IndexMap<BlkString, BlkField> = IndexMap::from_iter(with_name.1);
 					for (key, mut value) in with_name.0 {
-						let replaced = key.replace("override:", "");
+						let replaced = BlkString::from(key.replace("override:", ""));
 						if let Some(inner) = map.get_mut(&replaced) {
 							value.set_name(blk_str(replaced.as_str()));
 							*inner = value;

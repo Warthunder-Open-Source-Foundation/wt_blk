@@ -3,9 +3,9 @@ use std::fmt::{Display, Formatter};
 use std::ops::Deref;
 use std::sync::Arc;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-//pub type BlkString = Arc<String>;
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq, PartialOrd)]
+/// Efficient string wrapper for this specific application
 pub struct BlkString {
 	inner: Arc<String>,
 }
@@ -21,6 +21,8 @@ impl BlkString {
 		Self::new(Arc::from(String::from_utf8_lossy(bytes).to_string()))
 	}
 
+	/// This function should exclusively be used for accessing the string contents, as future
+	/// optimizations will change the internals
 	pub fn as_str(&self) -> &str {
 		self.inner.as_str()
 	}
@@ -30,13 +32,7 @@ impl Deref for BlkString {
 	type Target = str;
 
 	fn deref(&self) -> &Self::Target {
-		self.inner.as_str()
-	}
-}
-
-impl Borrow<String> for BlkString {
-	fn borrow(&self) -> &String {
-		self.inner.as_ref()
+		self.as_str()
 	}
 }
 
@@ -48,7 +44,7 @@ impl Borrow<str> for BlkString {
 
 impl Display for BlkString {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{}", self.deref())
+		write!(f, "{}", self.as_str())
 	}
 }
 
