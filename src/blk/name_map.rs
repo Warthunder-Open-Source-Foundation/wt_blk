@@ -3,7 +3,8 @@ use std::{io::Read, sync::Arc};
 use color_eyre::{eyre::ContextCompat, Report};
 use zstd::Decoder;
 
-use crate::blk::{blk_type::BlkString, error::ParseError, leb128::uleb128_offset};
+use crate::blk::{error::ParseError, leb128::uleb128_offset};
+use crate::blk::blk_string::BlkString;
 
 /// A name map is a collection of shared strings across an entire VROMF file
 /// Its usually in the top-level directory and called `nm` or in the binary vromf : `0xff 0x3f nm` (prefixed with a pair of seemingly random bytes)
