@@ -4,11 +4,8 @@ use color_eyre::Report;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
-use crate::blk::{
-	blk_type::BlkType,
-	util::blk_str,
-};
-use crate::blk::blk_string::BlkString;
+use crate::blk::blk_type::BlkType;
+use crate::blk::blk_string::{blk_str, BlkString};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum BlkField {
@@ -68,7 +65,7 @@ impl BlkField {
 						let replaced = key.replace("override:", "");
 
 						for (_, inner) in map.iter_mut() {
-							if inner.get_name().as_str() == &replaced {
+							if inner.get_name().as_ref() == replaced {
 								value.set_name(blk_str(replaced.as_str()));
 								*inner = value.clone();
 							}
@@ -178,7 +175,8 @@ impl BlkField {
 
 #[cfg(test)]
 mod test {
-	use crate::blk::{blk_structure::BlkField, blk_type::BlkType, util::blk_str};
+	use crate::blk::{blk_structure::BlkField, blk_type::BlkType};
+	use crate::blk::blk_string::blk_str;
 
 	#[test]
 	fn should_override() {

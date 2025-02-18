@@ -6,7 +6,7 @@ use divan::{black_box, Bencher};
 use wt_blk::blk::{make_strict_test, unpack_blk};
 use wt_blk::blk::blk_structure::BlkField;
 use wt_blk::blk::blk_type::BlkType;
-use wt_blk::blk::util::blk_str;
+use wt_blk::blk::blk_string::blk_str;
 use wt_blk::vromf::{File, VromfUnpacker};
 
 fn main() {

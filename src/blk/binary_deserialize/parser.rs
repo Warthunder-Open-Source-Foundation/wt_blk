@@ -12,8 +12,8 @@ use crate::blk::{
 	},
 	leb128::uleb128,
 	name_map::NameMap,
-	util::blk_str,
 };
+use crate::blk::blk_string::blk_str;
 
 /// Lowest-level function which unpacks BLK to [`crate::blk::blk_structure::BlkField`]
 pub fn parse_blk(

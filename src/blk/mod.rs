@@ -10,14 +10,13 @@ use std::{
 pub use ::zstd::dict::DecoderDictionary;
 use cfg_if::cfg_if;
 use color_eyre::Report;
-
+use blk_string::blk_str;
 use crate::blk::{
 	binary_deserialize::parser::parse_blk,
 	blk_structure::BlkField,
 	blk_type::BlkType,
 	file::FileType,
 	name_map::NameMap,
-	util::blk_str,
 	zstd::decode_zstd,
 };
 

@@ -1,8 +1,8 @@
 use std::{
 	fmt::{Display, Formatter as StdFormatter},
 	io,
-	io::Write,
-	sync::Arc,
+	io::Write
+	,
 };
 
 use color_eyre::Report;
@@ -98,7 +98,7 @@ impl BlkType {
 						}
 						buff.push(byte)
 					}
-					Arc::from(String::from_utf8_lossy(&buff).to_string())
+					BlkString::from_lossy(&buff)
 				};
 
 				Some(Self::Str(res))
@@ -395,7 +395,8 @@ impl Display for BlkType {
 
 #[cfg(test)]
 mod test {
-	use crate::blk::{blk_type::BlkType, util::blk_str};
+	use crate::blk::blk_type::BlkType;
+	use crate::blk::blk_string::blk_str;
 
 	#[test]
 	fn test_string() {
