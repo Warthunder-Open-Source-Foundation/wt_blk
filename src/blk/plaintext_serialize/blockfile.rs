@@ -56,7 +56,7 @@ fn escape_value(value: &BlkType) -> String {
 	match value {
 		BlkType::Str(s) => {
 			if s.contains('\"') {
-				format!("{ty} = \"{str}\"", str = s.replace('"', r#"\""#), ty = value.blk_type_name())
+				format!("{ty} = '{s}'", ty = value.blk_type_name())
 			} else {
 				value.to_string()
 			}
@@ -84,7 +84,7 @@ mod test {
 		let root = BlkField::Value(blk_str("totally not escaped"), BlkType::Str(blk_str("this is totally not escaped \" ")));
 		assert_eq!(
 			root.inner_as_blk_text(&mut 0, true).unwrap(),
-			r#""totally not escaped":t = "this is totally not escaped \" ""#
+			r#""totally not escaped":t = 'this is totally not escaped " '"#
 		);
 	}
 }
