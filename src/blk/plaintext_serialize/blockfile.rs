@@ -1,6 +1,7 @@
 use color_eyre::{eyre::bail, Report};
 
 use crate::blk::blk_structure::BlkField;
+use crate::blk::blk_type::{BlkString, BlkType};
 
 impl BlkField {
 	// Public facing formatting fn
@@ -12,7 +13,7 @@ impl BlkField {
 	// Internal fn that actually formats
 	fn inner_as_blk_text(&self, indent_level: &mut usize, is_root: bool) -> Result<String, Report> {
 		match self {
-			BlkField::Value(name, value) => Ok(format!("{name}:{value}")),
+			BlkField::Value(name, value) => Ok(format!("{name}:{value}", name = escape_key(name), value = escape_value(value))),
 			BlkField::Struct(name, fields) => {
 				let indent = "\t".repeat(*indent_level);
 				*indent_level += 1;
@@ -42,14 +43,48 @@ impl BlkField {
 	}
 }
 
+fn escape_key(field: &BlkString) -> String {
+	if field.contains(' ') {
+		format!("\"{field}\"")
+	} else {
+		field.to_string()
+	}
+}
+
+// Slowpath for escaping, it's a rare case
+fn escape_value(value: &BlkType) -> String {
+	match value {
+		BlkType::Str(s) => {
+			if s.contains('\"') {
+				format!("{ty} = \"{str}\"", str = s.replace('"', r#"\""#), ty = value.blk_type_name())
+			} else {
+				value.to_string()
+			}
+		}
+		_ => value.to_string(),
+	}
+}
+
 #[cfg(test)]
 mod test {
+	use crate::blk::blk_structure::BlkField;
+	use crate::blk::blk_type::BlkType;
 	use crate::blk::make_strict_test;
+	use crate::blk::util::blk_str;
 
 	#[test]
 	fn test_expected() {
 		// For testing purposes i should probably make a better way for this
 		let root = make_strict_test();
 		println!("{}", root.inner_as_blk_text(&mut 0, true).unwrap());
+	}
+
+	#[test]
+	fn test_escaping() {
+		let root = BlkField::Value(blk_str("totally not escaped"), BlkType::Str(blk_str("this is totally not escaped \" ")));
+		assert_eq!(
+			root.inner_as_blk_text(&mut 0, true).unwrap(),
+			r#""totally not escaped":t = "this is totally not escaped \" ""#
+		);
 	}
 }
