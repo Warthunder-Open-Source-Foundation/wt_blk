@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::{
 	ffi::OsStr,
 	fmt::{Debug, Formatter},
@@ -8,11 +9,13 @@ use std::{
 	str::FromStr,
 	sync::Arc,
 };
+use std::ops::Not;
 use color_eyre::{
 	eyre::{eyre, ContextCompat},
 	Help,
 	Report,
 };
+use color_eyre::eyre::Context;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use wt_version::Version;
 use zip::{write::SimpleFileOptions, CompressionMethod, ZipWriter};
@@ -70,6 +73,51 @@ pub enum ZipFormat {
 	Compressed(u8),
 }
 
+#[derive(Debug, Clone)]
+pub enum FileFilter {
+	All,
+	OneFolder {
+		remove_base: bool,
+		prefix: Arc<Path>,
+	},
+	FullPathRegex {
+		rex: Arc<Regex>,
+	},
+}
+
+impl FileFilter {
+	pub fn accept(&self, file: &File) -> bool {
+		match self {
+			FileFilter::All => {true}
+			FileFilter::OneFolder { prefix, .. } => {
+				file.path().starts_with(prefix)
+			}
+			FileFilter::FullPathRegex { rex } => {
+				rex.is_match(&file.path().to_string_lossy())
+			}
+		}
+	}
+
+	pub fn base_path_start(&self) -> usize {
+		match self {
+			FileFilter::OneFolder { prefix, .. } => {prefix.to_string_lossy().len()}
+			_ => 0,
+		}
+	}
+
+	pub fn from_regexstr(re: &str) -> Result<Self, Report> {
+		Ok(Self::FullPathRegex {rex: Arc::new(Regex::new(re).context(format!("Invalid regex: {}", re))?)})
+	}
+
+	pub const fn all() -> Self {
+		Self::All
+	}
+
+	pub fn one_folder(prefix: Arc<Path>, remove_base: bool) -> Self {
+		Self::OneFolder { remove_base, prefix }
+	}
+}
+
 impl VromfUnpacker {
 	pub fn from_file(file: &File, validate: bool) -> Result<Self, Report> {
 		let (decoded, metadata) = decode_bin_vromf(file.buf(), validate)?;
@@ -106,7 +154,7 @@ impl VromfUnpacker {
 		files
 			.into_par_iter()
 			.panic_fuse()
-			.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides))
+			.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides, FileFilter::All))
 			.collect::<Result<Vec<File>, Report>>()
 	}
 
@@ -133,7 +181,7 @@ impl VromfUnpacker {
 				.panic_fuse()
 				.map(|mut file| {
 					let mut w = writer(&mut file)?;
-					self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut w)?;
+					self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut w, FileFilter::All)?;
 					Ok(())
 				})
 				.collect::<Result<(), Report>>()
@@ -142,7 +190,7 @@ impl VromfUnpacker {
 				.into_iter()
 				.map(|mut file| {
 					let mut w = writer(&mut file)?;
-					self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut w)?;
+					self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut w, FileFilter::All)?;
 					Ok(())
 				})
 				.collect::<Result<(), Report>>()
@@ -151,10 +199,6 @@ impl VromfUnpacker {
 
 	pub fn unpack_subfolder_to_zip(
 		&self,
-		subfolder: &str,
-		// removes subfolder from start of path
-		// replacing for example `/gamedata/foo/bar` to `/foo/bar` when requesting `/gamedata`
-		remove_root: bool,
 		zip_format: ZipFormat,
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
@@ -162,6 +206,7 @@ impl VromfUnpacker {
 		// false increases global throughput when executed from a threadpool,
 		// but slower when individual calls are performed
 		threaded: bool,
+		filter: FileFilter,
 	) -> Result<Vec<u8>, Report> {
 		// TODO: Figure out some way to deduplicate this
 		// ParIter and Iter are obv. incompatible so this might need macro magic of sorts
@@ -170,16 +215,14 @@ impl VromfUnpacker {
 			files
 				.into_par_iter()
 				.panic_fuse()
-				.filter(|f|f.path().starts_with(subfolder))
 				.cloned()
-				.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides))
+				.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides, filter.clone()))
 				.collect::<Result<Vec<File>, Report>>()?
 		} else {
 			files
 				.iter()
-				.filter(|f|f.path().starts_with(subfolder))
 				.cloned()
-				.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides))
+				.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides, filter.clone()))
 				.collect::<Result<Vec<File>, Report>>()?
 		};
 
@@ -193,7 +236,7 @@ impl VromfUnpacker {
 
 		for f in unpacked.into_iter() {
 			writer.start_file(
-				&f.path().to_string_lossy()[if remove_root { subfolder.len().. } else { 0.. }],
+				&f.path().to_string_lossy()[filter.base_path_start()..],
 				SimpleFileOptions::default()
 					.compression_level(compression_level)
 					.compression_method(compression_method),
@@ -213,7 +256,7 @@ impl VromfUnpacker {
 		// Runs unpacking in the global rayon threadpool if true, otherwise its single threaded
 		threaded: bool,
 	) -> Result<Vec<u8>, Report> {
-		self.unpack_subfolder_to_zip("", false, zip_format, unpack_blk_into, apply_overrides, threaded)
+		self.unpack_subfolder_to_zip( zip_format, unpack_blk_into, apply_overrides, threaded, FileFilter::All)
 	}
 
 	pub fn unpack_one(
@@ -221,6 +264,7 @@ impl VromfUnpacker {
 		path_name: &Path,
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
+		file_filter: FileFilter
 	) -> Result<File, Report> {
 		let file = self
 			.files
@@ -232,7 +276,7 @@ impl VromfUnpacker {
 			))
 			.suggestion("Validate file-name and ensure it was typed correctly")?
 			.to_owned();
-		self.unpack_file(file, unpack_blk_into, apply_overrides)
+		self.unpack_file(file, unpack_blk_into, apply_overrides, file_filter)
 	}
 
 	pub fn unpack_file(
@@ -240,20 +284,26 @@ impl VromfUnpacker {
 		mut file: File,
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
+		filter: FileFilter,
 	) -> Result<File, Report> {
 		let mut buf = Cursor::new(Vec::with_capacity(4096));
-		self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut buf)?;
+		self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut buf, filter)?;
 		*file.buf_mut() = buf.into_inner();
 		Ok(file)
 	}
 
+	/// This is where the unpacking actually occurs
 	pub fn unpack_file_with_writer(
 		&self,
 		file: &mut File,
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
 		mut writer: impl Write,
+		filter: FileFilter,
 	) -> Result<(), Report> {
+		if filter.accept(file).not() {
+			return Ok(());
+		}
 		match () {
 			_ if maybe_blk(&file) => {
 				if let Some(format) = unpack_blk_into {
@@ -295,7 +345,7 @@ impl VromfUnpacker {
 		};
 
 		if let Ok((_, version_file)) = self
-			.unpack_one(Path::new("version"), None, false)
+			.unpack_one(Path::new("version"), None, false, FileFilter::All)
 			.map(|e| e.split())
 		{
 			let s = String::from_utf8(version_file)?;

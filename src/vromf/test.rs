@@ -8,6 +8,7 @@ use crate::vromf::{
 	unpacker::{BlkOutputFormat, VromfUnpacker, ZipFormat},
 	File,
 };
+use crate::vromf::unpacker::FileFilter;
 
 #[test]
 fn grp_vromf() {
@@ -45,6 +46,7 @@ fn regional() {
 			&PathBuf::from_str("dldata/downloadable_decals.blk").unwrap(),
 			Some(BlkOutputFormat::BlkText),
 			true,
+			FileFilter::All,
 		)
 		.unwrap();
 }
