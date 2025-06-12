@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use pyo3::prelude::*;
 use wt_blk::blk::DecoderDictionary;
-use wt_blk::blk::nm_file::NameMap;
+use wt_blk::blk::name_map::NameMap;
 
 /// Deserialise a binary BLK file into a JSON string
 #[pyfunction]
