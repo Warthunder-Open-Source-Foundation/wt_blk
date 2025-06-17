@@ -1,30 +1,50 @@
-use std::borrow::Borrow;
-use std::fmt::{Display, Formatter};
 use std::ops::Deref;
+use std::borrow::Borrow;
+use std::cmp::Ordering;
+use std::fmt::{Debug, Display, Formatter};
+use std::hash::{Hash, Hasher};
+use std::ops::{Range};
 use std::sync::Arc;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-#[derive(Debug, Clone, PartialEq, Hash, Eq, PartialOrd)]
+#[derive(Clone)]
 /// Efficient string wrapper for this specific application
 pub struct BlkString {
-	inner: Arc<String>,
+	inner: Arc<RefBlkString>,
+}
+
+#[derive(Clone)]
+enum RefBlkString {
+	Referenced {
+		from: Arc<String>,
+		range: Range<usize>,
+	},
+	Owned {
+		inner: String,
+	}
 }
 
 impl BlkString {
+	/// Creates Owned BlkString allocating the string if neccesary
 	pub fn new(inner: impl Into<String>) -> Self {
 		Self {
-			inner: Arc::new(inner.into()),
+			inner: Arc::new(RefBlkString::Owned { inner: inner.into() }),
 		}
 	}
 
-	pub fn from_lossy(bytes: &[u8]) -> Self {
-		Self { inner: (Arc::from(String::from_utf8_lossy(bytes).to_string())) }
+	pub fn from_range(memory: Arc<String>, range: Range<usize>) -> Self {
+		Self { inner: Arc::new(RefBlkString::Referenced { from: memory, range }) }
 	}
 
 	/// This function should exclusively be used for accessing the string contents, as future
 	/// optimizations will change the internals
 	pub fn as_str(&self) -> &str {
-		self.inner.as_str()
+		match self.inner.deref() {
+			RefBlkString::Referenced { from, range } => {
+				from[range]
+			}
+			RefBlkString::Owned { inner } => inner.as_str()
+		}
 	}
 }
 
@@ -79,6 +99,32 @@ impl<'de> Deserialize<'de> for BlkString {
 		Ok(BlkString {
 			inner: Arc::new(s),
 		})
+	}
+}
+
+impl Debug for BlkString {
+	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+		self.as_str().fmt(f)
+	}
+}
+
+impl PartialEq for BlkString {
+	fn eq(&self, other: &Self) -> bool {
+		self.as_str().eq(other.as_str())
+	}
+}
+
+impl Eq for BlkString{}
+
+impl Hash for BlkString {
+	fn hash<H: Hasher>(&self, state: &mut H) {
+		self.as_str().hash(state);
+	}
+}
+
+impl PartialOrd for BlkString {
+	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+		self.as_str().partial_cmp(other.as_str())
 	}
 }
 

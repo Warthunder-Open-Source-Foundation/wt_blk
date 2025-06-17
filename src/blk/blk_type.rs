@@ -77,6 +77,7 @@ impl BlkType {
 		field: &[u8],
 		data_region: &[u8],
 		name_map: &[BlkString],
+		fat_name_map: &[BlkString],
 	) -> Option<Self> {
 		match type_id {
 			STRING => {
@@ -90,15 +91,7 @@ impl BlkType {
 				let res: BlkString = if in_nm {
 					name_map[offset as usize].clone()
 				} else {
-					let data_region = &data_region[(offset as usize)..];
-					let mut buff = Vec::with_capacity(32);
-					for &byte in data_region {
-						if byte == 0 {
-							break;
-						}
-						buff.push(byte)
-					}
-					BlkString::from_lossy(&buff)
+					fat_name_map[offset as usize].clone()
 				};
 
 				Some(Self::Str(res))
