@@ -11,14 +11,14 @@ pub struct BlkString {
 }
 
 impl BlkString {
-	pub fn new(inner: Arc<String>) -> Self {
+	pub fn new(inner: impl Into<String>) -> Self {
 		Self {
-			inner,
+			inner: Arc::new(inner.into()),
 		}
 	}
 
 	pub fn from_lossy(bytes: &[u8]) -> Self {
-		Self::new(Arc::from(String::from_utf8_lossy(bytes).to_string()))
+		Self { inner: (Arc::from(String::from_utf8_lossy(bytes).to_string())) }
 	}
 
 	/// This function should exclusively be used for accessing the string contents, as future
@@ -50,7 +50,7 @@ impl Display for BlkString {
 
 impl From<String> for BlkString {
 	fn from(value: String) -> Self {
-		Self::new(Arc::new(value))
+		Self::new(value)
 	}
 }
 
