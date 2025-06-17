@@ -1,7 +1,7 @@
 use color_eyre::{eyre::bail, Report};
-
+use crate::blk::blk_string::BlkString;
 use crate::blk::blk_structure::BlkField;
-use crate::blk::blk_type::{BlkString, BlkType};
+use crate::blk::blk_type::BlkType;
 
 impl BlkField {
 	// Public facing formatting fn

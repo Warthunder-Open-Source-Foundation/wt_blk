@@ -3,7 +3,8 @@ use std::{collections::HashMap, io::Write, mem, sync::Arc};
 use color_eyre::Report;
 use serde_json::ser::{Formatter, PrettyFormatter};
 
-use crate::blk::{blk_structure::BlkField, blk_type::BlkString};
+use crate::blk::blk_structure::BlkField;
+use crate::blk::blk_string::BlkString;
 
 impl BlkField {
 	/// Merges duplicate keys in struct fields into the Merged array variant
