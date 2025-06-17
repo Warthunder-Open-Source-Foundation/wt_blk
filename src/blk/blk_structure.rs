@@ -5,10 +5,9 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 use crate::blk::{
-	blk_type::BlkType,
+	blk_type::{BlkString, BlkType},
 	util::blk_str,
 };
-use crate::blk::blk_string::BlkString;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum BlkField {

@@ -65,7 +65,6 @@ mod plaintext_deserialize;
 
 /// Implementation for deserializing internal representation to binary form
 pub mod binary_deserialize;
-mod blk_string;
 
 #[allow(dead_code)]
 fn test_parse_dir(

@@ -16,7 +16,8 @@ use crate::blk::{
 	blk_type::blk_type_id::*,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset, bytes_to_uint},
 };
-use crate::blk::blk_string::BlkString;
+
+pub type BlkString = Arc<String>;
 
 pub mod blk_type_id {
 	pub const STRING: u8 = 0x01;
