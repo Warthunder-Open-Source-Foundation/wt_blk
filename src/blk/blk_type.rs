@@ -1,8 +1,8 @@
 use std::{
 	fmt::{Display, Formatter as StdFormatter},
 	io,
-	io::Write,
-	sync::Arc,
+	io::Write
+	,
 };
 
 use color_eyre::Report;
@@ -16,8 +16,7 @@ use crate::blk::{
 	blk_type::blk_type_id::*,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset, bytes_to_uint},
 };
-
-pub type BlkString = Arc<String>;
+use crate::blk::blk_string::BlkString;
 
 pub mod blk_type_id {
 	pub const STRING: u8 = 0x01;
@@ -99,7 +98,7 @@ impl BlkType {
 						}
 						buff.push(byte)
 					}
-					Arc::from(String::from_utf8_lossy(&buff).to_string())
+					BlkString::from_lossy(&buff)
 				};
 
 				Some(Self::Str(res))
@@ -396,7 +395,8 @@ impl Display for BlkType {
 
 #[cfg(test)]
 mod test {
-	use crate::blk::{blk_type::BlkType, util::blk_str};
+	use crate::blk::blk_type::BlkType;
+	use crate::blk::blk_string::blk_str;
 
 	#[test]
 	fn test_string() {

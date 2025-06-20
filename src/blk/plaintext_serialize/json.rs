@@ -1,9 +1,10 @@
-use std::{collections::HashMap, io::Write, mem, sync::Arc};
+use std::{collections::HashMap, io::Write, mem};
 
 use color_eyre::Report;
 use serde_json::ser::{Formatter, PrettyFormatter};
 
-use crate::blk::{blk_structure::BlkField, blk_type::BlkString};
+use crate::blk::blk_structure::BlkField;
+use crate::blk::blk_string::BlkString;
 
 impl BlkField {
 	/// Merges duplicate keys in struct fields into the Merged array variant
@@ -24,7 +25,7 @@ impl BlkField {
 
 			for (i, elem) in old.iter().enumerate() {
 				let name = elem.as_ref().expect("Infallible").get_name();
-				if let Some(dupes) = maybe_merge.get_mut(name.as_ref()) {
+				if let Some(dupes) = maybe_merge.get_mut(name.as_str()) {
 					dupes.push(i);
 				} else {
 					maybe_merge.insert(name.clone(), vec![i]);
@@ -40,7 +41,7 @@ impl BlkField {
 						.into_iter()
 						.map(|e| old[e].take().expect("Infallible"))
 						.collect();
-					old[first_element] = Some(BlkField::Merged(Arc::from(key), to_merge));
+					old[first_element] = Some(BlkField::Merged(key, to_merge));
 				});
 			*fields = old.into_iter().filter_map(|e| e).collect();
 		}
@@ -143,7 +144,8 @@ impl BlkField {
 mod test {
 	use std::fs;
 
-	use crate::blk::{blk_structure::BlkField, blk_type::BlkType, make_strict_test, util::blk_str};
+	use crate::blk::{blk_structure::BlkField, blk_type::BlkType, make_strict_test};
+	use crate::blk::blk_string::blk_str;
 
 	#[test]
 	fn streaming() {
