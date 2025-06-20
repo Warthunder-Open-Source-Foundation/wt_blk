@@ -1,7 +1,7 @@
 use color_eyre::{eyre::bail, Report};
-
+use crate::blk::blk_string::BlkString;
 use crate::blk::blk_structure::BlkField;
-use crate::blk::blk_type::{BlkString, BlkType};
+use crate::blk::blk_type::BlkType;
 
 impl BlkField {
 	// Public facing formatting fn
@@ -67,10 +67,10 @@ fn escape_value(value: &BlkType) -> String {
 
 #[cfg(test)]
 mod test {
+	use crate::blk::blk_string::blk_str;
 	use crate::blk::blk_structure::BlkField;
 	use crate::blk::blk_type::BlkType;
 	use crate::blk::make_strict_test;
-	use crate::blk::util::blk_str;
 
 	#[test]
 	fn test_expected() {
