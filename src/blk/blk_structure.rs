@@ -175,7 +175,7 @@ impl BlkField {
 
 #[cfg(test)]
 mod test {
-	use crate::blk::{blk_structure::BlkField, blk_type::BlkType};
+	use crate::blk::{blk_structure::BlkField, blk_type::BlkType, make_strict_test};
 	use crate::blk::blk_string::blk_str;
 
 	#[test]
@@ -272,5 +272,13 @@ mod test {
 		before.apply_overrides(false);
 
 		assert_eq!(before, expected);
+	}
+
+	#[test]
+	fn ptr_value() {
+		let blk = make_strict_test();
+		assert_eq!(*blk.pointer("int").unwrap().value().unwrap(), BlkType::Int(42));
+		assert_eq!(*blk.pointer("alpha/str").unwrap().value().unwrap(), BlkType::Str(blk_str("hello")));
+		assert!(blk.pointer("alpha/noexist").is_err());
 	}
 }
