@@ -119,33 +119,32 @@ impl BlkField {
 
 	pub fn pointer(&self, ptr: &str) -> Result<BlkField, Report> {
 		let commands = ptr.split("/");
-		self.pointer_internal(ptr, &mut commands.into_iter().peekable())
+		self.pointer_internal(&mut commands.into_iter().peekable())
 	}
 
 	fn pointer_internal<'a>(
 		&self,
-		ptr: &str,
 		pointers: &mut Peekable<impl Iterator<Item = &'a str>>,
 	) -> Result<BlkField, Report> {
 		let current_search = pointers.next();
 		match self {
 			BlkField::Value(_k, _v) => {
-				if let Some(_) = current_search {
-					bail!("Did not expect end but ended up in value")
+				if let Some(needle) = current_search {
+					bail!("{needle} is a value, not a struct")
 				} else {
 					Ok(self.clone())
 				}
 			},
-			BlkField::Struct(_k, v) | BlkField::Merged(_k, v) => {
+			BlkField::Struct(k, v) | BlkField::Merged(k, v) => {
 				if let Some(search) = current_search {
 					for value in v {
 						if value.get_name().as_str() == search {
-							return value.pointer_internal(ptr, pointers);
+							return value.pointer_internal(pointers);
 						}
 					}
-					bail!("Substructure not in struct")
+					bail!("{search} is not contained in {k}")
 				} else {
-					bail!("Search ended before finding target")
+					bail!("key is not contained in {}", self.get_name())
 				}
 			},
 		}
