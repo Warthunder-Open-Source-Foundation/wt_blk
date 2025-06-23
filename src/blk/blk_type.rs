@@ -18,6 +18,7 @@ use crate::blk::{
 };
 use crate::blk::blk_string::BlkString;
 
+/// Unique ID for each type found in BLK
 pub mod blk_type_id {
 	pub const STRING: u8 = 0x01;
 	pub const INT: u8 = 0x02;
@@ -206,6 +207,9 @@ impl BlkType {
 	// grcov-excl-stop
 
 	// grcov-excl-start
+	
+	/// Defines if the value is stored directly in the reference section,
+	/// or if the value found is an offset to the value section
 	pub const fn is_inline(&self) -> bool {
 		match self {
 			BlkType::Str(_) => false,
@@ -261,7 +265,7 @@ impl BlkType {
 			BlkType::Color { .. } => "c",
 		}
 	}
-
+	
 	pub fn is_valid_type(t: &str) -> bool {
 		matches!(
 			t,

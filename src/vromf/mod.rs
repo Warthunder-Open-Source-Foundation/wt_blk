@@ -13,11 +13,11 @@ mod enums;
 mod util;
 
 /// This module unpacks the "outer" shell of the vromf image
-pub(crate) mod binary_container;
+pub mod binary_container;
 
 pub(crate) mod file;
 mod header;
-pub(crate) mod inner_container;
+pub mod inner_container;
 #[cfg(test)]
 mod test;
 mod unpacker;
