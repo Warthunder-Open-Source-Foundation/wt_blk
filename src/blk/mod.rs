@@ -16,7 +16,7 @@
 //! - Name/Name map -> String as key or value in the BLK, map is an array of Strings
 //!
 //! ### Types
-//! BLK has 12 data-types
+//! BLK has 12 data-types, 6 of which are unique, the rest being arrays of said types.
 //!
 //! |Name|Byte identifier|Layout|Size in bytes|[Inline](#inlining)|
 //! |-|-|-|-|-|

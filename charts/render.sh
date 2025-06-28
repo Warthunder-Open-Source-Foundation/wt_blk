@@ -2,5 +2,5 @@
 
 for file in *.drawio
 do
-  drawio -x -f png "$file" -o rendered/
+  drawio --scale 2 -x -f png "$file" -o rendered/
 done
