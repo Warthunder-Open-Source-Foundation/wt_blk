@@ -162,6 +162,8 @@ pub fn parse_blk(
 			)
 		})
 	};
+	
+	//TODO:  Couple this step with `results` to avoid allocating it
 
 	// Create a flat hierarchy of all blocks including their non-block fields
 	// This ensures all values are actually assigned
