@@ -79,13 +79,9 @@ pub fn parse_blk(
 
 	let _ptr = (); // Shadowing ptr causes it to become unusable, especially on accident
 
-	let mut results: Vec<(usize, Option<BlkField>)> = Vec::with_capacity(params_info.len() / 8);
-
-	let chunks = params_info.array_chunks::<8>();
-	if chunks.remainder().len() != 0 {
-		error!("Params info chunks did not align to 8 bytes")
-	} // TODO: Decide whether or not this constitutes a hard crash
-	for chunk in chunks {
+	// Parses the nth element from the params section
+	let get_nth_param = |index: usize| -> Result<BlkField, ParseError> {
+		let chunk: [u8; 8] = params_info[index * 8..(index + 1) * 8].try_into().unwrap();
 		let name_id_raw = &chunk[0..3];
 		let name_id = u32::from_le_bytes([name_id_raw[0], name_id_raw[1], name_id_raw[2], 0]);
 		let type_id = chunk[3];
@@ -114,15 +110,15 @@ pub fn parse_blk(
 					.parsed
 					.as_slice(),
 			)
-			.ok_or(BadBlkValue)?
+				.ok_or(BadBlkValue)?
 		} else {
 			BlkType::from_raw_param_info(type_id, data, params_data, names.as_ref())
 				.ok_or(BadBlkValue)?
 		};
 
 		let field = BlkField::Value(name, parsed);
-		results.push((name_id as usize, Some(field)));
-	}
+		Ok(field)
+	};
 
 	let mut block_ptr = 0;
 	let block_id_to_name = |id| {
@@ -179,20 +175,12 @@ pub fn parse_blk(
 		};
 		for i in (ptr)..(ptr + field_count) {
 			field.fields.push(
-				results[i]
-					.1
-					.take()
-					.expect("Infallible, already taken value"),
+				get_nth_param(i)?,
 			);
 		}
 		ptr += field_count;
 		flat_map.push(Some(field));
 	}
-	#[cfg(debug_assertions)]
-	assert!(
-		results.into_iter().all(|e| e.1.is_none()),
-		"unused values in results"
-	);
 
 	let out = BlkField::from_flat_blocks(&mut flat_map)
 		.map_err(|e| ParseError::BlkBlockBuilderError(e))?;
