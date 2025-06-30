@@ -1,0 +1,12 @@
+[package]
+name = "blk_binary_bench"
+version = "0.1.0"
+edition = "2024"
+
+[profile.release]
+opt-level = 3
+lto = true
+debug = true
+
+[dependencies]
+wt_blk = { path = "../"}
