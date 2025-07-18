@@ -21,6 +21,9 @@ pub fn parse_blk(
 	is_slim: bool,
 	shared_name_map: Option<Arc<NameMap>>,
 ) -> Result<BlkField, ParseError> {
+	#[cfg(feature = "instrument_binary_blk")]
+	eprint!("Unpacking {} blk {}, ", if is_slim {"slim"} else {"fat"}, if shared_name_map.is_some() {"with NM"} else {"without NM"});
+	
 	let mut ptr = 0;
 
 	// Globally increments ptr and returns next uleb integer from file
@@ -45,6 +48,8 @@ pub fn parse_blk(
 	};
 
 	let names_count = next_uleb(&mut ptr)?;
+	#[cfg(feature = "instrument_binary_blk")]
+	eprint!("{names_count} Names in file, ");
 
 	let names = if is_slim {
 		// TODO Figure out if names_count dictates the existence of a name map or if it may be 0 without requiring a name map
@@ -67,7 +72,13 @@ pub fn parse_blk(
 
 	let blocks_count = next_uleb(&mut ptr)?;
 
+	#[cfg(feature = "instrument_binary_blk")]
+	eprint!("{blocks_count} blocks, ");
+
 	let params_count = next_uleb(&mut ptr)?;
+
+	#[cfg(feature = "instrument_binary_blk")]
+	eprintln!("{params_count} parameters, ");
 
 	let params_data_size = next_uleb(&mut ptr)?;
 
@@ -115,6 +126,8 @@ pub fn parse_blk(
 			BlkType::from_raw_param_info(type_id, data, params_data, names.as_ref())
 				.ok_or(BadBlkValue)?
 		};
+		#[cfg(feature = "instrument_binary_blk")]
+		eprintln!("KV {index}: [{name_id}]{name}:{}", parsed.to_string());
 
 		let field = BlkField::Value(name, parsed);
 		Ok(field)

@@ -55,6 +55,7 @@ divan = "^0.1.17"
 
 [features]
 performance_stamp = []
+instrument_binary_blk = []
 
 [[bench]]
 name = "blk"
