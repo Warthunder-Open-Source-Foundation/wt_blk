@@ -58,6 +58,7 @@ impl BlkField {
 		let range = parent.location_range();
 		let mut block = BlkField::Struct(parent.name, parent.fields);
 
+		block.reserve_fields(range.len());
 		for flat_block in range {
 			let new_parent = flat_blocks[flat_block].take().ok_or(TakenElementMissing)?;
 			block

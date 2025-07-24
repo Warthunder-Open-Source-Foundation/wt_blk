@@ -92,6 +92,16 @@ impl BlkField {
 		}
 	}
 
+	/// Reserves space for at least `additional` more fields to be appended
+	pub fn reserve_fields(&mut self, additional :usize) {
+		match self {
+			BlkField::Struct(_, fields) | BlkField::Merged(_, fields) => {
+				fields.reserve(additional)
+			},
+			BlkField::Value(_, _) => {}
+		}
+	}
+
 	pub fn get_name(&self) -> BlkString {
 		match self {
 			BlkField::Value(name, _) | BlkField::Struct(name, _) | BlkField::Merged(name, _) => {
