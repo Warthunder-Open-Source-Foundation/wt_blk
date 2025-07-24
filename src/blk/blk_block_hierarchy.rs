@@ -58,15 +58,10 @@ impl BlkField {
 		let range = parent.location_range();
 		let mut block = BlkField::Struct(parent.name, parent.fields);
 
-		let block_range = flat_blocks[range]
-			.iter_mut()
-			.map(|e| e.take())
-			.collect::<Option<Vec<FlatBlock>>>()
-			.ok_or(TakenElementMissing)?;
-
-		for flat_block in block_range {
+		for flat_block in range {
+			let new_parent = flat_blocks[flat_block].take().ok_or(TakenElementMissing)?;
 			block
-				.insert_field(Self::from_flat_blocks_with_parent(flat_blocks, flat_block)?)
+				.insert_field(Self::from_flat_blocks_with_parent(flat_blocks, new_parent)?)
 				.ok_or(InsertingIntoNonStruct)?;
 		}
 
