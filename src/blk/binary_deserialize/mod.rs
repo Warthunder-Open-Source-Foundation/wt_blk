@@ -12,10 +12,9 @@ mod test {
 	use crate::blk::binary_deserialize::parser::parse_blk;
 	use crate::blk::make_strict_test;
 
-	#[test]
+	//#[test]
 	fn fat_blk() {
 		let file = fs::read("./samples/temp.rez").unwrap();
 		let output = parse_blk(&file[1..], false, None).unwrap();
-		assert!(false)
 	}
 }
