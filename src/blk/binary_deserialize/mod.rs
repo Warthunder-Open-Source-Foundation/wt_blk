@@ -1,6 +1,4 @@
-use std::fs;
 
-use crate::blk::{binary_deserialize::parser::parse_blk, make_strict_test};
 
 /// Exports core function for unpacking BLK file
 pub mod parser;

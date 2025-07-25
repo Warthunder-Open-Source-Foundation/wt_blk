@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::Write, mem};
+use std::{io::Write, mem};
 
 use color_eyre::Report;
 use foldhash::HashMapExt;
