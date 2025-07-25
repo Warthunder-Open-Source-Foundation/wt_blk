@@ -21,12 +21,12 @@ impl BlkField {
 				.collect::<Vec<_>>(); // Yoink the old vector to merge its fields
 
 			// Key: Field-name, Value: Indexes of duplicates found
-			let mut duplicates: foldhash::HashMap<BlkString, SmallVec<[u16; 8]>> =
+			let mut duplicates: foldhash::HashMap<BlkString, SmallVec<[u16; 4]>> =
 				foldhash::HashMap::with_capacity(to_merge.len());
 
 			for (i, elem) in to_merge.iter().enumerate() {
 				let name = elem.as_ref().expect("Infallible").get_name();
-				// Saving some space, as there won't be more than 2^16 duplicate fields
+				// Saving some space, as there won't be more than 2^16 fields
 				let i = i.try_into()?;
 				duplicates.entry(name)
 					.and_modify(|e|e.push(i))
