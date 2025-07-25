@@ -15,36 +15,35 @@ impl BlkField {
 				field.merge_fields();
 			}
 
-			let mut old = mem::take(fields)
+			let mut to_merge = mem::take(fields)
 				.into_iter()
 				.map(|field| Some(field))
 				.collect::<Vec<_>>(); // Yoink the old vector to merge its fields
 
 			// Key: Field-name, Value: Indexes of duplicates found
-			let mut maybe_merge: foldhash::HashMap<BlkString, Vec<usize>> =
-				foldhash::HashMap::with_capacity(old.len());
+			let mut duplicates: foldhash::HashMap<BlkString, Vec<usize>> =
+				foldhash::HashMap::with_capacity(to_merge.len());
 
-			for (i, elem) in old.iter().enumerate() {
+			for (i, elem) in to_merge.iter().enumerate() {
 				let name = elem.as_ref().expect("Infallible").get_name();
-				if let Some(dupes) = maybe_merge.get_mut(name.as_str()) {
-					dupes.push(i);
-				} else {
-					maybe_merge.insert(name.clone(), vec![i]);
-				}
+				duplicates.entry(name)
+					.and_modify(|e|e.push(i))
+					.or_insert_with(|| vec![i]);
 			}
 
-			maybe_merge
+			duplicates
 				.into_iter()
+				// Skip any key with only one occurrence
 				.filter(|e| e.1.len() > 1)
 				.for_each(|(key, indexes)| {
-					let first_element = indexes[0];
-					let to_merge = indexes
+					let merge_into = indexes[0];
+					let others = indexes
 						.into_iter()
-						.map(|e| old[e].take().expect("Infallible"))
+						.map(|e| to_merge[e].take().expect("Infallible"))
 						.collect();
-					old[first_element] = Some(BlkField::Merged(key, to_merge));
+					to_merge[merge_into] = Some(BlkField::Merged(key, others));
 				});
-			*fields = old.into_iter().filter_map(|e| e).collect();
+			*fields = to_merge.into_iter().filter_map(|e| e).collect();
 		}
 	}
 

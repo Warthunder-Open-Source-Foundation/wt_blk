@@ -5,13 +5,4 @@ pub mod parser;
 
 #[cfg(test)]
 mod test {
-	use std::fs;
-
-	use crate::blk::{binary_deserialize::parser::parse_blk, make_strict_test};
-
-	//#[test]
-	fn fat_blk() {
-		let file = fs::read("./samples/temp.rez").unwrap();
-		let output = parse_blk(&file[1..], false, None).unwrap();
-	}
 }
