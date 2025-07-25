@@ -55,11 +55,10 @@ impl BlkField {
 	}
 
 	pub fn as_serde_json_string(&self) -> Result<String, Report> {
-		let mut res = vec![];
-		self.as_serde_json_streaming(&mut res)?;
-		Ok(String::from_utf8(res)?)
+		Ok(String::from_utf8(self.as_serde_json()?)?)
 	}
 
+	/// Ensure the writer is buffered, since this will call write many many times
 	pub fn as_serde_json_streaming(&self, w: &mut impl Write) -> Result<(), Report> {
 		// let mut ser = PrettyFormatter::with_indent(b"\t");
 		let mut ser = PrettyFormatter::new();
