@@ -3,7 +3,7 @@
 //! > ⚠ **Warning: Unless stated otherwise, all integers are Little-endian**
 //! ## Header fields and their purpose
 //!
-//! 	### Header type `32 bits`
+//! ### Header type `32 bits`
 //!
 //! The base header is 16 bytes long, the extended version adds 8 additional bytes of information following the base.
 //!
@@ -13,7 +13,7 @@
 //! |0x78465256|`VRFx`       |VRFX  |File has an extended header|
 //! ---
 //!
-//! 	### Platform type `32 bits`
+//! ### Platform type `32 bits`
 //! Describes the platform the file is intended for, appears to serve no significant purpose.
 //! | Hex u32   | String repr.| Platform |
 //! |-----------|-------------|----------|
@@ -22,7 +22,7 @@
 //! |0x646e06100|`\0and`      |Android   |
 //! ---
 //!
-//! 	### Compression format `6 bits`
+//! ### Compression format `6 bits`
 //! Defines the format of the inner payload.
 //! | Hex   | Name              | Description of binary payload           |
 //! |-------|-------------------|-----------------------------------------|
