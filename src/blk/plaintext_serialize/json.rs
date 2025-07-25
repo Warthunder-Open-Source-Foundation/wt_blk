@@ -1,10 +1,10 @@
 use std::{collections::HashMap, io::Write, mem};
 
 use color_eyre::Report;
+use foldhash::HashMapExt;
 use serde_json::ser::{Formatter, PrettyFormatter};
 
-use crate::blk::blk_structure::BlkField;
-use crate::blk::blk_string::BlkString;
+use crate::blk::{blk_string::BlkString, blk_structure::BlkField};
 
 impl BlkField {
 	/// Merges duplicate keys in struct fields into the Merged array variant
@@ -21,7 +21,8 @@ impl BlkField {
 				.collect::<Vec<_>>(); // Yoink the old vector to merge its fields
 
 			// Key: Field-name, Value: Indexes of duplicates found
-			let mut maybe_merge: HashMap<BlkString, Vec<usize>> = HashMap::with_capacity(old.len());
+			let mut maybe_merge: foldhash::HashMap<BlkString, Vec<usize>> =
+				foldhash::HashMap::with_capacity(old.len());
 
 			for (i, elem) in old.iter().enumerate() {
 				let name = elem.as_ref().expect("Infallible").get_name();
@@ -144,8 +145,12 @@ impl BlkField {
 mod test {
 	use std::fs;
 
-	use crate::blk::{blk_structure::BlkField, blk_type::BlkType, make_strict_test};
-	use crate::blk::blk_string::blk_str;
+	use crate::blk::{
+		blk_string::blk_str,
+		blk_structure::BlkField,
+		blk_type::BlkType,
+		make_strict_test,
+	};
 
 	#[test]
 	fn streaming() {

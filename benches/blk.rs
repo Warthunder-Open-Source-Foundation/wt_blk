@@ -1,13 +1,16 @@
-use std::fs;
-use std::ops::Deref;
-use std::path::Path;
-use std::time::Duration;
+use std::{fs, ops::Deref, path::Path, time::Duration};
+
 use divan::{black_box, Bencher};
-use wt_blk::blk::{make_strict_test, unpack_blk};
-use wt_blk::blk::blk_structure::BlkField;
-use wt_blk::blk::blk_type::BlkType;
-use wt_blk::blk::blk_string::blk_str;
-use wt_blk::vromf::{File, VromfUnpacker};
+use wt_blk::{
+	blk::{
+		blk_string::blk_str,
+		blk_structure::BlkField,
+		blk_type::BlkType,
+		make_strict_test,
+		unpack_blk,
+	},
+	vromf::{File, VromfUnpacker},
+};
 
 fn main() {
 	// Run registered benchmarks.
@@ -21,8 +24,15 @@ min_time = Duration::from_secs(3),
 ignore
 )]
 fn streaming_merge(bencher: Bencher) {
-	let unpacker = VromfUnpacker::from_file(&File::new("samples/aces.vromfs.bin").unwrap(), false).unwrap();
-	let mut raw_blk = unpacker.unpack_one(Path::new("gamedata/units/tankmodels/germ_leopard_2a4.blk"), None, false).unwrap();
+	let unpacker =
+		VromfUnpacker::from_file(&File::new("samples/aces.vromfs.bin").unwrap(), false).unwrap();
+	let mut raw_blk = unpacker
+		.unpack_one(
+			Path::new("gamedata/units/tankmodels/germ_leopard_2a4.blk"),
+			None,
+			false,
+		)
+		.unwrap();
 	let mut blk = unpack_blk(&mut raw_blk.buf_mut(), unpacker.dict(), unpacker.nm()).unwrap();
 
 	bencher.bench_local(move || {
@@ -34,11 +44,24 @@ fn streaming_merge(bencher: Bencher) {
 min_time = Duration::from_secs(3),
 )]
 fn general_unpack(bencher: Bencher) {
-	let unpacker = VromfUnpacker::from_file(&File::new("samples/aces.vromfs.bin").unwrap(), false).unwrap();
-	let mut raw_blk = unpacker.unpack_one(Path::new("gamedata/units/tankmodels/germ_leopard_2a4.blk"), None, false).unwrap();
+	let unpacker =
+		VromfUnpacker::from_file(&File::new("samples/aces.vromfs.bin").unwrap(), false).unwrap();
+	let mut raw_blk = unpacker
+		.unpack_one(
+			Path::new("gamedata/units/tankmodels/germ_leopard_2a4.blk"),
+			None,
+			false,
+		)
+		.unwrap();
 
-	bencher.with_inputs(||raw_blk.clone())
+	bencher
+		.with_inputs(|| raw_blk.clone())
 		.bench_local_values(move |mut f| {
-		unpack_blk(black_box(&mut f.buf_mut()), black_box(unpacker.dict()), black_box(unpacker.nm())).unwrap();
-	});
+			unpack_blk(
+				black_box(&mut f.buf_mut()),
+				black_box(unpacker.dict()),
+				black_box(unpacker.nm()),
+			)
+			.unwrap();
+		});
 }

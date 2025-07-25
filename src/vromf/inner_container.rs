@@ -68,10 +68,12 @@
 //! # Illustration of the inner container
 //! ![Illustration](https://raw.githubusercontent.com/Warthunder-Open-Source-Foundation/wt_blk/refs/heads/master/charts/rendered/inner_container.png)
 
+use std::{
+	io::Write,
+	mem::size_of,
+	path::{Path, PathBuf},
+};
 
-use std::{mem::size_of, path::PathBuf};
-use std::io::Write;
-use std::path::Path;
 use color_eyre::{
 	eyre::{bail, Context, ContextCompat},
 	Report,
@@ -80,13 +82,13 @@ use fallible_iterator::{convert, FallibleIterator};
 use sha1_smol::Sha1;
 
 use crate::{
+	repacker_util::Buffer,
 	util::join_hex,
 	vromf::{
 		util::{bytes_to_int, bytes_to_usize},
 		File,
 	},
 };
-use crate::repacker_util::Buffer;
 
 pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<File>, Report> {
 	// Returns slice offset from file, incrementing the ptr by offset
@@ -213,7 +215,6 @@ pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<File>, Repo
 		.collect()?)
 }
 
-
 pub fn encode_inner_vromf(files: Vec<File>, digest_header: u8) -> Result<Vec<u8>, Report> {
 	let has_digest = match digest_header {
 		0x20 => false,
@@ -223,7 +224,9 @@ pub fn encode_inner_vromf(files: Vec<File>, digest_header: u8) -> Result<Vec<u8>
 		},
 	};
 
-	let mut buf = Buffer{ inner: Default::default() };
+	let mut buf = Buffer {
+		inner: Default::default(),
+	};
 
 	// **Names header**
 	let names_offset = buf.u32()?;
@@ -232,13 +235,11 @@ pub fn encode_inner_vromf(files: Vec<File>, digest_header: u8) -> Result<Vec<u8>
 	names_count.set_write(files.len().try_into()?, &mut buf)?;
 	buf.align_to_multiple_of_16()?;
 
-
 	// **Data header**
 	let data_info_offset = buf.u32()?;
 	let data_info_count = buf.u32()?;
 	data_info_count.set_write(files.len().try_into()?, &mut buf)?;
 	buf.align_to_multiple_of_16()?;
-
 
 	// **Digest header**
 	let digest_data = if has_digest {
@@ -264,13 +265,13 @@ pub fn encode_inner_vromf(files: Vec<File>, digest_header: u8) -> Result<Vec<u8>
 		if file.path() == Path::new("nm") {
 			buf.inner.write_all(b"\xff\x3fnm")?;
 		} else {
-			buf.inner.write_all(file.path().to_str().unwrap().as_ref())?;
+			buf.inner
+				.write_all(file.path().to_str().unwrap().as_ref())?;
 		}
 		buf.inner.write_all(&[0; 1])?;
 		index.set_write(start, &mut buf)?;
 	}
 	buf.align_to_multiple_of_16()?;
-
 
 	// **Data Info**
 	let mut data_offsets = Vec::with_capacity(files.len());
@@ -278,7 +279,7 @@ pub fn encode_inner_vromf(files: Vec<File>, digest_header: u8) -> Result<Vec<u8>
 	for _ in &files {
 		let offs = buf.u32()?;
 		let size = buf.u32()?;
-		buf.pad_zeroes::<{size_of::<u32>() * 2}>()?;
+		buf.pad_zeroes::<{ size_of::<u32>() * 2 }>()?;
 		data_offsets.push((offs, size));
 	}
 	buf.align_to_multiple_of_16()?;
@@ -305,17 +306,17 @@ pub fn encode_inner_vromf(files: Vec<File>, digest_header: u8) -> Result<Vec<u8>
 		buf.align_to_multiple_of_16()?;
 	}
 
-
 	Ok(buf.inner.into_inner())
 }
-
 
 #[cfg(test)]
 mod test {
 	use std::fs;
 
-	use crate::vromf::{binary_container::decode_bin_vromf, inner_container::decode_inner_vromf};
-	use crate::vromf::inner_container::encode_inner_vromf;
+	use crate::vromf::{
+		binary_container::decode_bin_vromf,
+		inner_container::{decode_inner_vromf, encode_inner_vromf},
+	};
 
 	#[test]
 	fn test_uncompressed() {

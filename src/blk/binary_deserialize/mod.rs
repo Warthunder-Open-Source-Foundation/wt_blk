@@ -1,16 +1,15 @@
 use std::fs;
-use crate::blk::binary_deserialize::parser::parse_blk;
-use crate::blk::make_strict_test;
+
+use crate::blk::{binary_deserialize::parser::parse_blk, make_strict_test};
 
 /// Exports core function for unpacking BLK file
 pub mod parser;
 
-
 #[cfg(test)]
 mod test {
 	use std::fs;
-	use crate::blk::binary_deserialize::parser::parse_blk;
-	use crate::blk::make_strict_test;
+
+	use crate::blk::{binary_deserialize::parser::parse_blk, make_strict_test};
 
 	//#[test]
 	fn fat_blk() {

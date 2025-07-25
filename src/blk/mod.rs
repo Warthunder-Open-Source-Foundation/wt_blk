@@ -95,15 +95,15 @@
 //!
 //! To start off, we first get the index, which uniquely identifies any struct, where 0 is the root/core struct.
 //! Together with the index, we can determine the name, which is a [Name ID](#name-reference) or undefined and irrelevant if the index is 0.
-//! 
+//!
 //! Field `count` defines how many fields from [the field map](#field-map) belong to this struct in the order as they appear.
-//! Keeping track of the sum of previous`count`'s is important as current `count` starts from where the last field ended. 
-//! 
+//! Keeping track of the sum of previous`count`'s is important as current `count` starts from where the last field ended.
+//!
 //! Sub-structs count defines how many substructs there are.
-//! 
+//!
 //! Sub-structs index defines which other struct are contained in this one, using the same indexing system as field count.
 //! **This value is not present when sub-structs count was 0.**
-//! 
+//!
 //! This mechanism is best explained with an example to go with it:
 //! Lets use this BLK as our working minimal example:
 //! ```blk
@@ -111,21 +111,21 @@
 //! "int":i = 42
 //! "long":i64 = 0x40
 //! "alpha" {
-//!		"str":t = "hello"
-//!		"bool":b = true
-//!		"color":c = 0x1, 0x2, 0x3, 0x4
-//!		"gamma" {
-//!			"vec2i":ip2 = 3, 4
-//!			"vec2f":p2 = 1.25, 2.5
-//!			"transform":m = [[1, 0, 0] [0, 1, 0] [0, 0, 1] [1.25, 2.5, 5]]
-//!		}
+//! 		"str":t = "hello"
+//! 		"bool":b = true
+//! 		"color":c = 0x1, 0x2, 0x3, 0x4
+//! 		"gamma" {
+//! 			"vec2i":ip2 = 3, 4
+//! 			"vec2f":p2 = 1.25, 2.5
+//! 			"transform":m = [[1, 0, 0] [0, 1, 0] [0, 0, 1] [1.25, 2.5, 5]]
+//! 		}
 //! }
 //! "beta" {
-//!		"float":r = 1.25
-//!		"vec2i":ip2 = 1, 2
-//!		"vec3f":p3 = 1.25, 2.5, 5
+//! 		"float":r = 1.25
+//! 		"vec2i":ip2 = 1, 2
+//! 		"vec3f":p3 = 1.25, 2.5, 5
 //! }
-//!```
+//! ```
 //! The Nesting map would look like the following:
 //! |Index|Name|Indexes|Sub-blocks|Binary representation|
 //! |-|-|-|-|-|
@@ -144,9 +144,10 @@ use std::{
 };
 
 pub use ::zstd::dict::DecoderDictionary;
+use blk_string::blk_str;
 use cfg_if::cfg_if;
 use color_eyre::Report;
-use blk_string::blk_str;
+
 use crate::blk::{
 	binary_deserialize::parser::parse_blk,
 	blk_structure::BlkField,

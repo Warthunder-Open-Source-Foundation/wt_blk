@@ -4,6 +4,7 @@ use tracing::error;
 
 use crate::blk::{
 	blk_block_hierarchy::FlatBlock,
+	blk_string::blk_str,
 	blk_structure::BlkField,
 	blk_type::{blk_type_id::STRING, BlkType},
 	error::{
@@ -13,7 +14,6 @@ use crate::blk::{
 	leb128::uleb128,
 	name_map::NameMap,
 };
-use crate::blk::blk_string::blk_str;
 
 /// Lowest-level function which unpacks BLK to [`crate::blk::blk_structure::BlkField`]
 pub fn parse_blk(
@@ -22,8 +22,16 @@ pub fn parse_blk(
 	shared_name_map: Option<Arc<NameMap>>,
 ) -> Result<BlkField, ParseError> {
 	#[cfg(feature = "instrument_binary_blk")]
-	eprint!("Unpacking {} blk {}, ", if is_slim {"slim"} else {"fat"}, if shared_name_map.is_some() {"with NM"} else {"without NM"});
-	
+	eprint!(
+		"Unpacking {} blk {}, ",
+		if is_slim { "slim" } else { "fat" },
+		if shared_name_map.is_some() {
+			"with NM"
+		} else {
+			"without NM"
+		}
+	);
+
 	let mut ptr = 0;
 
 	// Globally increments ptr and returns next uleb integer from file
@@ -121,7 +129,7 @@ pub fn parse_blk(
 					.parsed
 					.as_slice(),
 			)
-				.ok_or(BadBlkValue)?
+			.ok_or(BadBlkValue)?
 		} else {
 			BlkType::from_raw_param_info(type_id, data, params_data, names.as_ref())
 				.ok_or(BadBlkValue)?
@@ -171,7 +179,7 @@ pub fn parse_blk(
 			)
 		})
 	};
-	
+
 	// Create a flat hierarchy of all blocks including their non-block fields
 	// This ensures all values are actually assigned
 	// After this, the hierarchy will be assigned depth depending on the block-map
@@ -185,9 +193,7 @@ pub fn parse_blk(
 			offset: offset.unwrap_or(0),
 		};
 		for i in (ptr)..(ptr + field_count) {
-			field.fields.push(
-				get_nth_param(i)?,
-			);
+			field.fields.push(get_nth_param(i)?);
 		}
 		ptr += field_count;
 		flat_map.push(Some(field));

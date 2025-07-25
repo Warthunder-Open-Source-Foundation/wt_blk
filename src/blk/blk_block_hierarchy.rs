@@ -7,8 +7,7 @@ use crate::blk::blk_block_hierarchy::BlkBlockBuilderError::{
 	TakenElementMissing,
 	UnclaimedElements,
 };
-use crate::blk::blk_structure::BlkField;
-use crate::blk::blk_string::BlkString;
+use crate::blk::{blk_string::BlkString, blk_structure::BlkField};
 
 #[derive(Debug, Clone, thiserror::Error, Eq, PartialEq)]
 pub enum BlkBlockBuilderError {

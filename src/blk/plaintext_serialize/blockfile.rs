@@ -1,7 +1,6 @@
 use color_eyre::{eyre::bail, Report};
-use crate::blk::blk_string::BlkString;
-use crate::blk::blk_structure::BlkField;
-use crate::blk::blk_type::BlkType;
+
+use crate::blk::{blk_string::BlkString, blk_structure::BlkField, blk_type::BlkType};
 
 impl BlkField {
 	// Public facing formatting fn
@@ -13,7 +12,11 @@ impl BlkField {
 	// Internal fn that actually formats
 	fn inner_as_blk_text(&self, indent_level: &mut usize, is_root: bool) -> Result<String, Report> {
 		match self {
-			BlkField::Value(name, value) => Ok(format!("{name}:{value}", name = escape_key(name), value = escape_value(value))),
+			BlkField::Value(name, value) => Ok(format!(
+				"{name}:{value}",
+				name = escape_key(name),
+				value = escape_value(value)
+			)),
 			BlkField::Struct(name, fields) => {
 				let indent = "\t".repeat(*indent_level);
 				*indent_level += 1;
@@ -60,17 +63,19 @@ fn escape_value(value: &BlkType) -> String {
 			} else {
 				value.to_string()
 			}
-		}
+		},
 		_ => value.to_string(),
 	}
 }
 
 #[cfg(test)]
 mod test {
-	use crate::blk::blk_string::blk_str;
-	use crate::blk::blk_structure::BlkField;
-	use crate::blk::blk_type::BlkType;
-	use crate::blk::make_strict_test;
+	use crate::blk::{
+		blk_string::blk_str,
+		blk_structure::BlkField,
+		blk_type::BlkType,
+		make_strict_test,
+	};
 
 	#[test]
 	fn test_expected() {
@@ -81,7 +86,10 @@ mod test {
 
 	#[test]
 	fn test_escaping() {
-		let root = BlkField::Value(blk_str("totally not escaped"), BlkType::Str(blk_str("this is totally not escaped \" ")));
+		let root = BlkField::Value(
+			blk_str("totally not escaped"),
+			BlkType::Str(blk_str("this is totally not escaped \" ")),
+		);
 		assert_eq!(
 			root.inner_as_blk_text(&mut 0, true).unwrap(),
 			r#""totally not escaped":t = 'this is totally not escaped " '"#

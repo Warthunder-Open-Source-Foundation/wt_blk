@@ -1,9 +1,6 @@
 use std::ffi::OsStr;
 
-use crate::{
-	blk::file::FileType,
-	vromf::File,
-};
+use crate::{blk::file::FileType, vromf::File};
 #[inline(always)]
 pub(crate) fn bytes_to_offset(input: &[u8]) -> Option<usize> {
 	if input.len() != 4 {

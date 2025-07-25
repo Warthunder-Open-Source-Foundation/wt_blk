@@ -40,7 +40,15 @@ fn fat_blk() {
 fn netfile() {
 	let file = fs::read("./samples/encoded_11.blk").unwrap();
 	let output = parse_blk(&file[1..], false, None).unwrap();
-	assert_eq!(output.pointer("slogan").unwrap().value().unwrap().to_string(), "t = \"○ Warriors at the gate ○\"")
+	assert_eq!(
+		output
+			.pointer("slogan")
+			.unwrap()
+			.value()
+			.unwrap()
+			.to_string(),
+		"t = \"○ Warriors at the gate ○\""
+	)
 }
 
 #[test]

@@ -1,8 +1,7 @@
 use std::{
 	fmt::{Display, Formatter as StdFormatter},
 	io,
-	io::Write
-	,
+	io::Write,
 };
 
 use color_eyre::Report;
@@ -13,10 +12,10 @@ use serde_json::{
 };
 
 use crate::blk::{
+	blk_string::BlkString,
 	blk_type::blk_type_id::*,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset, bytes_to_uint},
 };
-use crate::blk::blk_string::BlkString;
 
 /// Unique ID for each type found in BLK
 pub mod blk_type_id {
@@ -151,14 +150,12 @@ impl BlkType {
 				]))
 			},
 			BOOL => Some(Self::Bool(field[0] != 0)),
-			COLOR => {
-				Some(Self::Color {
-					r: field[0],
-					g: field[1],
-					b: field[2],
-					a: field[3],
-				})
-			},
+			COLOR => Some(Self::Color {
+				r: field[0],
+				g: field[1],
+				b: field[2],
+				a: field[3],
+			}),
 			FLOAT12 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 48)];
@@ -207,7 +204,7 @@ impl BlkType {
 	// grcov-excl-stop
 
 	// grcov-excl-start
-	
+
 	/// Defines if the value is stored directly in the reference section,
 	/// or if the value found is an offset to the value section
 	pub const fn is_inline(&self) -> bool {
@@ -265,7 +262,7 @@ impl BlkType {
 			BlkType::Color { .. } => "c",
 		}
 	}
-	
+
 	pub fn is_valid_type(t: &str) -> bool {
 		matches!(
 			t,
@@ -399,8 +396,7 @@ impl Display for BlkType {
 
 #[cfg(test)]
 mod test {
-	use crate::blk::blk_type::BlkType;
-	use crate::blk::blk_string::blk_str;
+	use crate::blk::{blk_string::blk_str, blk_type::BlkType};
 
 	#[test]
 	fn test_string() {
@@ -425,8 +421,13 @@ mod test {
 
 	#[test]
 	fn test_matrix() {
-		let t = BlkType::Float12(Box::new([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]));
-		assert_eq!(t.to_string(), "m = [[1.0, 2.0, 3.0] [4.0, 5.0, 6.0] [7.0, 8.0, 9.0] [10.0, 11.0, 12.0]]")
+		let t = BlkType::Float12(Box::new([
+			1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
+		]));
+		assert_eq!(
+			t.to_string(),
+			"m = [[1.0, 2.0, 3.0] [4.0, 5.0, 6.0] [7.0, 8.0, 9.0] [10.0, 11.0, 12.0]]"
+		)
 	}
 
 	#[test]

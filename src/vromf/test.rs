@@ -5,10 +5,9 @@ use wt_version::Version;
 use crate::vromf::{
 	binary_container::decode_bin_vromf,
 	inner_container::decode_inner_vromf,
-	unpacker::{BlkOutputFormat, VromfUnpacker, ZipFormat},
+	unpacker::{BlkOutputFormat, FileFilter, VromfUnpacker, ZipFormat},
 	File,
 };
-use crate::vromf::unpacker::FileFilter;
 
 #[test]
 fn grp_vromf() {
@@ -23,7 +22,12 @@ fn write_to_zip() {
 	let out =
 		VromfUnpacker::from_file(&File::new("./samples/aces.vromfs.bin").unwrap(), true).unwrap();
 	let unpacked = out
-		.unpack_all_to_zip(ZipFormat::Compressed(1), Some(BlkOutputFormat::Json), true, true)
+		.unpack_all_to_zip(
+			ZipFormat::Compressed(1),
+			Some(BlkOutputFormat::Json),
+			true,
+			true,
+		)
 		.unwrap();
 	assert_eq!(55061478, unpacked.len())
 }

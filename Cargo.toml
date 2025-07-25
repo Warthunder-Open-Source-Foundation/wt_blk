@@ -32,6 +32,7 @@ sha1_smol = {version = "^1.0", features = ["std"]}
 itertools = "^0.13.0"
 bytes = "1.9.0"
 regex = "1.11.1"
+foldhash = "0.1.5"
 
 
 [profile.test]

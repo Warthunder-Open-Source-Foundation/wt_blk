@@ -1,10 +1,15 @@
-use std::ops::Range;
-use color_eyre::Report;
-use color_eyre::eyre::{ensure, ContextCompat};
-use std::io::{Cursor, Write};
+use std::{
+	io::{Cursor, Write},
+	ops::Range,
+};
+
+use color_eyre::{
+	eyre::{ensure, ContextCompat},
+	Report,
+};
 
 pub struct Buffer {
-	pub inner: Cursor<Vec<u8>>
+	pub inner: Cursor<Vec<u8>>,
 }
 
 impl Buffer {
@@ -12,10 +17,10 @@ impl Buffer {
 		let start = self.inner.position() as _;
 		self.inner.write_all(&[0; 4])?;
 		Ok(RefRange {
-			value: None,
+			value:      None,
 			serializer: |t| u32::to_le_bytes(t),
-			range: start..start + 4,
-			written: false,
+			range:      start..start + 4,
+			written:    false,
 		})
 	}
 
@@ -23,10 +28,10 @@ impl Buffer {
 		let start = self.inner.position() as _;
 		self.inner.write_all(&[0; 8])?;
 		Ok(RefRange {
-			value: None,
+			value:      None,
 			serializer: |t| u64::to_le_bytes(t),
-			range: start..start + 8,
-			written: false,
+			range:      start..start + 8,
+			written:    false,
 		})
 	}
 
@@ -47,17 +52,24 @@ impl Buffer {
 
 #[must_use]
 pub struct RefRange<const N: usize, T> {
-	value: Option<T>,
+	value:      Option<T>,
 	serializer: fn(T) -> [u8; N],
-	range: Range<usize>,
-	written: bool,
+	range:      Range<usize>,
+	written:    bool,
 }
 
-impl <const N: usize, T: Copy>RefRange<N, T> {
+impl<const N: usize, T: Copy> RefRange<N, T> {
 	pub fn write_to(mut self, buf: &mut Buffer) -> Result<(), Report> {
 		let ser = (self.serializer)(self.value.context("T was not initialized")?);
-		ensure!(ser.len() == self.range.len(), "Serialized length mismatches with assigned range");
-		buf.inner.get_mut().get_mut(self.range.clone()).context("todo")?.copy_from_slice(&ser);
+		ensure!(
+			ser.len() == self.range.len(),
+			"Serialized length mismatches with assigned range"
+		);
+		buf.inner
+			.get_mut()
+			.get_mut(self.range.clone())
+			.context("todo")?
+			.copy_from_slice(&ser);
 		self.written = true;
 		Ok(())
 	}

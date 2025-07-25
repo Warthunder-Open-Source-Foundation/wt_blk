@@ -1,7 +1,10 @@
-use std::borrow::Borrow;
-use std::fmt::{Display, Formatter};
-use std::ops::Deref;
-use std::sync::Arc;
+use std::{
+	borrow::Borrow,
+	fmt::{Display, Formatter},
+	ops::Deref,
+	sync::Arc,
+};
+
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq, PartialOrd)]
@@ -18,7 +21,9 @@ impl BlkString {
 	}
 
 	pub fn from_lossy(bytes: &[u8]) -> Self {
-		Self { inner: (Arc::from(String::from_utf8_lossy(bytes).to_string())) }
+		Self {
+			inner: (Arc::from(String::from_utf8_lossy(bytes).to_string())),
+		}
 	}
 
 	/// This function should exclusively be used for accessing the string contents, as future
@@ -63,22 +68,17 @@ pub fn blk_str(s: impl Into<String>) -> BlkString {
 impl Serialize for BlkString {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
-		S: Serializer
-	{
+		S: Serializer, {
 		serializer.serialize_str(self.as_str())
 	}
 }
 
-
 impl<'de> Deserialize<'de> for BlkString {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
-		D: Deserializer<'de>,
-	{
+		D: Deserializer<'de>, {
 		let s = String::deserialize(deserializer)?;
-		Ok(BlkString {
-			inner: Arc::new(s),
-		})
+		Ok(BlkString { inner: Arc::new(s) })
 	}
 }
 
@@ -89,13 +89,16 @@ mod test {
 	#[test]
 	pub fn serialize() {
 		let sample = BlkString::from("test".to_owned());
-		let ser  = serde_json::to_string_pretty(&sample).unwrap();
+		let ser = serde_json::to_string_pretty(&sample).unwrap();
 
 		assert_eq!(ser.as_str(), "\"test\"");
 	}
 
 	#[test]
 	pub fn deserialize() {
-		assert_eq!(BlkString::from("test".to_owned()), serde_json::from_str("\"test\"").unwrap());
+		assert_eq!(
+			BlkString::from("test".to_owned()),
+			serde_json::from_str("\"test\"").unwrap()
+		);
 	}
 }

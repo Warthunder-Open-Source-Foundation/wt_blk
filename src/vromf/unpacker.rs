@@ -1,22 +1,21 @@
-use regex::Regex;
 use std::{
 	ffi::OsStr,
 	fmt::{Debug, Formatter},
 	io::{Cursor, Write},
 	mem,
-	ops::Deref,
+	ops::{Deref, Not},
 	path::Path,
 	str::FromStr,
 	sync::Arc,
 };
-use std::ops::Not;
+
 use color_eyre::{
-	eyre::{eyre, ContextCompat},
+	eyre::{eyre, Context, ContextCompat},
 	Help,
 	Report,
 };
-use color_eyre::eyre::Context;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
+use regex::Regex;
 use wt_version::Version;
 use zip::{write::SimpleFileOptions, CompressionMethod, ZipWriter};
 use zstd::dict::DecoderDictionary;
@@ -53,7 +52,7 @@ impl<'a> Deref for DictWrapper {
 
 /// Unpacks vromf image into all internal files, optionally formatting binary BLK files
 #[derive(Debug, Clone)]
-pub struct VromfUnpacker{
+pub struct VromfUnpacker {
 	files:    Vec<File>,
 	dict:     Option<Arc<DictWrapper>>,
 	nm:       Option<Arc<NameMap>>,
@@ -78,7 +77,7 @@ pub enum FileFilter {
 	All,
 	OneFolder {
 		remove_base: bool,
-		prefix: Arc<Path>,
+		prefix:      Arc<Path>,
 	},
 	FullPathRegex {
 		rex: Arc<Regex>,
@@ -88,25 +87,23 @@ pub enum FileFilter {
 impl FileFilter {
 	pub fn accept(&self, file: &File) -> bool {
 		match self {
-			FileFilter::All => {true}
-			FileFilter::OneFolder { prefix, .. } => {
-				file.path().starts_with(prefix)
-			}
-			FileFilter::FullPathRegex { rex } => {
-				rex.is_match(&file.path().to_string_lossy())
-			}
+			FileFilter::All => true,
+			FileFilter::OneFolder { prefix, .. } => file.path().starts_with(prefix),
+			FileFilter::FullPathRegex { rex } => rex.is_match(&file.path().to_string_lossy()),
 		}
 	}
 
 	pub fn base_path_start(&self) -> usize {
 		match self {
-			FileFilter::OneFolder { prefix, .. } => {prefix.to_string_lossy().len()}
+			FileFilter::OneFolder { prefix, .. } => prefix.to_string_lossy().len(),
 			_ => 0,
 		}
 	}
 
 	pub fn from_regexstr(re: &str) -> Result<Self, Report> {
-		Ok(Self::FullPathRegex {rex: Arc::new(Regex::new(re).context(format!("Invalid regex: {}", re))?)})
+		Ok(Self::FullPathRegex {
+			rex: Arc::new(Regex::new(re).context(format!("Invalid regex: {}", re))?),
+		})
 	}
 
 	pub const fn all() -> Self {
@@ -114,7 +111,10 @@ impl FileFilter {
 	}
 
 	pub fn one_folder(prefix: Arc<Path>, remove_base: bool) -> Self {
-		Self::OneFolder { remove_base, prefix }
+		Self::OneFolder {
+			remove_base,
+			prefix,
+		}
 	}
 }
 
@@ -181,7 +181,13 @@ impl VromfUnpacker {
 				.panic_fuse()
 				.map(|mut file| {
 					let mut w = writer(&mut file)?;
-					self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut w, FileFilter::All)?;
+					self.unpack_file_with_writer(
+						&mut file,
+						unpack_blk_into,
+						apply_overrides,
+						&mut w,
+						FileFilter::All,
+					)?;
 					Ok(())
 				})
 				.collect::<Result<(), Report>>()
@@ -190,7 +196,13 @@ impl VromfUnpacker {
 				.into_iter()
 				.map(|mut file| {
 					let mut w = writer(&mut file)?;
-					self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut w, FileFilter::All)?;
+					self.unpack_file_with_writer(
+						&mut file,
+						unpack_blk_into,
+						apply_overrides,
+						&mut w,
+						FileFilter::All,
+					)?;
 					Ok(())
 				})
 				.collect::<Result<(), Report>>()
@@ -216,13 +228,17 @@ impl VromfUnpacker {
 				.into_par_iter()
 				.panic_fuse()
 				.cloned()
-				.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides, filter.clone()))
+				.map(|file| {
+					self.unpack_file(file, unpack_blk_into, apply_overrides, filter.clone())
+				})
 				.collect::<Result<Vec<File>, Report>>()?
 		} else {
 			files
 				.iter()
 				.cloned()
-				.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides, filter.clone()))
+				.map(|file| {
+					self.unpack_file(file, unpack_blk_into, apply_overrides, filter.clone())
+				})
 				.collect::<Result<Vec<File>, Report>>()?
 		};
 
@@ -256,7 +272,13 @@ impl VromfUnpacker {
 		// Runs unpacking in the global rayon threadpool if true, otherwise its single threaded
 		threaded: bool,
 	) -> Result<Vec<u8>, Report> {
-		self.unpack_subfolder_to_zip( zip_format, unpack_blk_into, apply_overrides, threaded, FileFilter::All)
+		self.unpack_subfolder_to_zip(
+			zip_format,
+			unpack_blk_into,
+			apply_overrides,
+			threaded,
+			FileFilter::All,
+		)
 	}
 
 	pub fn unpack_one(
@@ -264,7 +286,7 @@ impl VromfUnpacker {
 		path_name: &Path,
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
-		file_filter: FileFilter
+		file_filter: FileFilter,
 	) -> Result<File, Report> {
 		let file = self
 			.files
@@ -287,7 +309,13 @@ impl VromfUnpacker {
 		filter: FileFilter,
 	) -> Result<File, Report> {
 		let mut buf = Cursor::new(Vec::with_capacity(4096));
-		self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut buf, filter)?;
+		self.unpack_file_with_writer(
+			&mut file,
+			unpack_blk_into,
+			apply_overrides,
+			&mut buf,
+			filter,
+		)?;
 		*file.buf_mut() = buf.into_inner();
 		Ok(file)
 	}
@@ -372,6 +400,7 @@ impl VromfUnpacker {
 	pub fn dict(&self) -> Option<&DecoderDictionary<'_>> {
 		self.dict.as_deref().map(Deref::deref)
 	}
+
 	pub fn nm(&self) -> Option<Arc<NameMap>> {
 		self.nm.clone()
 	}

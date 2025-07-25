@@ -1,11 +1,13 @@
 use std::{fmt::Debug, iter::Peekable, mem};
-use color_eyre::eyre::bail;
-use color_eyre::Report;
+
+use color_eyre::{eyre::bail, Report};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
-use crate::blk::blk_type::BlkType;
-use crate::blk::blk_string::{blk_str, BlkString};
+use crate::blk::{
+	blk_string::{blk_str, BlkString},
+	blk_type::BlkType,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum BlkField {
@@ -32,10 +34,15 @@ impl BlkField {
 				// Move values out of struct, we will return it later
 				let mut moved_values = mem::replace(values, vec![]);
 
-				moved_values.iter_mut().for_each(|v| v.apply_overrides(already_merged_fields));
+				moved_values
+					.iter_mut()
+					.for_each(|v| v.apply_overrides(already_merged_fields));
 
 				// Non-overriding fastpath
-				if !moved_values.iter().any(|e|e.get_name().starts_with("override:")) {
+				if !moved_values
+					.iter()
+					.any(|e| e.get_name().starts_with("override:"))
+				{
 					*values = moved_values;
 					return;
 				}
@@ -45,7 +52,6 @@ impl BlkField {
 					.into_iter()
 					.map(|e| (e.get_name(), e))
 					.partition(|(name, _)| name.starts_with("override:"));
-
 
 				// Unmerged fields cannot use hashmap to find overrides, a linear search is required instead
 				let map: &mut dyn Iterator<Item = _> = if already_merged_fields {
@@ -74,7 +80,6 @@ impl BlkField {
 					&mut map.into_iter()
 				};
 
-
 				*values = map.into_iter().map(|e| e.1).collect();
 			},
 			_ => {},
@@ -93,12 +98,10 @@ impl BlkField {
 	}
 
 	/// Reserves space for at least `additional` more fields to be appended
-	pub fn reserve_fields(&mut self, additional :usize) {
+	pub fn reserve_fields(&mut self, additional: usize) {
 		match self {
-			BlkField::Struct(_, fields) | BlkField::Merged(_, fields) => {
-				fields.reserve(additional)
-			},
-			BlkField::Value(_, _) => {}
+			BlkField::Struct(_, fields) | BlkField::Merged(_, fields) => fields.reserve(additional),
+			BlkField::Value(_, _) => {},
 		}
 	}
 
@@ -120,10 +123,10 @@ impl BlkField {
 
 	pub fn value(&self) -> Option<&BlkType> {
 		match self {
-			BlkField::Value(_, v)  => {
-				Some(v)
+			BlkField::Value(_, v) => Some(v),
+			_ => {
+				panic!("Field is not a value")
 			},
-			_ => {panic!("Field is not a value")}
 		}
 	}
 
@@ -184,8 +187,12 @@ impl BlkField {
 
 #[cfg(test)]
 mod test {
-	use crate::blk::{blk_structure::BlkField, blk_type::BlkType, make_strict_test};
-	use crate::blk::blk_string::blk_str;
+	use crate::blk::{
+		blk_string::blk_str,
+		blk_structure::BlkField,
+		blk_type::BlkType,
+		make_strict_test,
+	};
 
 	#[test]
 	fn should_override() {
@@ -252,7 +259,10 @@ mod test {
 			.insert_field(BlkField::Value(blk_str("value"), BlkType::Int(0)))
 			.unwrap();
 		before
-			.insert_field(BlkField::Value(blk_str("override:cheese"), BlkType::Int(69)))
+			.insert_field(BlkField::Value(
+				blk_str("override:cheese"),
+				BlkType::Int(69),
+			))
 			.unwrap();
 		before
 			.insert_field(BlkField::Value(blk_str("cheese"), BlkType::Int(690)))
@@ -286,8 +296,14 @@ mod test {
 	#[test]
 	fn ptr_value() {
 		let blk = make_strict_test();
-		assert_eq!(*blk.pointer("int").unwrap().value().unwrap(), BlkType::Int(42));
-		assert_eq!(*blk.pointer("alpha/str").unwrap().value().unwrap(), BlkType::Str(blk_str("hello")));
+		assert_eq!(
+			*blk.pointer("int").unwrap().value().unwrap(),
+			BlkType::Int(42)
+		);
+		assert_eq!(
+			*blk.pointer("alpha/str").unwrap().value().unwrap(),
+			BlkType::Str(blk_str("hello"))
+		);
 		assert!(blk.pointer("alpha/noexist").is_err());
 	}
 }

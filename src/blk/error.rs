@@ -2,7 +2,7 @@ use std::{ops::Range, string::FromUtf8Error};
 
 use thiserror::Error;
 
-use crate::{blk::blk_block_hierarchy::BlkBlockBuilderError};
+use crate::blk::blk_block_hierarchy::BlkBlockBuilderError;
 
 #[derive(Debug, Error, Clone, Eq, PartialEq)]
 pub enum ParseError {
