@@ -3,16 +3,16 @@ use std::{io::Write, mem};
 use color_eyre::Report;
 use foldhash::HashMapExt;
 use serde_json::ser::{Formatter, PrettyFormatter};
-
+use smallvec::{smallvec, SmallVec};
 use crate::blk::{blk_string::BlkString, blk_structure::BlkField};
 
 impl BlkField {
 	/// Merges duplicate keys in struct fields into the Merged array variant
-	pub fn merge_fields(&mut self) {
+	pub fn merge_fields(&mut self) -> Result<(), Report> {
 		if let BlkField::Struct(_, fields) = self {
 			// Recurse first
 			for field in fields.iter_mut() {
-				field.merge_fields();
+				field.merge_fields()?;
 			}
 
 			let mut to_merge = mem::take(fields)
@@ -21,14 +21,16 @@ impl BlkField {
 				.collect::<Vec<_>>(); // Yoink the old vector to merge its fields
 
 			// Key: Field-name, Value: Indexes of duplicates found
-			let mut duplicates: foldhash::HashMap<BlkString, Vec<usize>> =
+			let mut duplicates: foldhash::HashMap<BlkString, SmallVec<[u16; 8]>> =
 				foldhash::HashMap::with_capacity(to_merge.len());
 
 			for (i, elem) in to_merge.iter().enumerate() {
 				let name = elem.as_ref().expect("Infallible").get_name();
+				// Saving some space, as there won't be more than 2^16 duplicate fields
+				let i = i.try_into()?;
 				duplicates.entry(name)
 					.and_modify(|e|e.push(i))
-					.or_insert_with(|| vec![i]);
+					.or_insert_with(|| smallvec![i]);
 			}
 
 			duplicates
@@ -39,12 +41,13 @@ impl BlkField {
 					let merge_into = indexes[0];
 					let others = indexes
 						.into_iter()
-						.map(|e| to_merge[e].take().expect("Infallible"))
+						.map(|e| to_merge[e as usize].take().expect("Infallible"))
 						.collect();
-					to_merge[merge_into] = Some(BlkField::Merged(key, others));
+					to_merge[merge_into as usize] = Some(BlkField::Merged(key, others));
 				});
 			*fields = to_merge.into_iter().filter_map(|e| e).collect();
 		}
+		Ok(())
 	}
 
 	pub fn as_serde_json(&self) -> Result<Vec<u8>, Report> {
@@ -169,7 +172,7 @@ mod test {
 		let mut blk = make_strict_test();
 		blk.insert_field(BlkField::Value(blk_str("int"), BlkType::Int(420)))
 			.unwrap();
-		blk.merge_fields();
+		blk.merge_fields().unwrap();
 		let mut buf = vec![];
 		blk.as_serde_json_streaming(&mut buf).unwrap();
 		assert_eq!(

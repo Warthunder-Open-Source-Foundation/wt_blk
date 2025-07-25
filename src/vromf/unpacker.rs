@@ -345,7 +345,7 @@ impl VromfUnpacker {
 							writer.write_all(parsed.as_blk_text()?.as_bytes())?;
 						},
 						BlkOutputFormat::Json => {
-							parsed.merge_fields();
+							parsed.merge_fields()?;
 							if apply_overrides {
 								parsed.apply_overrides(true);
 							}
