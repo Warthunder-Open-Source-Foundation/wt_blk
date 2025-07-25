@@ -64,6 +64,7 @@ impl BlkField {
 		// let mut ser = PrettyFormatter::with_indent(b"\t");
 		let mut ser = PrettyFormatter::new();
 		self._as_serde_json_streaming(w, &mut ser, true, true, false)?;
+		w.flush()?;
 		Ok(())
 	}
 
