@@ -20,14 +20,16 @@ impl BlkField {
 				.map(|field| Some(field))
 				.collect::<Vec<_>>(); // Yoink the old vector to merge its fields
 
+			type MergeIndex = u16;
+
 			// Key: Field-name, Value: Indexes of duplicates found
-			let mut duplicates: foldhash::HashMap<BlkString, SmallVec<[u16; 4]>> =
+			let mut duplicates: foldhash::HashMap<BlkString, SmallVec<[MergeIndex; 4]>> =
 				foldhash::HashMap::with_capacity(to_merge.len());
 
 			for (i, elem) in to_merge.iter().enumerate() {
 				let name = elem.as_ref().expect("Infallible").get_name();
 				// Saving some space, as there won't be more than 2^16 fields
-				let i = i.try_into().with_context(||format!("Parent of field {} has more than {} fields", name, u16::MAX))?;
+				let i = i.try_into()?;
 				duplicates.entry(name)
 					.and_modify(|e|e.push(i))
 					.or_insert_with(|| smallvec![i]);
