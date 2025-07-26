@@ -1,5 +1,5 @@
 use std::{io::Write, mem};
-
+use color_eyre::eyre::Context;
 use color_eyre::Report;
 use foldhash::HashMapExt;
 use serde_json::ser::{Formatter, PrettyFormatter};
@@ -27,7 +27,7 @@ impl BlkField {
 			for (i, elem) in to_merge.iter().enumerate() {
 				let name = elem.as_ref().expect("Infallible").get_name();
 				// Saving some space, as there won't be more than 2^16 fields
-				let i = i.try_into()?;
+				let i = i.try_into().with_context(||format!("Parent of field {} has more than {} fields", name, u16::MAX))?;
 				duplicates.entry(name)
 					.and_modify(|e|e.push(i))
 					.or_insert_with(|| smallvec![i]);
