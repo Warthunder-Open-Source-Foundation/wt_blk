@@ -13,7 +13,8 @@ fn binary_blk_to_json(mut blk: Vec<u8>, dict: Option<Vec<u8>>, nm: Option<Vec<u8
 	let nm = nm.map(|nm|{
 		NameMap::from_encoded_file(&nm).map(|e|Arc::new(e))
 	}).transpose().unwrap();
-	let blk = wt_blk::blk::unpack_blk(&mut blk, dict.as_ref(), nm).unwrap();
+	let mut blk = wt_blk::blk::unpack_blk(&mut blk, dict.as_ref(), nm).unwrap();
+	blk.merge_fields();
 	Ok(blk.as_serde_json_string().unwrap())
 }
 
