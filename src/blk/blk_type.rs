@@ -374,7 +374,7 @@ impl Display for BlkType {
 				write!(f, "{}, {}, {}, {}", v[0], v[1], v[2], v[3])
 			},
 			BlkType::Float12(v) => {
-				let chunks = v.array_chunks::<3>();
+				let chunks = v.as_chunks::<3>().0.iter();
 				let len = chunks.len();
 				write!(f, "[")?;
 				for (i, chunk) in chunks.enumerate() {

@@ -142,7 +142,7 @@ pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<File>, Repo
 	// Names info is a set of u64s, pointing at each name
 	let names_info_len = names_count * size_of::<u64>();
 	let names_info = &file[names_offset..(names_offset + names_info_len)];
-	let names_info_chunks = names_info.array_chunks::<{ size_of::<u64>() }>(); // No remainder from chunks as it is infallible
+	let names_info_chunks = names_info.as_chunks::<{ size_of::<u64>() }>().0.iter(); // No remainder from chunks as it is infallible
 	let parsed_names_offsets: Vec<usize> = names_info_chunks
 		.into_iter()
 		.map(|x| bytes_to_usize(x))
@@ -174,18 +174,18 @@ pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<File>, Repo
 	// Only the first two values are used, as offset and length, the remaining two values are 0
 	let data_info_len = data_info_count * size_of::<u32>() * 4; // Total length of the data-info block
 	let data_info = &file[data_info_offset..(data_info_offset + data_info_len)];
-	let data_info_split = data_info.array_chunks::<{ size_of::<u32>() }>(); // Data-info consists of u32 pairs, so we will split them once
-	if data_info_split.remainder().len() != 0 {
-		bail!("Unaligned chunks: the data-set of size {} was supposed to align/chunk into {}, but {} remained", data_info.len(), size_of::<u32>(), data_info_split.remainder().len());
+	let (data_info_split, data_info_remainder) = data_info.as_chunks::<{ size_of::<u32>() }>(); // Data-info consists of u32 pairs, so we will split them once
+	if data_info_remainder.len() != 0 {
+		bail!("Unaligned chunks: the data-set of size {} was supposed to align/chunk into {}, but {} remained", data_info.len(), size_of::<u32>(), data_info_remainder.len());
 	}
 
 	// This has to align to 4, because of previous chunk checks
-	let data_info_full = data_info_split.array_chunks::<4>(); // Join together pairs of offset and length with 2 trailing bytes
+	let data_info_full = data_info_split.as_chunks::<4>().0.iter(); // Join together pairs of offset and length with 2 trailing bytes
 	let data = data_info_full
 		.map(|x| {
 			(
-				u32::from_le_bytes(*x[0]) as usize,
-				u32::from_le_bytes(*x[1]) as usize,
+				u32::from_le_bytes(x[0]) as usize,
+				u32::from_le_bytes(x[1]) as usize,
 			)
 		})
 		.map(|(offset, size)| file[offset..(offset + size)].to_vec())

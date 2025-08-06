@@ -1,6 +1,3 @@
-#![feature(array_chunks)]
-#![feature(iter_array_chunks)]
-
 /// Low-level functions for BLK file format, for high level API use the [`vromf`] module
 pub mod blk;
 

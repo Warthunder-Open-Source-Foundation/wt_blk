@@ -1,5 +1,4 @@
 use std::{io::Write, mem};
-use color_eyre::eyre::Context;
 use color_eyre::Report;
 use foldhash::HashMapExt;
 use serde_json::ser::{Formatter, PrettyFormatter};
