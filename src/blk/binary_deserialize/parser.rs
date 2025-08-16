@@ -71,7 +71,7 @@ pub fn parse_blk(
 	} else {
 		let names_data_size = next_uleb(&mut ptr)?;
 
-		let names = NameMap::parse_name_section(idx_file_offset(&mut ptr, names_data_size)?)?;
+		let names = NameMap::parse_name_section(idx_file_offset(&mut ptr, names_data_size)?);
 		if names_count != names.len() {
 			error!("Name count mismatch, expected {names_count}, but found a len of {}. This might mean something is wrong.", names.len());
 		}

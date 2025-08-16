@@ -1,8 +1,10 @@
 use std::{io::Write, mem};
+
 use color_eyre::Report;
 use foldhash::HashMapExt;
 use serde_json::ser::{Formatter, PrettyFormatter};
 use smallvec::{smallvec, SmallVec};
+
 use crate::blk::{blk_string::BlkString, blk_structure::BlkField};
 
 impl BlkField {
@@ -29,8 +31,9 @@ impl BlkField {
 				let name = elem.as_ref().expect("Infallible").get_name();
 				// Saving some space, as there won't be more than 2^16 fields
 				let i = i.try_into()?;
-				duplicates.entry(name)
-					.and_modify(|e|e.push(i))
+				duplicates
+					.entry(name)
+					.and_modify(|e| e.push(i))
 					.or_insert_with(|| smallvec![i]);
 			}
 

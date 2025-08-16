@@ -1,9 +1,10 @@
-use std::{io::Read, sync::Arc};
-
+use std::{io::Read, isize, iter::once, sync::Arc};
+use std::ops::Add;
 use color_eyre::{eyre::ContextCompat, Report};
+use itertools::Itertools;
 use zstd::Decoder;
 
-use crate::blk::{blk_string::BlkString, error::ParseError, leb128::uleb128_offset};
+use crate::blk::{blk_string::BlkString, leb128::uleb128_offset};
 
 /// A name map is a collection of shared strings across an entire VROMF file
 /// Its usually in the top-level directory and called `nm` or in the binary vromf : `0xff 0x3f nm` (prefixed with a pair of seemingly random bytes)
@@ -42,16 +43,12 @@ impl NameMap {
 		Ok(out)
 	}
 
-	pub fn parse_name_section(file: &[u8]) -> Result<Vec<BlkString>, ParseError> {
-		let mut start = 0_usize;
-		let mut names = vec![];
-		for (i, val) in file.iter().enumerate() {
-			if *val == 0 {
-				names.push(BlkString::from_lossy(&file[start..i]));
-				start = i + 1;
-			}
-		}
-		Ok(names)
+	pub fn parse_name_section(file: &[u8]) -> Vec<BlkString> {
+		once(-1_isize)
+			.chain(memchr::memchr_iter(b'\0', file).map(|u| u as isize))
+			.tuple_windows::<(isize, isize)>()
+			.map(|(start, end)| BlkString::from_lossy(&file[(start.add(1) as usize)..(end as usize)]))
+			.collect()
 	}
 
 	pub fn parse_slim_nm(name_map: &[u8]) -> color_eyre::Result<Vec<BlkString>> {
@@ -61,7 +58,7 @@ impl NameMap {
 
 		let names_data_size = uleb128_offset(&name_map[nm_ptr..], &mut nm_ptr)?;
 
-		let names = NameMap::parse_name_section(&name_map[nm_ptr..(nm_ptr + names_data_size)])?;
+		let names = NameMap::parse_name_section(&name_map[nm_ptr..(nm_ptr + names_data_size)]);
 
 		if names_count != names.len() {
 			panic!("Should be equal"); // TODO: Change to result when fn signature allows for it
@@ -79,7 +76,7 @@ mod test {
 
 	#[test]
 	fn test_any_stream() {
-		let decoded = NameMap::parse_name_section("a\0b\0c\0".as_bytes()).unwrap();
+		let decoded = NameMap::parse_name_section("a\0b\0c\0".as_bytes());
 		assert_eq!(
 			vec!["a", "b", "c"],
 			decoded

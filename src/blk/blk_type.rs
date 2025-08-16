@@ -91,14 +91,8 @@ impl BlkType {
 					name_map[offset as usize].clone()
 				} else {
 					let data_region = &data_region[(offset as usize)..];
-					let mut buff = Vec::with_capacity(32);
-					for &byte in data_region {
-						if byte == 0 {
-							break;
-						}
-						buff.push(byte)
-					}
-					BlkString::from_lossy(&buff)
+					let end = memchr::memchr(b'\0', data_region)?;
+					BlkString::from_lossy(&data_region[..end])
 				};
 
 				Some(Self::Str(res))
