@@ -8,7 +8,7 @@ use std::{
 	str::FromStr,
 	sync::Arc,
 };
-
+use std::path::PathBuf;
 use color_eyre::{
 	eyre::{eyre, Context, ContextCompat},
 	Help,
@@ -77,7 +77,7 @@ pub enum FileFilter {
 	All,
 	OneFolder {
 		remove_base: bool,
-		prefix:      Arc<Path>,
+		prefix:      Arc<PathBuf>,
 	},
 	FullPathRegex {
 		rex: Arc<Regex>,
@@ -88,7 +88,7 @@ impl FileFilter {
 	pub fn accept(&self, file: &File) -> bool {
 		match self {
 			FileFilter::All => true,
-			FileFilter::OneFolder { prefix, .. } => file.path().starts_with(prefix),
+			FileFilter::OneFolder { prefix, .. } => file.path().starts_with(prefix.as_ref()),
 			FileFilter::FullPathRegex { rex } => rex.is_match(&file.path().to_string_lossy()),
 		}
 	}
@@ -110,7 +110,7 @@ impl FileFilter {
 		Self::All
 	}
 
-	pub fn one_folder(prefix: Arc<Path>, remove_base: bool) -> Self {
+	pub fn one_folder(prefix: Arc<PathBuf>, remove_base: bool) -> Self {
 		Self::OneFolder {
 			remove_base,
 			prefix,
