@@ -41,6 +41,9 @@ pub enum ParseError {
 	#[error(transparent)]
 	Utf8Error(#[from] FromUtf8Error),
 
+	#[error("Unknown BlkTypeId: {0:X}")]
+	UnknownBlkTypeId(u8),
+
 	#[error("Custom: {0}")]
 	Custom(String),
 }

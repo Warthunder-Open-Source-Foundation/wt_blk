@@ -4,11 +4,11 @@ use std::{
 	io::{Cursor, Write},
 	mem,
 	ops::{Deref, Not},
-	path::Path,
+	path::{Path, PathBuf},
 	str::FromStr,
 	sync::Arc,
 };
-use std::path::PathBuf;
+
 use color_eyre::{
 	eyre::{eyre, Context, ContextCompat},
 	Help,
@@ -335,7 +335,8 @@ impl VromfUnpacker {
 		match () {
 			_ if maybe_blk(&file) => {
 				if let Some(format) = unpack_blk_into {
-					let mut parsed = blk::unpack_blk(file.buf_mut(), self.dict(), self.nm.clone())?;
+					let mut parsed = blk::unpack_blk(file.buf_mut(), self.dict(), self.nm.clone())
+						.context(format!("unpacking {}", file.path().to_string_lossy()))?;
 
 					match format {
 						BlkOutputFormat::BlkText => {

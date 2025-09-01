@@ -34,9 +34,10 @@ regex = "1.11.1"
 foldhash = "0.1.5"
 smallvec = "1.15.1"
 memchr = "2.7.5"
+num_enum = "0.7.4"
 
 [profile.test]
-opt-level = 3
+#opt-level = 3
 debug = true
 
 [profile.bench]
