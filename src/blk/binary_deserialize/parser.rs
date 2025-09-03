@@ -1,12 +1,12 @@
+use crate::blk::binary_deserialize::parser::ParseError::UnknownBlkTypeId;
 use std::{borrow::Cow, sync::Arc};
-
 use tracing::error;
 
 use crate::blk::{
 	blk_block_hierarchy::FlatBlock,
 	blk_string::blk_str,
 	blk_structure::BlkField,
-	blk_type::{blk_type_id::STRING, BlkType},
+	blk_type::{BlkType},
 	error::{
 		ParseError,
 		ParseError::{BadBlkValue, ResidualBlockBuffer},
@@ -14,6 +14,7 @@ use crate::blk::{
 	leb128::uleb128,
 	name_map::NameMap,
 };
+use crate::blk::blk_type::blk_type_id::BlkTypeId;
 
 /// Lowest-level function which unpacks BLK to [`crate::blk::blk_structure::BlkField`]
 pub fn parse_blk(
@@ -103,7 +104,7 @@ pub fn parse_blk(
 		let chunk: [u8; 8] = params_info[index * 8..(index + 1) * 8].try_into().unwrap();
 		let name_id_raw = &chunk[0..3];
 		let name_id = u32::from_le_bytes([name_id_raw[0], name_id_raw[1], name_id_raw[2], 0]);
-		let type_id = chunk[3];
+		let type_id = BlkTypeId::try_from(chunk[3]).map_err(|_| UnknownBlkTypeId(chunk[3]))?;
 		let data = &chunk[4..];
 		let name = names
 			.get(name_id as usize)
@@ -114,7 +115,7 @@ pub fn parse_blk(
 			)))?
 			.clone();
 
-		let parsed = if is_slim && type_id == STRING {
+		let parsed = if is_slim && type_id == BlkTypeId::STRING {
 			BlkType::from_raw_param_info(
 				type_id,
 				data,
@@ -129,11 +130,10 @@ pub fn parse_blk(
 					.parsed
 					.as_slice(),
 			)
-			.ok_or(BadBlkValue)?
 		} else {
 			BlkType::from_raw_param_info(type_id, data, params_data, names.as_ref())
-				.ok_or(BadBlkValue)?
-		};
+		}
+		.ok_or(BadBlkValue)?;
 		#[cfg(feature = "instrument_binary_blk")]
 		eprintln!("KV {index}: [{name_id}]{name}:{}", parsed.to_string());
 

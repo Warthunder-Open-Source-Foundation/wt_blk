@@ -1,5 +1,5 @@
-use std::{io::Read, isize, iter::once, sync::Arc};
-use std::ops::Add;
+use std::{io::Read, isize, iter::once, ops::Add, sync::Arc};
+
 use color_eyre::{eyre::ContextCompat, Report};
 use itertools::Itertools;
 use zstd::Decoder;
@@ -47,7 +47,9 @@ impl NameMap {
 		once(-1_isize)
 			.chain(memchr::memchr_iter(b'\0', file).map(|u| u as isize))
 			.tuple_windows::<(isize, isize)>()
-			.map(|(start, end)| BlkString::from_lossy(&file[(start.add(1) as usize)..(end as usize)]))
+			.map(|(start, end)| {
+				BlkString::from_lossy(&file[(start.add(1) as usize)..(end as usize)])
+			})
 			.collect()
 	}
 

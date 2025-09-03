@@ -3,7 +3,6 @@ use std::{
 	io,
 	io::Write,
 };
-
 use color_eyre::Report;
 use serde::{Deserialize, Serialize, Serializer};
 use serde_json::{
@@ -16,21 +15,31 @@ use crate::blk::{
 	blk_type::blk_type_id::*,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset, bytes_to_uint},
 };
+use crate::blk::blk_string::blk_str;
 
 /// Unique ID for each type found in BLK
 pub mod blk_type_id {
-	pub const STRING: u8 = 0x01;
-	pub const INT: u8 = 0x02;
-	pub const INT2: u8 = 0x07;
-	pub const INT3: u8 = 0x08;
-	pub const LONG: u8 = 0x0C;
-	pub const FLOAT: u8 = 0x03;
-	pub const FLOAT2: u8 = 0x04;
-	pub const FLOAT3: u8 = 0x05;
-	pub const FLOAT4: u8 = 0x06;
-	pub const FLOAT12: u8 = 0x0B;
-	pub const BOOL: u8 = 0x09;
-	pub const COLOR: u8 = 0x0A;
+	#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, num_enum::IntoPrimitive, num_enum::TryFromPrimitive)]
+	#[repr(u8)]
+	pub enum BlkTypeId {
+		STRING  = 0x01,
+		INT     = 0x02,
+		INT2    = 0x07,
+		INT3    = 0x08,
+		LONG    = 0x0C,
+		FLOAT   = 0x03,
+		FLOAT2  = 0x04,
+		FLOAT3  = 0x05,
+		FLOAT4  = 0x06,
+		FLOAT12 = 0x0B,
+		BOOL    = 0x09,
+		COLOR   = 0x0A,
+		// TODO: Determine what this type ID represents
+		// Bitset?
+		// Transparency?
+		// It is quite certainly not a pointer
+		UNKNOWN = 0x0D,
+	}
 }
 
 /// Asserts the size of BlkType is constant
@@ -73,13 +82,13 @@ impl BlkType {
 	/// Field is a 4 byte long region that either contains the final value or offset for the data region
 	/// data_region is for non-32 bit data
 	pub fn from_raw_param_info(
-		type_id: u8,
+		type_id: BlkTypeId,
 		field: &[u8],
 		data_region: &[u8],
 		name_map: &[BlkString],
 	) -> Option<Self> {
 		match type_id {
-			STRING => {
+			BlkTypeId::STRING => {
 				// Explanation:
 				// Strings have their offset encoded as a LE integer constructed from 31 bits
 				// The first bit in their field is an indicator whether or not to search in the regular data region or name map
@@ -97,9 +106,9 @@ impl BlkType {
 
 				Some(Self::Str(res))
 			},
-			INT => Some(Self::Int(bytes_to_int(field)?)),
-			FLOAT => Some(Self::Float(bytes_to_float(field)?)),
-			FLOAT2 => {
+			BlkTypeId::INT => Some(Self::Int(bytes_to_int(field)?)),
+			BlkTypeId::FLOAT => Some(Self::Float(bytes_to_float(field)?)),
+			BlkTypeId::FLOAT2 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
 				Some(Self::Float2([
@@ -107,7 +116,7 @@ impl BlkType {
 					bytes_to_float(&data_region[4..8])?,
 				]))
 			},
-			FLOAT3 => {
+			BlkTypeId::FLOAT3 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 12)];
 				Some(Self::Float3([
@@ -116,7 +125,7 @@ impl BlkType {
 					bytes_to_float(&data_region[8..12])?,
 				]))
 			},
-			FLOAT4 => {
+			BlkTypeId::FLOAT4 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 16)];
 				Some(Self::Float4(Box::new([
@@ -126,7 +135,7 @@ impl BlkType {
 					bytes_to_float(&data_region[12..16])?,
 				])))
 			},
-			INT2 => {
+			BlkTypeId::INT2 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
 				Some(Self::Int2([
@@ -134,7 +143,7 @@ impl BlkType {
 					bytes_to_int(&data_region[4..8])?,
 				]))
 			},
-			INT3 => {
+			BlkTypeId::INT3 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 12)];
 				Some(Self::Int3([
@@ -143,14 +152,14 @@ impl BlkType {
 					bytes_to_int(&data_region[8..12])?,
 				]))
 			},
-			BOOL => Some(Self::Bool(field[0] != 0)),
-			COLOR => Some(Self::Color {
+			BlkTypeId::BOOL => Some(Self::Bool(field[0] != 0)),
+			BlkTypeId::COLOR => Some(Self::Color {
 				r: field[0],
 				g: field[1],
 				b: field[2],
 				a: field[3],
 			}),
-			FLOAT12 => {
+			BlkTypeId::FLOAT12 => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 48)];
 				Some(Self::Float12(Box::new([
@@ -168,17 +177,19 @@ impl BlkType {
 					bytes_to_float(&data_region[44..48])?,
 				])))
 			},
-			LONG => {
+			BlkTypeId::LONG => {
 				let offset = bytes_to_offset(field)?;
 				let data_region = &data_region[offset..(offset + 8)];
 				Some(Self::Long(bytes_to_long(data_region)?))
 			},
-			_ => None,
+			BlkTypeId::UNKNOWN => {
+					Some(Self::Str(blk_str(format!("UNKNOWN: {:?}", &field))))
+			}
 		}
 	}
 
-	// grcov-excl-start
-	pub const fn type_code(&self) -> u8 {
+	pub const fn type_code(&self) -> BlkTypeId {
+		use crate::blk::blk_type::BlkTypeId::*;
 		match self {
 			BlkType::Str(_) => STRING,
 			BlkType::Int(_) => INT,
@@ -194,10 +205,6 @@ impl BlkType {
 			BlkType::Color { .. } => COLOR,
 		}
 	}
-
-	// grcov-excl-stop
-
-	// grcov-excl-start
 
 	/// Defines if the value is stored directly in the reference section,
 	/// or if the value found is an offset to the value section
@@ -218,9 +225,6 @@ impl BlkType {
 		}
 	}
 
-	// grcov-excl-stop
-
-	// grcov-excl-start
 	pub fn size_bytes(&self) -> usize {
 		match self {
 			BlkType::Str(inner) => inner.len(),
@@ -237,8 +241,6 @@ impl BlkType {
 			BlkType::Color { .. } => 4,
 		}
 	}
-
-	// grcov-excl-stop
 
 	pub const fn blk_type_name(&self) -> &'static str {
 		match self {

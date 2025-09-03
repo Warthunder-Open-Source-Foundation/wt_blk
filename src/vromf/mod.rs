@@ -23,4 +23,4 @@ mod test;
 mod unpacker;
 
 pub use file::File;
-pub use unpacker::{BlkOutputFormat, VromfUnpacker, ZipFormat, FileFilter};
+pub use unpacker::{BlkOutputFormat, FileFilter, VromfUnpacker, ZipFormat};
