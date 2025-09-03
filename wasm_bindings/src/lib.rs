@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use wasm_bindgen::prelude::wasm_bindgen;
 use wt_blk::blk::DecoderDictionary;
-use wt_blk::blk::nm_file::NameMap;
+use wt_blk::blk::name_map::NameMap;
 
 /// Converts binary BLK into json string
 #[wasm_bindgen]
