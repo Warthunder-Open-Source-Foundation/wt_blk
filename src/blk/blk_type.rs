@@ -269,7 +269,7 @@ impl BlkType {
 	pub fn is_valid_type(t: &str) -> bool {
 		matches!(
 			t,
-			"t" | "i" | "ip2" | "ip3" | "i64" | "r" | "p2" | "p3" | "p4" | "m" | "b" | "c"
+			"t" | "i" | "ip2" | "ip3" | "ip4" | "i64" | "r" | "p2" | "p3" | "p4" | "m" | "b" | "c"
 		)
 	}
 
@@ -421,7 +421,7 @@ mod test {
 	#[test]
 	fn test_valid_types() {
 		assert_eq!(
-			["t", "i", "ip2", "ip3", "i64", "r", "p2", "p3", "p4", "m", "b", "c"]
+			["t", "i", "ip2", "ip3", "ip4", "i64", "r", "p2", "p3", "p4", "m", "b", "c"]
 				.iter()
 				.all(|e| BlkType::is_valid_type(e)),
 			true
