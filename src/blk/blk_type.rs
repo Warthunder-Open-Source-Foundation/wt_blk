@@ -15,7 +15,6 @@ use crate::blk::{
 	blk_type::blk_type_id::*,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset, bytes_to_uint},
 };
-use crate::blk::blk_string::blk_str;
 
 /// Unique ID for each type found in BLK
 pub mod blk_type_id {
@@ -26,6 +25,7 @@ pub mod blk_type_id {
 		INT     = 0x02,
 		INT2    = 0x07,
 		INT3    = 0x08,
+		INT4 = 0x0D,
 		LONG    = 0x0C,
 		FLOAT   = 0x03,
 		FLOAT2  = 0x04,
@@ -34,11 +34,6 @@ pub mod blk_type_id {
 		FLOAT12 = 0x0B,
 		BOOL    = 0x09,
 		COLOR   = 0x0A,
-		// TODO: Determine what this type ID represents
-		// Bitset?
-		// Transparency?
-		// It is quite certainly not a pointer
-		UNKNOWN = 0x0D,
 	}
 }
 
@@ -61,6 +56,7 @@ pub enum BlkType {
 	Int(i32),
 	Int2([i32; 2]),
 	Int3([i32; 3]),
+	Int4(Box<[i32; 4]>),
 	Long(i64),
 	Float(f32),
 	Float2([f32; 2]),
@@ -152,6 +148,16 @@ impl BlkType {
 					bytes_to_int(&data_region[8..12])?,
 				]))
 			},
+			BlkTypeId::INT4 => {
+				let offset = bytes_to_offset(field)?;
+				let data_region = &data_region[offset..(offset + 16)];
+				Some(Self::Int4(Box::new([
+					bytes_to_int(&data_region[0..4])?,
+					bytes_to_int(&data_region[4..8])?,
+					bytes_to_int(&data_region[8..12])?,
+					bytes_to_int(&data_region[12..16])?,
+				])))
+			},
 			BlkTypeId::BOOL => Some(Self::Bool(field[0] != 0)),
 			BlkTypeId::COLOR => Some(Self::Color {
 				r: field[0],
@@ -182,9 +188,6 @@ impl BlkType {
 				let data_region = &data_region[offset..(offset + 8)];
 				Some(Self::Long(bytes_to_long(data_region)?))
 			},
-			BlkTypeId::UNKNOWN => {
-					Some(Self::Str(blk_str(format!("UNKNOWN: {:?}", &field))))
-			}
 		}
 	}
 
@@ -195,6 +198,7 @@ impl BlkType {
 			BlkType::Int(_) => INT,
 			BlkType::Int2(_) => INT2,
 			BlkType::Int3(_) => INT3,
+			BlkType::Int4(_) => INT4,
 			BlkType::Long(_) => LONG,
 			BlkType::Float(_) => FLOAT,
 			BlkType::Float2(_) => FLOAT2,
@@ -214,6 +218,7 @@ impl BlkType {
 			BlkType::Int(_) => true,
 			BlkType::Int2(_) => false,
 			BlkType::Int3(_) => false,
+			BlkType::Int4(_) => false,
 			BlkType::Long(_) => false,
 			BlkType::Float(_) => true,
 			BlkType::Float2(_) => false,
@@ -231,6 +236,7 @@ impl BlkType {
 			BlkType::Int(_) => 4,
 			BlkType::Int2(_) => 8,
 			BlkType::Int3(_) => 12,
+			BlkType::Int4(_) => 16,
 			BlkType::Long(_) => 8,
 			BlkType::Float(_) => 4,
 			BlkType::Float2(_) => 8,
@@ -248,6 +254,7 @@ impl BlkType {
 			BlkType::Int(_) => "i",
 			BlkType::Int2(_) => "ip2",
 			BlkType::Int3(_) => "ip3",
+			BlkType::Int4(_) => "ip4",
 			BlkType::Long(_) => "i64",
 			BlkType::Float(_) => "r",
 			BlkType::Float2(_) => "p2",
@@ -291,6 +298,9 @@ impl BlkType {
 				write_generic_array(PrettyFormatter::write_i32, s.iter(), w, ser)?;
 			},
 			BlkType::Int3(s) => {
+				write_generic_array(PrettyFormatter::write_i32, s.iter(), w, ser)?;
+			},
+			BlkType::Int4(s) => {
 				write_generic_array(PrettyFormatter::write_i32, s.iter(), w, ser)?;
 			},
 			BlkType::Long(s) => {
@@ -357,6 +367,9 @@ impl Display for BlkType {
 			},
 			BlkType::Int3(v) => {
 				write!(f, "{}, {}, {}", v[0], v[1], v[2])
+			},
+			BlkType::Int4(v) => {
+				write!(f, "{}, {}, {} {}", v[0], v[1], v[2], v[3])
 			},
 			BlkType::Long(v) => write!(f, "{v}"),
 			BlkType::Float(v) => write!(f, "{v}"),
