@@ -47,7 +47,7 @@ fn netfile() {
 			.unwrap()
 			.value()
 			.unwrap()
-			.to_string(),
+			.to_string_default(),
 		"t = \"○ Warriors at the gate ○\""
 	)
 }

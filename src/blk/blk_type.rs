@@ -1,5 +1,4 @@
 use std::{
-	fmt::{Display, Formatter as StdFormatter},
 	io,
 	io::Write,
 };
@@ -354,9 +353,48 @@ fn write_generic_array<'a, 'b, T: 'a + Copy, W: Write>(
 	Ok(())
 }
 
-impl Display for BlkType {
-	fn fmt(&self, f: &mut StdFormatter<'_>) -> std::fmt::Result {
-		write!(f, "{} = ", self.blk_type_name())?;
+#[derive(Copy, Clone)]
+pub struct BlkFormatting {
+	pub yesno_booleans: bool,
+	pub assignment_spacing: bool,
+}
+
+impl BlkFormatting {
+	pub const fn standard() -> Self {
+		Self {
+			yesno_booleans: false,
+			assignment_spacing: true,
+		}
+	}
+
+	pub const fn compact() -> Self {
+		Self {
+			yesno_booleans: true,
+			assignment_spacing: false,
+		}
+	}
+}
+
+impl BlkType {
+	pub fn to_string_default(&self) -> String {
+		self.to_string_with(BlkFormatting::standard())
+	}
+
+	pub fn to_string_with(&self, format: BlkFormatting) -> String {
+		let mut buf = Vec::new();
+		let _ = self.fmt_with(&mut buf, format); // Infallible
+		String::from_utf8(buf).unwrap()
+	}
+
+	pub fn fmt_default(&self, f: &mut impl Write) -> io::Result<()>  {
+		self.fmt_with(f, BlkFormatting::standard())
+	}
+	pub fn fmt_with(&self, f: &mut impl Write, format: BlkFormatting) -> io::Result<()> {
+		if format.assignment_spacing {
+			write!(f, "{} = ", self.blk_type_name())?;
+		} else {
+			write!(f, "{}=", self.blk_type_name())?;
+		}
 		match self {
 			BlkType::Str(v) => {
 				write!(f, "\"{}\"", v)
@@ -395,7 +433,8 @@ impl Display for BlkType {
 				write!(f, "]")?;
 				Ok(())
 			},
-			BlkType::Bool(v) => write!(f, "{v}"),
+			//											yes/no or true/false
+			BlkType::Bool(v) => write!(f, "{}", if format.yesno_booleans { if *v { "yes" } else { "no" } } else { if *v { "true" } else { "false" } }),
 			BlkType::Color { r, g, b, a } => {
 				write!(f, "{r}, {g}, {b}, {a}")
 			},
@@ -406,11 +445,12 @@ impl Display for BlkType {
 #[cfg(test)]
 mod test {
 	use crate::blk::{blk_string::blk_str, blk_type::BlkType};
+	use crate::blk::blk_type::BlkFormatting;
 
 	#[test]
 	fn test_string() {
 		let t = BlkType::Str(blk_str("yeet"));
-		assert_eq!(t.to_string(), "t = \"yeet\"")
+		assert_eq!(t.to_string_default(), "t = \"yeet\"")
 	}
 
 	#[test]
@@ -434,7 +474,7 @@ mod test {
 			1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
 		]));
 		assert_eq!(
-			t.to_string(),
+			t.to_string_default(),
 			"m = [[1.0, 2.0, 3.0] [4.0, 5.0, 6.0] [7.0, 8.0, 9.0] [10.0, 11.0, 12.0]]"
 		)
 	}
@@ -442,9 +482,24 @@ mod test {
 	#[test]
 	fn test_float() {
 		let t = BlkType::Float(42.0);
-		assert_eq!(t.to_string(), "r = 42");
+		assert_eq!(t.to_string_default(), "r = 42");
 
 		let t = BlkType::Float(42.69);
-		assert_eq!(t.to_string(), "r = 42.69");
+		assert_eq!(t.to_string_default(), "r = 42.69");
+	}
+
+	#[test]
+	fn test_compact_format() {
+		let t = BlkType::Float(42.0);
+		assert_eq!(t.to_string_with(BlkFormatting::compact()), "r=42");
+
+		let t = BlkType::Float(42.69);
+		assert_eq!(t.to_string_with(BlkFormatting::compact()), "r=42.69");
+
+		let t = BlkType::Bool(false);
+		assert_eq!(t.to_string_with(BlkFormatting::compact()), "b=no");
+
+		let t = BlkType::Bool(true);
+		assert_eq!(t.to_string_with(BlkFormatting::compact()), "b=yes");
 	}
 }

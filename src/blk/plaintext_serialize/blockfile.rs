@@ -1,21 +1,22 @@
 use color_eyre::{eyre::bail, Report};
 
 use crate::blk::{blk_string::BlkString, blk_structure::BlkField, blk_type::BlkType};
+use crate::blk::blk_type::BlkFormatting;
 
 impl BlkField {
 	// Public facing formatting fn
-	pub fn as_blk_text(&self) -> Result<String, Report> {
-		self.inner_as_blk_text(&mut 0, true)
+	pub fn as_blk_text(&self, format: BlkFormatting) -> Result<String, Report> {
+		self.inner_as_blk_text(&mut 0, true, format)
 	}
 
 	// TODO: Make this generic with a configuration file
 	// Internal fn that actually formats
-	fn inner_as_blk_text(&self, indent_level: &mut usize, is_root: bool) -> Result<String, Report> {
+	fn inner_as_blk_text(&self, indent_level: &mut usize, is_root: bool, format: BlkFormatting) -> Result<String, Report> {
 		match self {
 			BlkField::Value(name, value) => Ok(format!(
 				"{name}:{value}",
 				name = escape_key(name),
-				value = escape_value(value)
+				value = escape_value(value, format)
 			)),
 			BlkField::Struct(name, fields) => {
 				let indent = "\t".repeat(*indent_level);
@@ -25,7 +26,7 @@ impl BlkField {
 					.map(|x| {
 						Ok(format!(
 							"{indent}{}",
-							x.inner_as_blk_text(indent_level, false)?
+							x.inner_as_blk_text(indent_level, false, format)?
 						))
 					})
 					.collect::<Result<Vec<_>, Report>>()?
@@ -55,16 +56,16 @@ fn escape_key(field: &BlkString) -> String {
 }
 
 // Slowpath for escaping, it's a rare case
-fn escape_value(value: &BlkType) -> String {
+fn escape_value(value: &BlkType, format: BlkFormatting) -> String {
 	match value {
 		BlkType::Str(s) => {
 			if s.contains('\"') {
 				format!("{ty} = '{s}'", ty = value.blk_type_name())
 			} else {
-				value.to_string()
+				value.to_string_with(format)
 			}
 		},
-		_ => value.to_string(),
+		_ => value.to_string_with(format),
 	}
 }
 
@@ -76,12 +77,13 @@ mod test {
 		blk_type::BlkType,
 		make_strict_test,
 	};
+	use crate::blk::blk_type::BlkFormatting;
 
 	#[test]
 	fn test_expected() {
 		// For testing purposes i should probably make a better way for this
 		let root = make_strict_test();
-		println!("{}", root.inner_as_blk_text(&mut 0, true).unwrap());
+		println!("{}", root.inner_as_blk_text(&mut 0, true, BlkFormatting::standard()).unwrap());
 	}
 
 	#[test]
@@ -91,7 +93,7 @@ mod test {
 			BlkType::Str(blk_str("this is totally not escaped \" ")),
 		);
 		assert_eq!(
-			root.inner_as_blk_text(&mut 0, true).unwrap(),
+			root.inner_as_blk_text(&mut 0, true, BlkFormatting::standard()).unwrap(),
 			r#""totally not escaped":t = 'this is totally not escaped " '"#
 		);
 	}
