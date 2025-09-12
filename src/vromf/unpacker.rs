@@ -65,6 +65,16 @@ pub struct VromfUnpacker {
 pub enum BlkOutputFormat {
 	Json,
 	BlkText,
+	BlkCompact,
+}
+
+impl BlkOutputFormat {
+	pub fn map_to_formatter(self) -> BlkFormatting {
+		match self {
+			BlkOutputFormat::Json | BlkOutputFormat::BlkText => {BlkFormatting::standard()},
+			BlkOutputFormat::BlkCompact => {BlkFormatting::compact()},
+		}
+	}
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -148,7 +158,6 @@ impl VromfUnpacker {
 		mut self,
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
-		blk_formatting: BlkFormatting,
 	) -> Result<Vec<File>, Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
 		// Due to partial moving rules this is necessary
@@ -156,7 +165,7 @@ impl VromfUnpacker {
 		files
 			.into_par_iter()
 			.panic_fuse()
-			.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides, FileFilter::All, blk_formatting))
+			.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides, FileFilter::All))
 			.collect::<Result<Vec<File>, Report>>()
 	}
 
@@ -170,7 +179,6 @@ impl VromfUnpacker {
 		// false increases global throughput when executed from a threadpool,
 		// but slower when individual calls are performed
 		threaded: bool,
-		blk_formatting: BlkFormatting,
 	) -> Result<(), Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
 		// Due to partial moving rules this is necessary
@@ -190,7 +198,6 @@ impl VromfUnpacker {
 						apply_overrides,
 						&mut w,
 						FileFilter::All,
-						blk_formatting,
 					)?;
 					Ok(())
 				})
@@ -206,7 +213,6 @@ impl VromfUnpacker {
 						apply_overrides,
 						&mut w,
 						FileFilter::All,
-						blk_formatting,
 					)?;
 					Ok(())
 				})
@@ -224,7 +230,6 @@ impl VromfUnpacker {
 		// but slower when individual calls are performed
 		threaded: bool,
 		filter: FileFilter,
-		blk_formatting: BlkFormatting,
 	) -> Result<Vec<u8>, Report> {
 		// TODO: Figure out some way to deduplicate this
 		// ParIter and Iter are obv. incompatible so this might need macro magic of sorts
@@ -235,7 +240,7 @@ impl VromfUnpacker {
 				.panic_fuse()
 				.cloned()
 				.map(|file| {
-					self.unpack_file(file, unpack_blk_into, apply_overrides, filter.clone(), blk_formatting)
+					self.unpack_file(file, unpack_blk_into, apply_overrides, filter.clone())
 				})
 				.collect::<Result<Vec<File>, Report>>()?
 		} else {
@@ -243,7 +248,7 @@ impl VromfUnpacker {
 				.iter()
 				.cloned()
 				.map(|file| {
-					self.unpack_file(file, unpack_blk_into, apply_overrides, filter.clone(), blk_formatting)
+					self.unpack_file(file, unpack_blk_into, apply_overrides, filter.clone())
 				})
 				.collect::<Result<Vec<File>, Report>>()?
 		};
@@ -277,7 +282,6 @@ impl VromfUnpacker {
 		apply_overrides: bool,
 		// Runs unpacking in the global rayon threadpool if true, otherwise its single threaded
 		threaded: bool,
-		blk_formatting: BlkFormatting,
 	) -> Result<Vec<u8>, Report> {
 		self.unpack_subfolder_to_zip(
 			zip_format,
@@ -285,7 +289,6 @@ impl VromfUnpacker {
 			apply_overrides,
 			threaded,
 			FileFilter::All,
-			blk_formatting,
 		)
 	}
 
@@ -295,7 +298,6 @@ impl VromfUnpacker {
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
 		file_filter: FileFilter,
-		blk_formatting: BlkFormatting,
 	) -> Result<File, Report> {
 		let file = self
 			.files
@@ -307,7 +309,7 @@ impl VromfUnpacker {
 			))
 			.suggestion("Validate file-name and ensure it was typed correctly")?
 			.to_owned();
-		self.unpack_file(file, unpack_blk_into, apply_overrides, file_filter, blk_formatting)
+		self.unpack_file(file, unpack_blk_into, apply_overrides, file_filter)
 	}
 
 	pub fn unpack_file(
@@ -316,7 +318,6 @@ impl VromfUnpacker {
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
 		filter: FileFilter,
-		blk_formatting: BlkFormatting,
 	) -> Result<File, Report> {
 		let mut buf = Cursor::new(Vec::with_capacity(4096));
 		self.unpack_file_with_writer(
@@ -325,7 +326,6 @@ impl VromfUnpacker {
 			apply_overrides,
 			&mut buf,
 			filter,
-			blk_formatting,
 		)?;
 		*file.buf_mut() = buf.into_inner();
 		Ok(file)
@@ -339,7 +339,6 @@ impl VromfUnpacker {
 		apply_overrides: bool,
 		mut writer: impl Write,
 		filter: FileFilter,
-		blk_formatting: BlkFormatting,
 	) -> Result<(), Report> {
 		if filter.accept(file).not() {
 			return Ok(());
@@ -351,11 +350,11 @@ impl VromfUnpacker {
 						.context(format!("unpacking {}", file.path().to_string_lossy()))?;
 
 					match format {
-						BlkOutputFormat::BlkText => {
+						BlkOutputFormat::BlkText | BlkOutputFormat::BlkCompact => {
 							if apply_overrides {
 								parsed.apply_overrides(false);
 							}
-							writer.write_all(parsed.as_blk_text(blk_formatting)?.as_bytes())?;
+							writer.write_all(parsed.as_blk_text(format.map_to_formatter())?.as_bytes())?;
 						},
 						BlkOutputFormat::Json => {
 							parsed.merge_fields()?;
@@ -386,7 +385,7 @@ impl VromfUnpacker {
 		};
 
 		if let Ok((_, version_file)) = self
-			.unpack_one(Path::new("version"), None, false, FileFilter::All, BlkFormatting::standard())
+			.unpack_one(Path::new("version"), None, false, FileFilter::All)
 			.map(|e| e.split())
 		{
 			let s = String::from_utf8(version_file)?;

@@ -1,7 +1,6 @@
 use std::{fs, path::PathBuf, str::FromStr};
 
 use wt_version::Version;
-use crate::blk::blk_type::BlkFormatting;
 use crate::vromf::{
 	binary_container::decode_bin_vromf,
 	inner_container::decode_inner_vromf,
@@ -13,7 +12,7 @@ use crate::vromf::{
 fn grp_vromf() {
 	let out = VromfUnpacker::from_file(&File::new("./samples/grp_hdr.vromfs.bin").unwrap(), true)
 		.unwrap();
-	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true, BlkFormatting::standard()).unwrap();
+	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true).unwrap();
 	assert_eq!(2322, unpacked.len())
 }
 
@@ -27,7 +26,6 @@ fn write_to_zip() {
 			Some(BlkOutputFormat::Json),
 			true,
 			true,
-			BlkFormatting::standard(),
 		)
 		.unwrap();
 	assert_eq!(55061478, unpacked.len())
@@ -37,7 +35,7 @@ fn write_to_zip() {
 fn regular_vromf() {
 	let out =
 		VromfUnpacker::from_file(&File::new("./samples/aces.vromfs.bin").unwrap(), true).unwrap();
-	let unpacked = out.unpack_all(None, true, BlkFormatting::standard()).unwrap();
+	let unpacked = out.unpack_all(None, true).unwrap();
 	assert_eq!(15632, unpacked.len())
 }
 
@@ -52,7 +50,6 @@ fn regional() {
 			Some(BlkOutputFormat::BlkText),
 			true,
 			FileFilter::All,
-			BlkFormatting::standard(),
 		)
 		.unwrap();
 }
@@ -61,7 +58,7 @@ fn regional() {
 fn no_nm_vromf() {
 	let out = VromfUnpacker::from_file(&File::new("./samples/atlases.vromfs.bin").unwrap(), true)
 		.unwrap();
-	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true, BlkFormatting::standard()).unwrap();
+	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true).unwrap();
 	assert_eq!(8924, unpacked.len())
 }
 
@@ -93,7 +90,7 @@ fn new_format() {
 		true,
 	)
 	.unwrap();
-	let _unpacked = out.unpack_all(None, false, BlkFormatting::standard()).unwrap();
+	let _unpacked = out.unpack_all(None, false).unwrap();
 	println!("{}", _unpacked.len());
 }
 
