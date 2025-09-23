@@ -27,10 +27,3 @@ pub(crate) fn join_hex(hex: &[u8]) -> String {
 pub(crate) fn debug_hex(hex: &[u8]) {
 	eprintln!("{:?}", format_hex(hex));
 }
-
-#[allow(unused)]
-#[cfg(test)]
-pub(crate) fn load_eyre() {
-	std::env::set_var("RUST_BACKTRACE", "full");
-	color_eyre::install().unwrap();
-}
