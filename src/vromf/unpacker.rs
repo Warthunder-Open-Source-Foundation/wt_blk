@@ -3,7 +3,7 @@ use std::{
 	fmt::{Debug, Formatter},
 	io::{Cursor, Write},
 	mem,
-	ops::{Deref, Not},
+	ops::{Deref},
 	path::{Path, PathBuf},
 	str::FromStr,
 	sync::Arc,
@@ -198,6 +198,7 @@ impl VromfUnpacker {
 		// false increases global throughput when executed from a threadpool,
 		// but slower when individual calls are performed
 		threaded: bool,
+		filter: FileFilter,
 	) -> Result<(), Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
 		// Due to partial moving rules this is necessary
@@ -209,6 +210,7 @@ impl VromfUnpacker {
 			files
 				.into_par_iter()
 				.panic_fuse()
+				.filter(|e|filter.accept(&e))
 				.map(|mut file| {
 					let mut w = writer(&mut file)?;
 					self.unpack_file_with_writer(
@@ -223,6 +225,7 @@ impl VromfUnpacker {
 		} else {
 			files
 				.into_iter()
+				.filter(|e|filter.accept(&e))
 				.map(|mut file| {
 					let mut w = writer(&mut file)?;
 					self.unpack_file_with_writer(
