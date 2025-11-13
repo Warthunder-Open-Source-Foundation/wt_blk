@@ -193,7 +193,7 @@ impl VromfUnpacker {
 		mut self,
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
-		writer: impl FnOnce(&mut File) -> Result<W, Report> + Sync + Send + Copy,
+		writer: impl FnOnce(&mut File) -> Result<W, Report> + Sync + Send + Clone,
 		// Runs unpacking in the global rayon threadpool if true, otherwise its single threaded
 		// false increases global throughput when executed from a threadpool,
 		// but slower when individual calls are performed
@@ -212,7 +212,7 @@ impl VromfUnpacker {
 				.panic_fuse()
 				.filter(|e|filter.accept(&e))
 				.map(|mut file| {
-					let mut w = writer(&mut file)?;
+					let mut w = writer.clone()(&mut file)?;
 					self.unpack_file_with_writer(
 						&mut file,
 						unpack_blk_into,
@@ -227,7 +227,7 @@ impl VromfUnpacker {
 				.into_iter()
 				.filter(|e|filter.accept(&e))
 				.map(|mut file| {
-					let mut w = writer(&mut file)?;
+					let mut w = writer.clone()(&mut file)?;
 					self.unpack_file_with_writer(
 						&mut file,
 						unpack_blk_into,
