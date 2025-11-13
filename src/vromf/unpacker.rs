@@ -10,27 +10,26 @@ use std::{
 };
 
 use color_eyre::{
-	eyre::{eyre, Context, ContextCompat},
 	Help,
 	Report,
+	eyre::{Context, ContextCompat, eyre},
 };
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use regex::Regex;
 use wt_version::Version;
-use zip::{write::SimpleFileOptions, CompressionMethod, ZipWriter};
+use zip::{CompressionMethod, ZipWriter, write::SimpleFileOptions};
 use zstd::dict::DecoderDictionary;
 
 use crate::{
 	blk,
-	blk::{name_map::NameMap, util::maybe_blk},
+	blk::{blk_type::BlkFormatting, name_map::NameMap, util::maybe_blk},
 	vromf::{
+		File,
 		binary_container::decode_bin_vromf,
 		header::Metadata,
 		inner_container::decode_inner_vromf,
-		File,
 	},
 };
-use crate::blk::blk_type::BlkFormatting;
 
 // TODO: Check if this leaks, or if the FFI drops the contents appropriately
 // TODO: Implement https://docs.rs/zstd/latest/zstd/dict/struct.DecoderDictionary.html#method.new once it is no longer experimental
@@ -71,8 +70,8 @@ pub enum BlkOutputFormat {
 impl BlkOutputFormat {
 	pub fn map_to_formatter(self) -> BlkFormatting {
 		match self {
-			BlkOutputFormat::Json | BlkOutputFormat::BlkText => {BlkFormatting::standard()},
-			BlkOutputFormat::BlkCompact => {BlkFormatting::compact()},
+			BlkOutputFormat::Json | BlkOutputFormat::BlkText => BlkFormatting::standard(),
+			BlkOutputFormat::BlkCompact => BlkFormatting::compact(),
 		}
 	}
 }
@@ -142,8 +141,21 @@ impl VromfUnpacker {
 			.transpose()?
 			.map(|elem| Arc::new(elem));
 
-		if let Some(nm) = nm.as_ref() && dump_parsed_nm {
-			inner.push(File::from_raw(PathBuf::from_str("nm.txt")?, nm.parsed.join("\n").into_bytes()));
+		if let Some(nm) = nm.as_ref()
+			&& dump_parsed_nm
+		{
+			let mut sorted = (*nm.parsed).clone();
+			sorted.sort_by(|a, b| a.cmp(b));
+
+			inner.push(File::from_raw(
+				PathBuf::from_str("nm.txt")?,
+				sorted
+					.iter()
+					.map(|s| s.as_str())
+					.collect::<Vec<_>>()
+					.join("\n")
+					.into_bytes(),
+			));
 		}
 
 		let dict = inner
@@ -359,7 +371,9 @@ impl VromfUnpacker {
 							if apply_overrides {
 								parsed.apply_overrides(false);
 							}
-							writer.write_all(parsed.as_blk_text(format.map_to_formatter())?.as_bytes())?;
+							writer.write_all(
+								parsed.as_blk_text(format.map_to_formatter())?.as_bytes(),
+							)?;
 						},
 						BlkOutputFormat::Json => {
 							parsed.merge_fields()?;

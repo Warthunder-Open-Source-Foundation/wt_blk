@@ -7,7 +7,7 @@ use std::{
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-#[derive(Debug, Clone, PartialEq, Hash, Eq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, Hash, Eq, PartialOrd, Ord)]
 /// Efficient string wrapper for this specific application
 pub struct BlkString {
 	inner: Arc<String>,
