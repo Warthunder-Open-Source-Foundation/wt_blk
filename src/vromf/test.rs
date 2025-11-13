@@ -10,7 +10,7 @@ use crate::vromf::{
 
 #[test]
 fn grp_vromf() {
-	let out = VromfUnpacker::from_file(&File::new("./samples/grp_hdr.vromfs.bin").unwrap(), true)
+	let out = VromfUnpacker::from_file(&File::new("./samples/grp_hdr.vromfs.bin").unwrap(), true, false)
 		.unwrap();
 	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true).unwrap();
 	assert_eq!(2322, unpacked.len())
@@ -19,7 +19,7 @@ fn grp_vromf() {
 #[test]
 fn write_to_zip() {
 	let out =
-		VromfUnpacker::from_file(&File::new("./samples/aces.vromfs.bin").unwrap(), true).unwrap();
+		VromfUnpacker::from_file(&File::new("./samples/aces.vromfs.bin").unwrap(), true, false).unwrap();
 	let unpacked = out
 		.unpack_all_to_zip(
 			ZipFormat::Compressed(1),
@@ -34,7 +34,7 @@ fn write_to_zip() {
 #[test]
 fn regular_vromf() {
 	let out =
-		VromfUnpacker::from_file(&File::new("./samples/aces.vromfs.bin").unwrap(), true).unwrap();
+		VromfUnpacker::from_file(&File::new("./samples/aces.vromfs.bin").unwrap(), true, false).unwrap();
 	let unpacked = out.unpack_all(None, true).unwrap();
 	assert_eq!(15632, unpacked.len())
 }
@@ -42,7 +42,7 @@ fn regular_vromf() {
 // Smoke-test
 #[test]
 fn regional() {
-	let out = VromfUnpacker::from_file(&File::new("./samples/regional.vromfs.bin").unwrap(), true)
+	let out = VromfUnpacker::from_file(&File::new("./samples/regional.vromfs.bin").unwrap(), true, false)
 		.unwrap();
 	let _unpacked = out
 		.unpack_one(
@@ -56,7 +56,7 @@ fn regional() {
 
 #[test]
 fn no_nm_vromf() {
-	let out = VromfUnpacker::from_file(&File::new("./samples/atlases.vromfs.bin").unwrap(), true)
+	let out = VromfUnpacker::from_file(&File::new("./samples/atlases.vromfs.bin").unwrap(), true, true)
 		.unwrap();
 	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true).unwrap();
 	assert_eq!(8924, unpacked.len())
@@ -72,7 +72,7 @@ fn decode_simple() {
 #[test]
 fn version() {
 	let out =
-		VromfUnpacker::from_file(&File::new("./samples/aces.vromfs.bin").unwrap(), true).unwrap();
+		VromfUnpacker::from_file(&File::new("./samples/aces.vromfs.bin").unwrap(), true, true).unwrap();
 	assert_eq!(
 		vec![
 			Version::from_str("2.25.1.39").unwrap(),
@@ -88,6 +88,7 @@ fn new_format() {
 	let out = VromfUnpacker::from_file(
 		&File::new("./samples/2_30_vromfs/aces.vromfs.bin").unwrap(),
 		true,
+		false,
 	)
 	.unwrap();
 	let _unpacked = out.unpack_all(None, false).unwrap();

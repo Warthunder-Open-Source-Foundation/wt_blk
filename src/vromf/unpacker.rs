@@ -130,9 +130,10 @@ impl FileFilter {
 }
 
 impl VromfUnpacker {
-	pub fn from_file(file: &File, validate: bool) -> Result<Self, Report> {
+	// TODO: dump_parsed_nm should maybe be an argument passed to the other unpack functions, not the struct
+	pub fn from_file(file: &File, validate: bool, dump_parsed_nm: bool) -> Result<Self, Report> {
 		let (decoded, metadata) = decode_bin_vromf(file.buf(), validate)?;
-		let inner = decode_inner_vromf(&decoded, validate)?;
+		let mut inner = decode_inner_vromf(&decoded, validate)?;
 
 		let nm = inner
 			.iter()
@@ -140,6 +141,10 @@ impl VromfUnpacker {
 			.map(|elem| NameMap::from_encoded_file(&elem.buf()))
 			.transpose()?
 			.map(|elem| Arc::new(elem));
+
+		if let Some(nm) = nm.as_ref() && dump_parsed_nm {
+			inner.push(File::from_raw(PathBuf::from_str("nm.txt")?, nm.parsed.join("\n").into_bytes()));
+		}
 
 		let dict = inner
 			.iter()
