@@ -10,7 +10,8 @@ use std::{
 };
 
 use color_eyre::{
-	Help, Report,
+	Help,
+	Report,
 	eyre::{Context, ContextCompat, eyre},
 };
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -19,12 +20,13 @@ use wt_version::Version;
 use zip::{CompressionMethod, ZipWriter, write::SimpleFileOptions};
 use zstd::dict::DecoderDictionary;
 
-use crate::blk::blk_type::BlkFormatting;
 use crate::{
 	blk,
-	blk::{name_map::NameMap, util::maybe_blk},
+	blk::{blk_type::BlkFormatting, name_map::NameMap, util::maybe_blk},
 	vromf::{
-		File, binary_container::decode_bin_vromf, header::Metadata,
+		File,
+		binary_container::decode_bin_vromf,
+		header::Metadata,
 		inner_container::decode_inner_vromf,
 	},
 };
@@ -51,9 +53,9 @@ impl<'a> Deref for DictWrapper {
 /// Unpacks vromf image into all internal files, optionally formatting binary BLK files
 #[derive(Debug, Clone)]
 pub struct VromfUnpacker {
-	files: Vec<File>,
-	dict: Option<Arc<DictWrapper>>,
-	nm: Option<Arc<NameMap>>,
+	files:    Vec<File>,
+	dict:     Option<Arc<DictWrapper>>,
+	nm:       Option<Arc<NameMap>>,
 	metadata: Metadata,
 }
 
@@ -85,7 +87,7 @@ pub enum FileFilter {
 	All,
 	OneFolder {
 		remove_base: bool,
-		prefix: Arc<PathBuf>,
+		prefix:      Arc<PathBuf>,
 	},
 	FullPathRegex {
 		rex: Arc<Regex>,
