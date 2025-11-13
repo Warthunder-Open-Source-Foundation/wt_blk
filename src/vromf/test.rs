@@ -49,7 +49,6 @@ fn regional() {
 			&PathBuf::from_str("dldata/downloadable_decals.blk").unwrap(),
 			Some(BlkOutputFormat::BlkText),
 			true,
-			FileFilter::All,
 		)
 		.unwrap();
 }
