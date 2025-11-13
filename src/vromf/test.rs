@@ -12,7 +12,7 @@ use crate::vromf::{
 fn grp_vromf() {
 	let out = VromfUnpacker::from_file(&File::new("./samples/grp_hdr.vromfs.bin").unwrap(), true, false)
 		.unwrap();
-	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true).unwrap();
+	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true, FileFilter::All).unwrap();
 	assert_eq!(2322, unpacked.len())
 }
 
@@ -35,7 +35,7 @@ fn write_to_zip() {
 fn regular_vromf() {
 	let out =
 		VromfUnpacker::from_file(&File::new("./samples/aces.vromfs.bin").unwrap(), true, false).unwrap();
-	let unpacked = out.unpack_all(None, true).unwrap();
+	let unpacked = out.unpack_all(None, true, FileFilter::All).unwrap();
 	assert_eq!(15632, unpacked.len())
 }
 
@@ -58,7 +58,7 @@ fn regional() {
 fn no_nm_vromf() {
 	let out = VromfUnpacker::from_file(&File::new("./samples/atlases.vromfs.bin").unwrap(), true, true)
 		.unwrap();
-	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true).unwrap();
+	let unpacked = out.unpack_all(Some(BlkOutputFormat::Json), true, FileFilter::All).unwrap();
 	assert_eq!(8924, unpacked.len())
 }
 
@@ -91,7 +91,7 @@ fn new_format() {
 		false,
 	)
 	.unwrap();
-	let _unpacked = out.unpack_all(None, false).unwrap();
+	let _unpacked = out.unpack_all(None, false, FileFilter::All).unwrap();
 	println!("{}", _unpacked.len());
 }
 

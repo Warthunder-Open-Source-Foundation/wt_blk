@@ -175,6 +175,7 @@ impl VromfUnpacker {
 		mut self,
 		unpack_blk_into: Option<BlkOutputFormat>,
 		apply_overrides: bool,
+		file_filter: FileFilter,
 	) -> Result<Vec<File>, Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
 		// Due to partial moving rules this is necessary
@@ -182,7 +183,7 @@ impl VromfUnpacker {
 		files
 			.into_par_iter()
 			.panic_fuse()
-			.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides, FileFilter::All))
+			.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides, file_filter.clone()))
 			.collect::<Result<Vec<File>, Report>>()
 	}
 
@@ -196,6 +197,7 @@ impl VromfUnpacker {
 		// false increases global throughput when executed from a threadpool,
 		// but slower when individual calls are performed
 		threaded: bool,
+		file_filter: FileFilter,
 	) -> Result<(), Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
 		// Due to partial moving rules this is necessary
@@ -214,7 +216,7 @@ impl VromfUnpacker {
 						unpack_blk_into,
 						apply_overrides,
 						&mut w,
-						FileFilter::All,
+						file_filter.clone(),
 					)?;
 					Ok(())
 				})
@@ -229,7 +231,7 @@ impl VromfUnpacker {
 						unpack_blk_into,
 						apply_overrides,
 						&mut w,
-						FileFilter::All,
+						file_filter.clone(),
 					)?;
 					Ok(())
 				})
