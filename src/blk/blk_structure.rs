@@ -71,7 +71,7 @@ impl BlkField {
 						let replaced = key.replace("override:", "");
 
 						for (_, inner) in map.iter_mut() {
-							if inner.get_name().as_ref() == replaced {
+							if inner.get_name().as_str() == replaced {
 								value.set_name(blk_str(replaced.as_str()));
 								*inner = value.clone();
 							}

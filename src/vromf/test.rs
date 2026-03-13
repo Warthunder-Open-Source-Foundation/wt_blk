@@ -28,7 +28,7 @@ fn write_to_zip() {
 			true,
 		)
 		.unwrap();
-	assert_eq!(55061478, unpacked.len())
+	assert_eq!(59739743, unpacked.len()) // Update size when internal files change but zip did not
 }
 
 #[test]

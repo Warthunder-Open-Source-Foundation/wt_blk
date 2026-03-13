@@ -16,26 +16,26 @@ exclude = ["samples"]
 serde_json ={version = "^1.0", features = ["preserve_order", "float_roundtrip"]}
 serde = {version = "^1.0", features = ["serde_derive", "rc"]}
 thiserror = "^2.0"
-zstd = "^0.13.2"
-rayon = "^1.10"
-tracing = "^0.1.41"
-memmap2 = "^0.9.5"
+zstd = "^0.13.3"
+rayon = "^1.11"
+tracing = "^0.1.44"
+memmap2 = "^0.9.10"
 color-eyre = "^0.6"
-strum = { version = "^0.26.3", default-features = false, features = ["derive"] }
-indexmap = "^2.7"
+strum = { version = "0.28.0", default-features = false, features = ["derive"] }
+indexmap = "^2.13"
 cfg-if = "^1.0"
-zip = { version = "^2.2", features = ["deflate"], default-features = false}
+zip = { version = "8.2", features = ["deflate"], default-features = false}
 wt_version = "^0.1.2"
 ryu = "^1.0"
-md5 = "^0.7.0"
+md5 = "0.8.0"
 fallible-iterator = {version = "^0.3.0", features = ["std"] }
 sha1_smol = {version = "^1.0", features = ["std"]}
-itertools = "^0.13.0"
-regex = "1.11.1"
-foldhash = "0.1.5"
+itertools = "0.14.0"
+regex = "1.12.3"
+foldhash = "0.2.0"
 smallvec = "1.15.1"
-memchr = "2.7.5"
-num_enum = "0.7.4"
+memchr = "2.8"
+num_enum = "0.7.5"
 
 [profile.test]
 #opt-level = 3
