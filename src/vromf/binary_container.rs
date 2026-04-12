@@ -75,7 +75,7 @@
 
 use std::mem::size_of;
 
-use color_eyre::{eyre::bail, Report, Section};
+use color_eyre::{Report, Section, eyre::bail};
 use wt_version::Version;
 
 use crate::vromf::{

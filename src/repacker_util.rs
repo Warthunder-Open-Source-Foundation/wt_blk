@@ -4,8 +4,8 @@ use std::{
 };
 
 use color_eyre::{
-	eyre::{ensure, ContextCompat},
 	Report,
+	eyre::{ContextCompat, ensure},
 };
 
 pub struct Buffer {

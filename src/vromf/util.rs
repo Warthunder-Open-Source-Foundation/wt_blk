@@ -1,8 +1,8 @@
 use std::mem::size_of;
 
 use color_eyre::{
-	eyre::{bail, Context},
 	Report,
+	eyre::{Context, bail},
 };
 
 use crate::vromf::enums::Packing;

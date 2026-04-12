@@ -1,12 +1,13 @@
-use crate::blk::binary_deserialize::parser::ParseError::UnknownBlkTypeId;
 use std::{borrow::Cow, sync::Arc};
+
 use tracing::error;
 
 use crate::blk::{
+	binary_deserialize::parser::ParseError::UnknownBlkTypeId,
 	blk_block_hierarchy::FlatBlock,
 	blk_string::blk_str,
 	blk_structure::BlkField,
-	blk_type::{BlkType},
+	blk_type::{BlkType, blk_type_id::BlkTypeId},
 	error::{
 		ParseError,
 		ParseError::{BadBlkValue, ResidualBlockBuffer},
@@ -14,7 +15,6 @@ use crate::blk::{
 	leb128::uleb128,
 	name_map::NameMap,
 };
-use crate::blk::blk_type::blk_type_id::BlkTypeId;
 
 /// Lowest-level function which unpacks BLK to [`crate::blk::blk_structure::BlkField`]
 pub fn parse_blk(
@@ -74,7 +74,10 @@ pub fn parse_blk(
 
 		let names = NameMap::parse_name_section(idx_file_offset(&mut ptr, names_data_size)?);
 		if names_count != names.len() {
-			error!("Name count mismatch, expected {names_count}, but found a len of {}. This might mean something is wrong.", names.len());
+			error!(
+				"Name count mismatch, expected {names_count}, but found a len of {}. This might mean something is wrong.",
+				names.len()
+			);
 		}
 		Cow::Owned(names)
 	};

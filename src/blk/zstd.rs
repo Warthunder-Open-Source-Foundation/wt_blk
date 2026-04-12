@@ -1,7 +1,7 @@
 use std::io::{BufReader, Read};
 
-use color_eyre::{eyre::ContextCompat, Report};
-use zstd::{dict::DecoderDictionary, Decoder};
+use color_eyre::{Report, eyre::ContextCompat};
+use zstd::{Decoder, dict::DecoderDictionary};
 
 use crate::blk::file::FileType;
 
@@ -39,7 +39,7 @@ pub fn decode_zstd(
 mod test {
 	use std::{fs, io::Read};
 
-	use zstd::{dict::DecoderDictionary, Decoder};
+	use zstd::{Decoder, dict::DecoderDictionary};
 
 	use crate::blk::{file::FileType, zstd::decode_zstd};
 

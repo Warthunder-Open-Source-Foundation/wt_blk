@@ -3,7 +3,7 @@ use std::{
 	fmt::{Debug, Formatter},
 	io::{Cursor, Write},
 	mem,
-	ops::{Deref},
+	ops::Deref,
 	path::{Path, PathBuf},
 	str::FromStr,
 	sync::Arc,
@@ -65,6 +65,36 @@ pub enum BlkOutputFormat {
 	Json,
 	BlkText,
 	BlkCompact,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
+pub enum ContinueMode {
+	#[default]
+	ExitOnFirstError, // As one expects, it simply fails on the first error
+	Standard, // Silently skips failed file
+	Quiet,
+}
+
+// Yields closure to filter failed/completed according to mode
+fn continue_filter<T>(mode: ContinueMode) -> impl for<'a> Fn(&'a Result<T, Report>) -> bool {
+	move |e: &Result<T, Report>| {
+		if let Err(e) = e {
+			match mode {
+				ContinueMode::ExitOnFirstError => false, // Yield, crash with error
+				ContinueMode::Standard => {
+					eprintln!(
+						"Continue mode is on, the following error is a file that was skipped\n{e}"
+					);
+					false // Do not yield, drop error
+				},
+				ContinueMode::Quiet => {
+					false // Do not yield, drop error
+				},
+			}
+		} else {
+			true // Yield because not an error
+		}
+	}
 }
 
 impl BlkOutputFormat {
@@ -183,7 +213,7 @@ impl VromfUnpacker {
 		files
 			.into_par_iter()
 			.panic_fuse()
-			.filter(|e|file_filter.accept(&e))
+			.filter(|e| file_filter.accept(&e))
 			.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides))
 			.collect::<Result<Vec<File>, Report>>()
 	}
@@ -199,6 +229,7 @@ impl VromfUnpacker {
 		// but slower when individual calls are performed
 		threaded: bool,
 		filter: FileFilter,
+		continue_mode: ContinueMode,
 	) -> Result<(), Report> {
 		// Important: We own self here, so "destroying" the files vector isn't an issue
 		// Due to partial moving rules this is necessary
@@ -210,7 +241,7 @@ impl VromfUnpacker {
 			files
 				.into_par_iter()
 				.panic_fuse()
-				.filter(|e|filter.accept(&e))
+				.filter(|e| filter.accept(&e))
 				.map(|mut file| {
 					let mut w = writer.clone()(&mut file)?;
 					self.unpack_file_with_writer(
@@ -221,11 +252,12 @@ impl VromfUnpacker {
 					)?;
 					Ok(())
 				})
+				.filter(continue_filter(continue_mode))
 				.collect::<Result<(), Report>>()
 		} else {
 			files
 				.into_iter()
-				.filter(|e|filter.accept(&e))
+				.filter(|e| filter.accept(&e))
 				.map(|mut file| {
 					let mut w = writer.clone()(&mut file)?;
 					self.unpack_file_with_writer(
@@ -236,6 +268,7 @@ impl VromfUnpacker {
 					)?;
 					Ok(())
 				})
+				.filter(continue_filter(continue_mode))
 				.collect::<Result<(), Report>>()
 		}
 	}
@@ -250,6 +283,7 @@ impl VromfUnpacker {
 		// but slower when individual calls are performed
 		threaded: bool,
 		filter: FileFilter,
+		continue_mode: ContinueMode,
 	) -> Result<Vec<u8>, Report> {
 		// TODO: Figure out some way to deduplicate this
 		// ParIter and Iter are obv. incompatible so this might need macro magic of sorts
@@ -259,17 +293,15 @@ impl VromfUnpacker {
 				.into_par_iter()
 				.panic_fuse()
 				.cloned()
-				.map(|file| {
-					self.unpack_file(file, unpack_blk_into, apply_overrides)
-				})
+				.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides))
+				.filter(continue_filter(continue_mode))
 				.collect::<Result<Vec<File>, Report>>()?
 		} else {
 			files
 				.iter()
 				.cloned()
-				.map(|file| {
-					self.unpack_file(file, unpack_blk_into, apply_overrides)
-				})
+				.map(|file| self.unpack_file(file, unpack_blk_into, apply_overrides))
+				.filter(continue_filter(continue_mode))
 				.collect::<Result<Vec<File>, Report>>()?
 		};
 
@@ -302,6 +334,7 @@ impl VromfUnpacker {
 		apply_overrides: bool,
 		// Runs unpacking in the global rayon threadpool if true, otherwise its single threaded
 		threaded: bool,
+		continue_mode: ContinueMode,
 	) -> Result<Vec<u8>, Report> {
 		self.unpack_subfolder_to_zip(
 			zip_format,
@@ -309,6 +342,7 @@ impl VromfUnpacker {
 			apply_overrides,
 			threaded,
 			FileFilter::All,
+			continue_mode,
 		)
 	}
 
@@ -338,12 +372,7 @@ impl VromfUnpacker {
 		apply_overrides: bool,
 	) -> Result<File, Report> {
 		let mut buf = Cursor::new(Vec::with_capacity(4096));
-		self.unpack_file_with_writer(
-			&mut file,
-			unpack_blk_into,
-			apply_overrides,
-			&mut buf,
-		)?;
+		self.unpack_file_with_writer(&mut file, unpack_blk_into, apply_overrides, &mut buf)?;
 		*file.buf_mut() = buf.into_inner();
 		Ok(file)
 	}

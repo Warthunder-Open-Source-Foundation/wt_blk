@@ -1,6 +1,6 @@
 use std::{io::Read, isize, iter::once, ops::Add, sync::Arc};
 
-use color_eyre::{eyre::ContextCompat, Report};
+use color_eyre::{Report, eyre::ContextCompat};
 use itertools::Itertools;
 use zstd::Decoder;
 

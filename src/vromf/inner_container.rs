@@ -75,18 +75,18 @@ use std::{
 };
 
 use color_eyre::{
-	eyre::{bail, Context, ContextCompat},
 	Report,
+	eyre::{Context, ContextCompat, bail},
 };
-use fallible_iterator::{convert, FallibleIterator};
+use fallible_iterator::{FallibleIterator, convert};
 use sha1_smol::Sha1;
 
 use crate::{
 	repacker_util::Buffer,
 	util::join_hex,
 	vromf::{
-		util::{bytes_to_int, bytes_to_usize},
 		File,
+		util::{bytes_to_int, bytes_to_usize},
 	},
 };
 
@@ -176,7 +176,12 @@ pub fn decode_inner_vromf(file: &[u8], validate: bool) -> Result<Vec<File>, Repo
 	let data_info = &file[data_info_offset..(data_info_offset + data_info_len)];
 	let (data_info_split, data_info_remainder) = data_info.as_chunks::<{ size_of::<u32>() }>(); // Data-info consists of u32 pairs, so we will split them once
 	if data_info_remainder.len() != 0 {
-		bail!("Unaligned chunks: the data-set of size {} was supposed to align/chunk into {}, but {} remained", data_info.len(), size_of::<u32>(), data_info_remainder.len());
+		bail!(
+			"Unaligned chunks: the data-set of size {} was supposed to align/chunk into {}, but {} remained",
+			data_info.len(),
+			size_of::<u32>(),
+			data_info_remainder.len()
+		);
 	}
 
 	// This has to align to 4, because of previous chunk checks

@@ -20,7 +20,9 @@ pub enum DxpGrpError {
 		file_size:   usize,
 	},
 
-	#[error("The file was a valid, but cut short before the names section, minimum bytes are 0x48, but the file was only {len:X}")]
+	#[error(
+		"The file was a valid, but cut short before the names section, minimum bytes are 0x48, but the file was only {len:X}"
+	)]
 	FileTooShort { len: usize },
 
 	#[error(transparent)]

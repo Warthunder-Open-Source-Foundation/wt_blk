@@ -1,12 +1,10 @@
-use std::{
-	io,
-	io::Write,
-};
+use std::{io, io::Write};
+
 use color_eyre::Report;
 use serde::{Deserialize, Serialize, Serializer};
 use serde_json::{
-	ser::{Formatter, PrettyFormatter},
 	Serializer as JsonSerializer,
+	ser::{Formatter, PrettyFormatter},
 };
 
 use crate::blk::{
@@ -17,14 +15,16 @@ use crate::blk::{
 
 /// Unique ID for each type found in BLK
 pub mod blk_type_id {
-	#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, num_enum::IntoPrimitive, num_enum::TryFromPrimitive)]
+	#[derive(
+		Debug, Copy, Clone, PartialEq, Eq, Hash, num_enum::IntoPrimitive, num_enum::TryFromPrimitive,
+	)]
 	#[repr(u8)]
 	pub enum BlkTypeId {
 		STRING  = 0x01,
 		INT     = 0x02,
 		INT2    = 0x07,
 		INT3    = 0x08,
-		INT4 = 0x0D,
+		INT4    = 0x0D,
 		LONG    = 0x0C,
 		FLOAT   = 0x03,
 		FLOAT2  = 0x04,
@@ -355,21 +355,21 @@ fn write_generic_array<'a, 'b, T: 'a + Copy, W: Write>(
 
 #[derive(Copy, Clone)]
 pub struct BlkFormatting {
-	pub yesno_booleans: bool,
+	pub yesno_booleans:     bool,
 	pub assignment_spacing: bool,
 }
 
 impl BlkFormatting {
 	pub const fn standard() -> Self {
 		Self {
-			yesno_booleans: false,
+			yesno_booleans:     false,
 			assignment_spacing: true,
 		}
 	}
 
 	pub const fn compact() -> Self {
 		Self {
-			yesno_booleans: true,
+			yesno_booleans:     true,
 			assignment_spacing: false,
 		}
 	}
@@ -386,9 +386,10 @@ impl BlkType {
 		String::from_utf8(buf).unwrap()
 	}
 
-	pub fn fmt_default(&self, f: &mut impl Write) -> io::Result<()>  {
+	pub fn fmt_default(&self, f: &mut impl Write) -> io::Result<()> {
 		self.fmt_with(f, BlkFormatting::standard())
 	}
+
 	pub fn fmt_with(&self, f: &mut impl Write, format: BlkFormatting) -> io::Result<()> {
 		if format.assignment_spacing {
 			write!(f, "{} = ", self.blk_type_name())?;
@@ -433,8 +434,16 @@ impl BlkType {
 				write!(f, "]")?;
 				Ok(())
 			},
-			//											yes/no or true/false
-			BlkType::Bool(v) => write!(f, "{}", if format.yesno_booleans { if *v { "yes" } else { "no" } } else { if *v { "true" } else { "false" } }),
+			// 											yes/no or true/false
+			BlkType::Bool(v) => write!(
+				f,
+				"{}",
+				if format.yesno_booleans {
+					if *v { "yes" } else { "no" }
+				} else {
+					if *v { "true" } else { "false" }
+				}
+			),
 			BlkType::Color { r, g, b, a } => {
 				write!(f, "{r}, {g}, {b}, {a}")
 			},
@@ -444,8 +453,10 @@ impl BlkType {
 
 #[cfg(test)]
 mod test {
-	use crate::blk::{blk_string::blk_str, blk_type::BlkType};
-	use crate::blk::blk_type::BlkFormatting;
+	use crate::blk::{
+		blk_string::blk_str,
+		blk_type::{BlkFormatting, BlkType},
+	};
 
 	#[test]
 	fn test_string() {
@@ -461,9 +472,11 @@ mod test {
 	#[test]
 	fn test_valid_types() {
 		assert_eq!(
-			["t", "i", "ip2", "ip3", "ip4", "i64", "r", "p2", "p3", "p4", "m", "b", "c"]
-				.iter()
-				.all(|e| BlkType::is_valid_type(e)),
+			[
+				"t", "i", "ip2", "ip3", "ip4", "i64", "r", "p2", "p3", "p4", "m", "b", "c"
+			]
+			.iter()
+			.all(|e| BlkType::is_valid_type(e)),
 			true
 		)
 	}

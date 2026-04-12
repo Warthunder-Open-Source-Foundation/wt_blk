@@ -1,7 +1,10 @@
-use color_eyre::{eyre::bail, Report};
+use color_eyre::{Report, eyre::bail};
 
-use crate::blk::{blk_string::BlkString, blk_structure::BlkField, blk_type::BlkType};
-use crate::blk::blk_type::BlkFormatting;
+use crate::blk::{
+	blk_string::BlkString,
+	blk_structure::BlkField,
+	blk_type::{BlkFormatting, BlkType},
+};
 
 impl BlkField {
 	// Public facing formatting fn
@@ -11,7 +14,12 @@ impl BlkField {
 
 	// TODO: Make this generic with a configuration file
 	// Internal fn that actually formats
-	fn inner_as_blk_text(&self, indent_level: &mut usize, is_root: bool, format: BlkFormatting) -> Result<String, Report> {
+	fn inner_as_blk_text(
+		&self,
+		indent_level: &mut usize,
+		is_root: bool,
+		format: BlkFormatting,
+	) -> Result<String, Report> {
 		match self {
 			BlkField::Value(name, value) => Ok(format!(
 				"{name}:{value}",
@@ -41,7 +49,9 @@ impl BlkField {
 				})
 			},
 			BlkField::Merged(..) => {
-				bail!("Attempted to parse merged array in blk-text function (array type is not available in the BLK format)")
+				bail!(
+					"Attempted to parse merged array in blk-text function (array type is not available in the BLK format)"
+				)
 			},
 		}
 	}
@@ -74,16 +84,19 @@ mod test {
 	use crate::blk::{
 		blk_string::blk_str,
 		blk_structure::BlkField,
-		blk_type::BlkType,
+		blk_type::{BlkFormatting, BlkType},
 		make_strict_test,
 	};
-	use crate::blk::blk_type::BlkFormatting;
 
 	#[test]
 	fn test_expected() {
 		// For testing purposes i should probably make a better way for this
 		let root = make_strict_test();
-		println!("{}", root.inner_as_blk_text(&mut 0, true, BlkFormatting::standard()).unwrap());
+		println!(
+			"{}",
+			root.inner_as_blk_text(&mut 0, true, BlkFormatting::standard())
+				.unwrap()
+		);
 	}
 
 	#[test]
@@ -93,7 +106,8 @@ mod test {
 			BlkType::Str(blk_str("this is totally not escaped \" ")),
 		);
 		assert_eq!(
-			root.inner_as_blk_text(&mut 0, true, BlkFormatting::standard()).unwrap(),
+			root.inner_as_blk_text(&mut 0, true, BlkFormatting::standard())
+				.unwrap(),
 			r#""totally not escaped":t = 'this is totally not escaped " '"#
 		);
 	}

@@ -1,6 +1,6 @@
 use std::{fs, ops::Deref, path::Path, time::Duration};
 
-use divan::{black_box, Bencher};
+use divan::{Bencher, black_box};
 use wt_blk::{
 	blk::{
 		blk_string::blk_str,

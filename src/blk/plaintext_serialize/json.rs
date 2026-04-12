@@ -3,7 +3,7 @@ use std::{io::Write, mem};
 use color_eyre::Report;
 use foldhash::HashMapExt;
 use serde_json::ser::{Formatter, PrettyFormatter};
-use smallvec::{smallvec, SmallVec};
+use smallvec::{SmallVec, smallvec};
 
 use crate::blk::{blk_string::BlkString, blk_structure::BlkField};
 

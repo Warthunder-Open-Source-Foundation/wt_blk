@@ -138,8 +138,8 @@ use std::{
 	fs,
 	fs::ReadDir,
 	sync::{
-		atomic::{AtomicUsize, Ordering},
 		Arc,
+		atomic::{AtomicUsize, Ordering},
 	},
 };
 

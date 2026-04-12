@@ -1,11 +1,11 @@
 use std::{fmt::Debug, iter::Peekable, mem};
 
-use color_eyre::{eyre::bail, Report};
+use color_eyre::{Report, eyre::bail};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 use crate::blk::{
-	blk_string::{blk_str, BlkString},
+	blk_string::{BlkString, blk_str},
 	blk_type::BlkType,
 };
 
