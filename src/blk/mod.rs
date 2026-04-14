@@ -146,6 +146,7 @@ use std::{
 pub use ::zstd::dict::DecoderDictionary;
 use blk_string::blk_str;
 use cfg_if::cfg_if;
+use color_eyre::eyre::bail;
 use color_eyre::Report;
 
 use crate::blk::{
@@ -232,6 +233,9 @@ pub fn unpack_blk(
 ) -> Result<BlkField, Report> {
 	let mut offset = 0;
 	let file_type = FileType::from_byte(file[0])?;
+	if file_type == FileType::BBF {
+		bail!("BBF file type currently not supported, its a legacy format from before 2019");
+	}
 	if file_type.is_zstd() {
 		if file_type == FileType::FAT_ZSTD {
 			offset += 1

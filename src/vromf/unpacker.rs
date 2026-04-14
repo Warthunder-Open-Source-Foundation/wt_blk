@@ -80,7 +80,7 @@ fn continue_filter<T>(mode: ContinueMode) -> impl for<'a> Fn(&'a Result<T, Repor
 	move |e: &Result<T, Report>| {
 		if let Err(e) = e {
 			match mode {
-				ContinueMode::ExitOnFirstError => false, // Yield, crash with error
+				ContinueMode::ExitOnFirstError => true, // Yield, crash with error
 				ContinueMode::Standard => {
 					eprintln!(
 						"Continue mode is on, the following error is a file that was skipped\n{e}"
