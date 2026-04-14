@@ -98,7 +98,7 @@ pub fn parse_blk(
 
 	let params_info = idx_file_offset(&mut ptr, params_count * 8)?;
 
-	let block_info = &file.get(ptr..).ok_or(ResidualBlockBuffer)?;
+	let block_info = file.get(ptr..).ok_or(ResidualBlockBuffer)?;
 
 	let _ptr = (); // Shadowing ptr causes it to become unusable, especially on accident
 
