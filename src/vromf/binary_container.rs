@@ -73,14 +73,18 @@
 //! # Continue reading
 //! To learn how the payload is used, read [`crate::vromf::inner_container`].
 
-use std::mem::size_of;
+use std::{io::Write, mem::size_of};
 
-use color_eyre::{Report, Section, eyre::bail};
+use color_eyre::{
+	Report,
+	Section,
+	eyre::{ContextCompat, bail},
+};
 use wt_version::Version;
 
 use crate::vromf::{
-	de_obfuscation::deobfuscate,
-	enums::{HeaderType, PlatformType},
+	de_obfuscation::{deobfuscate, obfuscate},
+	enums::{HeaderType, Packing, PlatformType},
 	header::Metadata,
 	util::{bytes_to_int, pack_type_from_aligned},
 };
@@ -187,15 +191,64 @@ pub(crate) fn decode_bin_vromf(file: &[u8], validate: bool) -> Result<(Vec<u8>, 
 	Ok((output, metadata))
 }
 
-pub(crate) fn _encode_bin_vromf(_input: &[u8], _meta: Metadata) -> Result<Vec<u8>, Report> {
-	todo!()
+pub(crate) fn _encode_bin_vromf(input: &[u8], meta: Metadata) -> Result<Vec<u8>, Report> {
+	let header_type = meta.header_type.context("Missing header type")?;
+	let platform = meta.platform.context("Missing platform")?;
+	let packing = meta.packing.context("Missing packing")?;
+
+	let mut output = Vec::new();
+
+	// Base header (16 bytes)
+	output.write_all(&(header_type as u32).to_le_bytes())?;
+	output.write_all(&(platform as u32).to_le_bytes())?;
+	output.write_all(&(input.len() as u32).to_le_bytes())?;
+
+	// Prepare payload
+	let payload: Vec<u8> = if packing == Packing::PLAIN {
+		input.to_vec()
+	} else {
+		let mut compressed = zstd::encode_all(input, 0)?;
+		obfuscate(&mut compressed);
+		compressed
+	};
+
+	// Compression info: top 6 bits = packing, lower 26 bits = payload size
+	let compression_info = (packing as u32) << 26 | (payload.len() as u32 & 0x03FF_FFFF);
+	output.write_all(&compression_info.to_le_bytes())?;
+
+	// Extended header (if VRFX)
+	if header_type.is_extended() {
+		let version = meta
+			.version
+			.context("Missing version for extended header")?;
+		output.write_all(&8u16.to_le_bytes())?;
+		output.write_all(&0u16.to_le_bytes())?;
+		// Version is stored reversed in the file
+		output.write_all(&[
+			version.patch() as u8,
+			version.minor() as u8,
+			version.major() as u8,
+			version.global() as u8,
+		])?;
+	}
+
+	// Payload
+	output.write_all(&payload)?;
+
+	// MD5 checksum (if applicable)
+	if packing.has_hash() {
+		let hash = md5::compute(input);
+		output.write_all(&hash.0)?;
+	}
+
+	Ok(output)
 }
 
 #[cfg(test)]
 mod test {
 	use std::fs;
 
-	use crate::vromf::binary_container::decode_bin_vromf;
+	use crate::vromf::binary_container::{_encode_bin_vromf, decode_bin_vromf};
 
 	#[test]
 	fn decode_compressed() {
@@ -203,13 +256,13 @@ mod test {
 		decode_bin_vromf(&f, true).unwrap();
 	}
 
-	// #[test]
-	// fn two_way() {
-	// 	let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
-	// 	let (decoded, meta) = decode_bin_vromf(&f).unwrap();
-	// 	let re_encoded = encode_bin_vromf(&decoded, meta).unwrap();
-	// 	assert_eq!(re_encoded, f);
-	// }
+	#[test]
+	fn two_way() {
+		let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
+		let (decoded, meta) = decode_bin_vromf(&f, true).unwrap();
+		let re_encoded = _encode_bin_vromf(&decoded, meta).unwrap();
+		assert_eq!(re_encoded, f);
+	}
 
 	// #[test]
 	// fn test_regional() {

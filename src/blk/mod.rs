@@ -146,8 +146,7 @@ use std::{
 pub use ::zstd::dict::DecoderDictionary;
 use blk_string::blk_str;
 use cfg_if::cfg_if;
-use color_eyre::eyre::bail;
-use color_eyre::Report;
+use color_eyre::{Report, eyre::bail};
 
 use crate::blk::{
 	binary_deserialize::parser::parse_blk,
