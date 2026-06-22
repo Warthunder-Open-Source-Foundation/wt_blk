@@ -89,7 +89,7 @@ use crate::vromf::{
 	util::{bytes_to_int, pack_type_from_aligned},
 };
 
-pub(crate) fn decode_bin_vromf(file: &[u8], validate: bool) -> Result<(Vec<u8>, Metadata), Report> {
+pub fn decode_bin_vromf(file: &[u8], validate: bool) -> Result<(Vec<u8>, Metadata), Report> {
 	let mut metadata = Metadata::default();
 
 	let mut ptr = 0_usize;
@@ -191,7 +191,7 @@ pub(crate) fn decode_bin_vromf(file: &[u8], validate: bool) -> Result<(Vec<u8>, 
 	Ok((output, metadata))
 }
 
-pub(crate) fn _encode_bin_vromf(input: &[u8], meta: Metadata) -> Result<Vec<u8>, Report> {
+pub fn encode_bin_vromf(input: &[u8], meta: Metadata) -> Result<Vec<u8>, Report> {
 	let header_type = meta.header_type.context("Missing header type")?;
 	let platform = meta.platform.context("Missing platform")?;
 	let packing = meta.packing.context("Missing packing")?;
@@ -248,7 +248,7 @@ pub(crate) fn _encode_bin_vromf(input: &[u8], meta: Metadata) -> Result<Vec<u8>,
 mod test {
 	use std::fs;
 
-	use crate::vromf::binary_container::{_encode_bin_vromf, decode_bin_vromf};
+	use crate::vromf::binary_container::{encode_bin_vromf, decode_bin_vromf};
 
 	#[test]
 	fn decode_compressed() {
@@ -260,7 +260,7 @@ mod test {
 	fn two_way() {
 		let f = fs::read("./samples/unchecked_extended_compressed_checked.vromfs.bin").unwrap();
 		let (decoded, meta) = decode_bin_vromf(&f, true).unwrap();
-		let re_encoded = _encode_bin_vromf(&decoded, meta).unwrap();
+		let re_encoded = encode_bin_vromf(&decoded, meta).unwrap();
 		assert_eq!(re_encoded, f);
 	}
 

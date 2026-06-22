@@ -9,18 +9,20 @@
 //! The inner container docs can be found here [`crate::vromf::inner_container`].
 
 pub mod de_obfuscation;
-mod enums;
+pub mod enums;
 mod util;
 
 /// This module unpacks the "outer" shell of the vromf image
 pub mod binary_container;
 
 pub(crate) mod file;
-mod header;
+pub mod header;
 pub mod inner_container;
 #[cfg(test)]
 mod test;
 mod unpacker;
 
+pub use enums::{HeaderType, Packing, PlatformType};
 pub use file::File;
+pub use header::Metadata;
 pub use unpacker::{BlkOutputFormat, ContinueMode, FileFilter, VromfUnpacker, ZipFormat};

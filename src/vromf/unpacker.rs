@@ -161,7 +161,8 @@ impl FileFilter {
 impl VromfUnpacker {
 	// TODO: dump_parsed_nm should maybe be an argument passed to the other unpack functions, not the struct
 	pub fn from_file(file: &File, validate: bool, dump_parsed_nm: bool) -> Result<Self, Report> {
-		let (decoded, metadata) = decode_bin_vromf(file.buf(), validate)?;
+		let (decoded, mut metadata) = decode_bin_vromf(file.buf(), validate)?;
+		metadata.digest = Some(decoded[0] == 0x30);
 		let mut inner = decode_inner_vromf(&decoded, validate)?;
 
 		let nm = inner
@@ -459,5 +460,9 @@ impl VromfUnpacker {
 
 	pub fn nm(&self) -> Option<Arc<NameMap>> {
 		self.nm.clone()
+	}
+
+	pub fn metadata(&self) -> &Metadata {
+		&self.metadata
 	}
 }
