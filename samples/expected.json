@@ -11,9 +11,9 @@
     "str": "hello",
     "bool": true,
     "color": [
-      3,
-      2,
       1,
+      2,
+      3,
       4
     ],
     "gamma": {

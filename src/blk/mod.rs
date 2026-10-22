@@ -266,10 +266,11 @@ pub fn make_strict_test() -> BlkField {
 					BlkField::Value(blk_str("bool"), BlkType::Bool(true)),
 					BlkField::Value(
 						blk_str("color"),
+						// samples/section_strict.blk has `color:c=1, 2, 3, 4`
 						BlkType::Color {
-							r: 3,
+							r: 1,
 							g: 2,
-							b: 1,
+							b: 3,
 							a: 4,
 						},
 					),

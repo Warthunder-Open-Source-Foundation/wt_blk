@@ -158,10 +158,11 @@ impl BlkType {
 				])))
 			},
 			BlkTypeId::BOOL => Some(Self::Bool(field[0] != 0)),
+			// Dagor's E3DCOLOR stores its bytes as b, g, r, a (dag_e3dColor.h)
 			BlkTypeId::COLOR => Some(Self::Color {
-				r: field[0],
+				r: field[2],
 				g: field[1],
-				b: field[2],
+				b: field[0],
 				a: field[3],
 			}),
 			BlkTypeId::FLOAT12 => {
@@ -408,7 +409,7 @@ impl BlkType {
 				write!(f, "{}, {}, {}", v[0], v[1], v[2])
 			},
 			BlkType::Int4(v) => {
-				write!(f, "{}, {}, {} {}", v[0], v[1], v[2], v[3])
+				write!(f, "{}, {}, {}, {}", v[0], v[1], v[2], v[3])
 			},
 			BlkType::Long(v) => write!(f, "{v}"),
 			BlkType::Float(v) => write!(f, "{v}"),

@@ -4,6 +4,7 @@ use zstd::dict::DecoderDictionary;
 
 use crate::blk::{
 	binary_deserialize::parser::parse_blk,
+	blk_type::BlkType,
 	file::FileType,
 	make_strict_test,
 	name_map::NameMap,
@@ -103,4 +104,13 @@ fn slim_blk() {
 	let output = parse_blk(&file[1..], true, Some(Arc::new(shared_name_map))).unwrap();
 	println!("{:?}", start.elapsed());
 	println!("{:?}", output.estimate_size());
+}
+
+#[test]
+fn int4_text_is_comma_separated() {
+	let mut out = vec![];
+	BlkType::Int4(Box::new([1, 2, 3, 4]))
+		.fmt_default(&mut out)
+		.unwrap();
+	assert!(String::from_utf8(out).unwrap().ends_with("1, 2, 3, 4"));
 }

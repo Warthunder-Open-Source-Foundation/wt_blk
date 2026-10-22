@@ -40,7 +40,7 @@ fn write_to_zip() {
 			ContinueMode::ExitOnFirstError,
 		)
 		.unwrap();
-	assert_eq!(59739743, unpacked.len()) // Update size when internal files change but zip did not
+	assert_eq!(59738962, unpacked.len()) // Update size when internal files change but zip did not
 }
 
 #[test]
