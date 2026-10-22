@@ -4,9 +4,13 @@ use zstd::dict::DecoderDictionary;
 
 use crate::blk::{
 	binary_deserialize::parser::parse_blk,
+	blk_string::blk_str,
+	blk_structure::BlkField,
+	blk_type::BlkType,
 	file::FileType,
 	make_strict_test,
 	name_map::NameMap,
+	unpack_blk,
 	zstd::decode_zstd,
 };
 
@@ -103,4 +107,48 @@ fn slim_blk() {
 	let output = parse_blk(&file[1..], true, Some(Arc::new(shared_name_map))).unwrap();
 	println!("{:?}", start.elapsed());
 	println!("{:?}", output.estimate_size());
+}
+
+#[test]
+fn slim_blk_with_its_own_names() {
+	let shared = NameMap {
+		binary: vec![],
+		parsed: Arc::new(vec![blk_str("alpha"), blk_str("beta")]),
+	};
+	let mut dump = vec![1, 6]; // 1 own name, 6 bytes
+	dump.extend_from_slice(b"gamma\0");
+	dump.extend_from_slice(&[1, 2, 6]); // 1 block, 2 params, 6 bytes of data
+	dump.extend_from_slice(b"hello\0");
+	// "gamma" (own name 2, after the 2 shared ones) is a string from this file's data
+	dump.extend_from_slice(&[2, 0, 0, 1]);
+	dump.extend_from_slice(&0u32.to_le_bytes());
+	// "alpha" is a string naming entry 2 of the name map
+	dump.extend_from_slice(&[0, 0, 0, 1]);
+	dump.extend_from_slice(&(2u32 | 1 << 31).to_le_bytes());
+	dump.extend_from_slice(&[0, 2, 0]); // root: 2 params, no blocks
+
+	let parsed = parse_blk(&dump, true, Some(Arc::new(shared))).unwrap();
+	assert_eq!(
+		parsed,
+		BlkField::Struct(
+			blk_str("root"),
+			vec![
+				BlkField::Value(blk_str("gamma"), BlkType::Str(blk_str("hello"))),
+				BlkField::Value(blk_str("alpha"), BlkType::Str(blk_str("gamma"))),
+			]
+		)
+	);
+}
+
+#[test]
+fn blk_without_names() {
+	// No names means no size for them either
+	let dump = [0, 1, 0, 0, 0, 0, 0];
+	let parsed = parse_blk(&dump, false, None).unwrap();
+	assert_eq!(parsed, BlkField::Struct(blk_str("root"), vec![]));
+}
+
+#[test]
+fn empty_blk_is_an_error() {
+	assert!(unpack_blk(&mut vec![], None, None).is_err());
 }

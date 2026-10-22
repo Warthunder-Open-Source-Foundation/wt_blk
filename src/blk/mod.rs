@@ -231,7 +231,10 @@ pub fn unpack_blk(
 	nm: Option<Arc<NameMap>>,
 ) -> Result<BlkField, Report> {
 	let mut offset = 0;
-	let file_type = FileType::from_byte(file[0])?;
+	let Some(&first) = file.first() else {
+		bail!("Empty BLK file");
+	};
+	let file_type = FileType::from_byte(first)?;
 	if file_type == FileType::BBF {
 		bail!("BBF file type currently not supported, its a legacy format from before 2019");
 	}

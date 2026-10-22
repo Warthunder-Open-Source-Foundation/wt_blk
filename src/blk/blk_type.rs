@@ -10,6 +10,7 @@ use serde_json::{
 use crate::blk::{
 	blk_string::BlkString,
 	blk_type::blk_type_id::*,
+	plaintext_serialize::blockfile::quote_string,
 	util::{bytes_to_float, bytes_to_int, bytes_to_long, bytes_to_offset, bytes_to_uint},
 };
 
@@ -92,7 +93,7 @@ impl BlkType {
 				let in_nm = (offset >> 31) == 1; // Compare first bit to check where to look
 				let offset = i32::MAX as u32 & offset; // Set first byte to 0
 				let res: BlkString = if in_nm {
-					name_map[offset as usize].clone()
+					name_map.get(offset as usize)?.clone()
 				} else {
 					let data_region = &data_region[(offset as usize)..];
 					let end = memchr::memchr(b'\0', data_region)?;
@@ -397,9 +398,7 @@ impl BlkType {
 			write!(f, "{}=", self.blk_type_name())?;
 		}
 		match self {
-			BlkType::Str(v) => {
-				write!(f, "\"{}\"", v)
-			},
+			BlkType::Str(v) => f.write_all(quote_string(v).as_bytes()),
 			BlkType::Int(v) => write!(f, "{v}"),
 			BlkType::Int2(v) => {
 				write!(f, "{}, {}", v[0], v[1])

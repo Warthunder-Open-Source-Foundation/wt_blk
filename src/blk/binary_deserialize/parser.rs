@@ -38,7 +38,7 @@ pub fn parse_blk(
 	// Globally increments ptr and returns next uleb integer from file
 	let next_uleb = |ptr: &mut usize| {
 		// Using ? inside of closures is not supported yet, so we need to use this match
-		match uleb128(&file[*ptr..]) {
+		match uleb128(file.get(*ptr..).unwrap_or_default()) {
 			Ok((offset, int)) => {
 				*ptr += offset;
 				Ok(int)
@@ -60,18 +60,12 @@ pub fn parse_blk(
 	#[cfg(feature = "instrument_binary_blk")]
 	eprint!("{names_count} Names in file, ");
 
-	let names = if is_slim {
-		// TODO Figure out if names_count dictates the existence of a name map or if it may be 0 without requiring a name map
-		Cow::Borrowed(
-			shared_name_map
-				.as_deref()
-				.ok_or(ParseError::SlimBlkWithoutNm)?
-				.parsed
-				.as_ref(),
-		)
+	// Every file carries its own names, even slim ones, where they are numbered after the shared
+	// name map's (DataBlockShared::getName in Dagor). The size only follows a non-zero count.
+	let own_names = if names_count == 0 {
+		Vec::new()
 	} else {
 		let names_data_size = next_uleb(&mut ptr)?;
-
 		let names = NameMap::parse_name_section(idx_file_offset(&mut ptr, names_data_size)?);
 		if names_count != names.len() {
 			error!(
@@ -79,7 +73,21 @@ pub fn parse_blk(
 				names.len()
 			);
 		}
-		Cow::Owned(names)
+		names
+	};
+	let names = if is_slim {
+		let shared = shared_name_map
+			.as_deref()
+			.ok_or(ParseError::SlimBlkWithoutNm)?
+			.parsed
+			.as_ref();
+		if own_names.is_empty() {
+			Cow::Borrowed(shared)
+		} else {
+			Cow::Owned([shared.as_slice(), own_names.as_slice()].concat())
+		}
+	} else {
+		Cow::Owned(own_names)
 	};
 
 	let blocks_count = next_uleb(&mut ptr)?;
@@ -118,24 +126,9 @@ pub fn parse_blk(
 			)))?
 			.clone();
 
-		let parsed = if is_slim && type_id == BlkTypeId::STRING {
-			BlkType::from_raw_param_info(
-				type_id,
-				data,
-				shared_name_map
-					.as_deref()
-					.ok_or(ParseError::SlimBlkWithoutNm)?
-					.binary
-					.as_slice(),
-				shared_name_map
-					.as_deref()
-					.ok_or(ParseError::SlimBlkWithoutNm)?
-					.parsed
-					.as_slice(),
-			)
-		} else {
-			BlkType::from_raw_param_info(type_id, data, params_data, names.as_ref())
-		}
+		// Strings either name an entry of the name map or sit in this file's data region, in slim
+		// files too
+		let parsed = BlkType::from_raw_param_info(type_id, data, params_data, names.as_ref())
 		.ok_or(BadBlkValue)?;
 		#[cfg(feature = "instrument_binary_blk")]
 		eprintln!("KV {index}: [{name_id}]{name}:{}", parsed.to_string());
