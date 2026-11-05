@@ -227,13 +227,16 @@ fn parse_blk_impl(
 		} else {
 			ptr
 		};
-		if start + field_count > params_count {
+		let end = start
+			.checked_add(field_count)
+			.ok_or_else(|| ParseError::Custom("Block parameter range overflows".into()))?;
+		if end > params_count {
 			return Err(ParseError::Custom(format!(
 				"Block parameters {start}..{} out of bounds for {params_count} parameters",
-				start + field_count
+				end
 			)));
 		}
-		for i in start..(start + field_count) {
+		for i in start..end {
 			field.fields.push(get_nth_param(i)?);
 		}
 		if !dedup {
