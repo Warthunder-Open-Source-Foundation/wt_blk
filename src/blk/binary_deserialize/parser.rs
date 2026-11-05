@@ -188,7 +188,7 @@ fn parse_blk_impl(
 
 			// Dedup files store where the block's parameters start, as several blocks may share one run
 			let param_offset = if dedup && param_count > 0 {
-				let (offset, param_offset) = uleb128(&block_info[block_ptr..]).unwrap();
+				let (offset, param_offset) = uleb128(&block_info[block_ptr..])?;
 				block_ptr += offset;
 				Some(param_offset)
 			} else {
@@ -199,13 +199,13 @@ fn parse_blk_impl(
 			// Amount of child-blocks
 			// If it has child-blocks, starting index of said block
 			// If dedup, starting index of its fields
-			(
+			Ok::<_, ParseError>((
 				block_id_to_name(name_id),
 				param_count,
 				blocks_count,
 				first_block_id,
 				param_offset,
-			)
+			))
 		})
 	};
 
@@ -214,7 +214,8 @@ fn parse_blk_impl(
 	// After this, the hierarchy will be assigned depth depending on the block-map
 	let mut flat_map: Vec<Option<FlatBlock>> = Vec::with_capacity(blocks_count);
 	let mut ptr = 0;
-	for (name, field_count, blocks, offset, param_offset) in blocks {
+	for block in blocks {
+		let (name, field_count, blocks, offset, param_offset) = block?;
 		let mut field = FlatBlock {
 			name,
 			fields: Vec::with_capacity(field_count),

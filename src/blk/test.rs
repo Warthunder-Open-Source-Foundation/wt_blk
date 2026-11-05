@@ -206,3 +206,14 @@ fn fat_dedup_rejects_out_of_bounds_offset() {
 	let err = parse_blk_dedup(&dedup).unwrap_err().to_string();
 	assert!(err.contains("out of bounds"), "{err}");
 }
+
+#[test]
+fn fat_dedup_missing_parameter_offset_is_an_error() {
+	let mut file = vec![1, 2, b'x', 0, 1, 1, 0];
+	file.extend_from_slice(&[0, 0, 0, 2]);
+	file.extend_from_slice(&7_i32.to_le_bytes());
+	file.extend_from_slice(&[0, 1, 0, 0]);
+	assert!(parse_blk_dedup(&file).is_ok());
+	file.pop();
+	assert!(parse_blk_dedup(&file).is_err());
+}
