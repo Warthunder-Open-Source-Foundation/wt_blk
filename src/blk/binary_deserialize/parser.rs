@@ -22,6 +22,21 @@ pub fn parse_blk(
 	is_slim: bool,
 	shared_name_map: Option<Arc<NameMap>>,
 ) -> Result<BlkField, ParseError> {
+	parse_blk_impl(file, is_slim, shared_name_map, false)
+}
+
+/// Same as [`parse_blk`], but for [`crate::blk::file::FileType::FAT_DEDUP`] files,
+/// where each block descriptor carries an explicit offset into the parameter table
+pub fn parse_blk_dedup(file: &[u8]) -> Result<BlkField, ParseError> {
+	parse_blk_impl(file, false, None, true)
+}
+
+fn parse_blk_impl(
+	file: &[u8],
+	is_slim: bool,
+	shared_name_map: Option<Arc<NameMap>>,
+	dedup: bool,
+) -> Result<BlkField, ParseError> {
 	#[cfg(feature = "instrument_binary_blk")]
 	eprint!(
 		"Unpacking {} blk {}, ",
@@ -170,16 +185,27 @@ pub fn parse_blk(
 			} else {
 				None
 			};
+
+			// Dedup files store where the block's parameters start, as several blocks may share one run
+			let param_offset = if dedup && param_count > 0 {
+				let (offset, param_offset) = uleb128(&block_info[block_ptr..])?;
+				block_ptr += offset;
+				Some(param_offset)
+			} else {
+				None
+			};
 			// Name of the block
 			// Amount of non-block fields
 			// Amount of child-blocks
 			// If it has child-blocks, starting index of said block
-			(
+			// If dedup, starting index of its fields
+			Ok::<_, ParseError>((
 				block_id_to_name(name_id),
 				param_count,
 				blocks_count,
 				first_block_id,
-			)
+				param_offset,
+			))
 		})
 	};
 
@@ -188,17 +214,34 @@ pub fn parse_blk(
 	// After this, the hierarchy will be assigned depth depending on the block-map
 	let mut flat_map: Vec<Option<FlatBlock>> = Vec::with_capacity(blocks_count);
 	let mut ptr = 0;
-	for (name, field_count, blocks, offset) in blocks {
+	for block in blocks {
+		let (name, field_count, blocks, offset, param_offset) = block?;
 		let mut field = FlatBlock {
 			name,
 			fields: Vec::with_capacity(field_count),
 			blocks,
 			offset: offset.unwrap_or(0),
 		};
-		for i in (ptr)..(ptr + field_count) {
+		let start = if dedup {
+			param_offset.unwrap_or(0)
+		} else {
+			ptr
+		};
+		let end = start
+			.checked_add(field_count)
+			.ok_or_else(|| ParseError::Custom("Block parameter range overflows".into()))?;
+		if end > params_count {
+			return Err(ParseError::Custom(format!(
+				"Block parameters {start}..{} out of bounds for {params_count} parameters",
+				end
+			)));
+		}
+		for i in start..end {
 			field.fields.push(get_nth_param(i)?);
 		}
-		ptr += field_count;
+		if !dedup {
+			ptr += field_count;
+		}
 		flat_map.push(Some(field));
 	}
 

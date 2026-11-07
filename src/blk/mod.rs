@@ -47,6 +47,7 @@
 //! |0x03|SLIM|A BLK like FAT, but with all strings outlined to the nm|
 //! |0x04|SLIM_ZST|Same as SLIM, but ZSTD compressed|
 //! |0x05|SLIM_ZSTD_DICT|Same as SLIM, but ZSTD compressed using the dict|
+//! |0x06|FAT_DEDUP|Same as FAT, but each block descriptor with parameters is followed by a ULEB offset into the parameter table, so blocks with identical parameters can share them|
 //!
 //! ### Name reference
 //! Whenever a String is used in the name-map or field-map, this layout applies.
@@ -149,7 +150,7 @@ use cfg_if::cfg_if;
 use color_eyre::{Report, eyre::bail};
 
 use crate::blk::{
-	binary_deserialize::parser::parse_blk,
+	binary_deserialize::parser::{parse_blk, parse_blk_dedup},
 	blk_structure::BlkField,
 	blk_type::BlkType,
 	file::FileType,
@@ -245,7 +246,11 @@ pub fn unpack_blk(
 		offset = 1;
 	};
 
-	let parsed = parse_blk(&file[offset..], file_type.is_slim(), nm)?;
+	let parsed = if file_type.is_dedup() {
+		parse_blk_dedup(&file[offset..])?
+	} else {
+		parse_blk(&file[offset..], file_type.is_slim(), nm)?
+	};
 	Ok(parsed)
 }
 

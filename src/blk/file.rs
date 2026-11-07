@@ -17,6 +17,9 @@ pub enum FileType {
 	SLIM_ZSTD     = 0x04,
 	/// Same as SLIM_ZSTD, but with a ZSTD dictionary
 	SLIM_ZST_DICT = 0x05,
+	/// Same as FAT, but blocks with identical parameter runs share them.
+	/// Every block descriptor carries an explicit offset into the parameter table
+	FAT_DEDUP     = 0x06,
 }
 
 impl FileType {
@@ -28,6 +31,7 @@ impl FileType {
 			0x03 => Ok(Self::SLIM),
 			0x04 => Ok(Self::SLIM_ZSTD),
 			0x05 => Ok(Self::SLIM_ZST_DICT),
+			0x06 => Ok(Self::FAT_DEDUP),
 			_ => Err(ParseError::UnrecognizedBlkHeader { header: input }),
 		}
 	}
@@ -52,5 +56,9 @@ impl FileType {
 
 	pub fn needs_dict(&self) -> bool {
 		*self == FileType::SLIM_ZST_DICT
+	}
+
+	pub fn is_dedup(&self) -> bool {
+		*self == FileType::FAT_DEDUP
 	}
 }
